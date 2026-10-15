@@ -3,141 +3,137 @@
 </p>
 
 <h1 align="center">Mwoyeo</h1>
-<p align="center"><b>Read any screen in your language, right where the text is.</b><br>
-Put a lens over a chat, a feed or a game. The original text disappears and the translation is written in its place.</p>
+<p align="center"><b>한국어</b> · <a href="README.en.md">English</a> · <a href="README.ja.md">日本語</a> · <a href="README.zh-CN.md">简体中文</a></p>
+<p align="center"><b>어떤 화면이든 글자가 있던 그 자리에서 내 언어로 읽습니다.</b><br>
+채팅이나 피드, 게임 위에 렌즈를 올리면 원문이 사라지고 그 자리에 번역이 쓰입니다.</p>
 
 <p align="center">
   <code>brew install midagedev/tap/mwoyeo</code><br>
-  <sub>macOS 27 · Apple silicon · everything on-device · <a href="https://github.com/midagedev/mwoyeo/releases/latest">v1.0.2</a></sub>
+  <sub>macOS 27 · Apple silicon · 모든 처리는 기기 안에서 · <a href="https://github.com/midagedev/mwoyeo/releases/latest">v1.0.2</a></sub>
 </p>
 
-<p align="center"><img src="docs/media/hero.gif" width="640" alt="A lens over a Japanese chat: new messages are rewritten in Korean in place; the lens is dragged and resized, the chat scrolls under it, and ⌃⌥O flips back to the original."></p>
+<p align="center"><img src="docs/media/hero.gif" width="640" alt="일본어 채팅 위의 렌즈. 새 메시지가 그 자리에서 한국어로 바뀝니다. 렌즈를 끌어 옮기고 크기를 바꾼 뒤 아래 채팅을 스크롤하고 ⌃⌥O로 원문을 다시 봅니다."></p>
 
-Mwoyeo reads the text under a lens, **erases it from the picture**, and paints the translation back in the same
-place, size and colour. It is not a popup or a subtitle bar: the screen simply reads in your language, and keeps
-reading as messages arrive and the page scrolls. Everything runs on your Mac; nothing on your screen is sent anywhere.
+Mwoyeo는 렌즈 아래 글자를 읽어 **화면에서 지운 다음** 같은 자리에 같은 크기와 색으로 번역을 다시 씁니다.
+팝업이나 자막 줄이 따로 뜨지 않습니다. 화면이 그냥 내 언어로 보이고 새 메시지가 올라오거나 페이지를 스크롤해도
+계속 그렇게 보입니다. 모든 처리는 이 Mac 안에서 끝나고 화면 내용은 어디로도 보내지 않습니다.
 
-## Install
+## 설치
 
 ```bash
 brew install midagedev/tap/mwoyeo
 ```
 
-Or download the disk image from [Releases](https://github.com/midagedev/mwoyeo/releases/latest) and drag Mwoyeo to
-Applications. The app is signed and notarized.
+[Releases](https://github.com/midagedev/mwoyeo/releases/latest)에서 디스크 이미지를 받아 Mwoyeo를 응용 프로그램
+폴더로 끌어다 놓아도 됩니다. 서명과 공증을 마친 앱입니다.
 
-Mwoyeo checks GitHub once a day for a new version and says so in its menu. Update with `brew upgrade mwoyeo`, or
-download the new disk image. Settings › About has the check, the switch to turn it off, and links to the release
-notes and issue tracker.
+Mwoyeo는 하루에 한 번 GitHub에서 새 버전을 확인하고 새 버전이 나오면 메뉴에 알려 줍니다. 업데이트는
+`brew upgrade mwoyeo`로 하거나 새 디스크 이미지를 받으면 됩니다. 설정 › 정보에서 직접 확인하거나 자동 확인을 끌
+수 있고 릴리즈 노트와 이슈 트래커 링크도 있습니다.
 
-### Requirements
-
-| | |
-|---|---|
-| **macOS** | 27.0 or later |
-| **Mac** | Any Mac that runs macOS 27: Apple silicon, M1 or later, or MacBook Neo. There is no Intel build. |
-| **Permission** | Screen Recording, nothing else: no Accessibility, no keyboard monitoring |
-| **Network** | None for translating. The only request is the daily update check, which you can turn off. |
-| **Disk** | About 20 MB for the app. Language packs (and Apple Intelligence's model, up to 8–14 GB) are downloaded and stored by macOS. |
-
-**What runs on device, and what it needs.** Everything runs on your Mac; the only question is which engine is there.
-
-| Part | Needs |
-|---|---|
-| Reading the text (Vision), erasing it (Core ML) | Nothing more: every Mac that runs macOS 27 |
-| Translating with a **language pack** (fastest, offline) | The pack for your language pair, downloaded once from Mwoyeo's Settings › Translation or System Settings › General › Language & Region › Translation Languages |
-| Translating **without a pack**, the *High fidelity* engine and *Glossary first* | **Apple Intelligence** turned on in System Settings › Apple Intelligence & Siri |
-
-Apple Intelligence runs on every Mac that runs macOS 27, but it has two more conditions: your Mac's language and Siri's
-language must be the same supported language, and it is not available in mainland China. It supports English,
-Korean, Japanese, Chinese, French, German, Spanish, Italian, Portuguese and Vietnamese among Mwoyeo's languages, but
-not Russian, Ukrainian or Thai: those translate with language packs only. Without Apple Intelligence, Mwoyeo uses
-language packs for everything.
-| **Displays** | Any number; a lens can go on any display |
-
-**Languages.** Translate from and into English, Korean, Japanese, Chinese (Simplified and Traditional), French,
-German, Spanish, Italian, Portuguese (Brazil), Russian, Ukrainian, Vietnamese and Thai, in any direction macOS has a
-translation model for. *Automatic* detects the source language per line. The app itself is in English, Korean,
-Japanese, Chinese (Simplified and Traditional), French, German, Spanish, Italian, Portuguese (Brazil), Russian and
-Ukrainian.
-
-## Getting started
-
-1. **Open Mwoyeo.** It lives in the menu bar (the viewfinder icon); a welcome window walks you through the rest.
-2. **Allow Screen Recording.** Click **Allow** and turn Mwoyeo on in System Settings › Privacy & Security › Screen &
-   System Audio Recording. If the lens stays empty afterwards, quit and reopen Mwoyeo.
-3. **Pick your languages.** *Translate from* can stay on **Automatic**; *Translate to* starts as your Mac's language.
-4. **Get the language pack** (recommended). In Mwoyeo's Settings › Translation, click **Download** next to your
-   language pair. With a pack, translation is near-instant and works offline. Without one, Apple Intelligence
-   translates instead, which needs no download but takes about half a second per line.
-5. **Press ⌃⌥L and drag a box** over the text you want to read, such as the message list of a Discord channel or a
-   Reddit thread. Or just click, and a lens is dropped where you clicked. Hold ⌥ while you do it to pin the lens to
-   the screen instead of the window (see below).
-
-## Using a lens
-
-- **Move it** by dragging its glowing edge or the name tag on top. Translations stay on the text underneath; only
-  what is inside the lens is shown.
-- **Resize it** from the bottom-right corner.
-- **Close it** with the ✕ on the name tag (hover over the lens to see it).
-- **Scroll and chat as usual.** The interior of a lens is click-through, so the page under it works normally. New
-  messages are translated as they arrive and scrolling carries the translations along.
-- **Window lens or screen lens.** A lens placed on a window is a *window lens* (🪟 on its name tag): it moves with
-  that window and hides while the window is minimized or covered. A *screen lens* (📌) stays where you put it and
-  translates whatever is under it, whichever app that is: handy for a subtitle line or a spot you keep switching
-  apps under. Click the icon on the name tag to switch.
-- **Keep lenses small.** A lens around just the part you read (the chat, not the whole browser) translates faster
-  and uses less power. You can have several.
-
-The menu bar icon lists your lenses: switch each one on or off, remove it, or add a new one. It also has
-**Show Original**, **Pause** and Settings.
-
-### Shortcuts
-
-These work in any app. Change or remove them in Settings › Shortcuts: click a shortcut and press the new keys.
-macOS can't tell an app when another one already uses the same keys, so if a shortcut also does something
-elsewhere, record a different one. The defaults stay clear of window managers such as Rectangle and Magnet.
+### 지원 환경
 
 | | |
 |---|---|
-| ⌃⌥L | Add a lens (drag an area, or click to drop one; hold ⌥ to pin it to the screen) |
-| ⌃⌥O | Show the original / the translation |
-| none | Pause all lenses, Translate again (in the menu; give them keys in Settings if you like) |
+| **macOS** | 27.0 이상 |
+| **Mac** | macOS 27이 돌아가는 모든 Mac. Apple silicon(M1 이상)이나 MacBook Neo이고 Intel용 빌드는 없습니다. |
+| **권한** | 화면 기록 하나뿐입니다. 손쉬운 사용 권한도, 키 입력 감시도 쓰지 않습니다. |
+| **네트워크** | 번역에는 쓰지 않습니다. 하루 한 번 하는 업데이트 확인이 유일한 요청이고 끌 수 있습니다. |
+| **용량** | 앱은 약 20MB입니다. 언어 팩과 Apple Intelligence 모델(최대 8~14GB)은 macOS가 받아서 보관합니다. |
+| **디스플레이** | 몇 개든 됩니다. 어느 디스플레이에나 렌즈를 놓을 수 있습니다. |
 
-## Settings
+**기기 안에서 도는 것과 필요한 조건.** 모든 처리는 Mac 안에서 이루어지고 엔진이 무엇이냐만 다릅니다.
 
-| Tab | What you can change |
+| 기능 | 필요한 것 |
 |---|---|
-| General | Languages · **Display**: *Adaptive* (default: plain boxes while things move, a seamless rewrite once still), *Quick* (always boxes, least battery) or *Seamless* (always rewrites) · how often the screen is checked (4, 8 or 15 fps) · open at login |
-| Translation | **Engine**: *Automatic* (language pack if installed, Apple Intelligence otherwise), *High fidelity* (always Apple Intelligence) or *Glossary first* · language packs · **translation memory**: how many translations to keep for reuse (1,000, 5,000 or 20,000; in memory only, cleared when Mwoyeo quits) · a **glossary** of names, one `original = translation` per line |
-| Appearance | **Lens style**: *Glow*, *Subtle* (glows only while reading) or *Minimal* (a faint line; the name tag shows on hover) · font (default, rounded, serif) · box opacity · AI erasing on photos and artwork |
+| 글자 읽기(Vision), 원문 지우기(Core ML) | 추가 조건 없음. macOS 27이 돌아가는 모든 Mac |
+| **언어 팩** 번역(가장 빠르고 오프라인으로도 됨) | 해당 언어 쌍의 언어 팩. Mwoyeo 설정 › 번역이나 시스템 설정 › 일반 › 언어 및 지역 › 번역 언어에서 한 번 받으면 됩니다. |
+| 언어 팩 **없이** 번역, *고품질* 엔진, *용어집 우선* | 시스템 설정 › Apple Intelligence 및 Siri에서 **Apple Intelligence**를 켜야 합니다. |
 
-## Tips and troubleshooting
+Apple Intelligence는 macOS 27이 돌아가는 모든 Mac에서 쓸 수 있지만 조건이 두 가지 더 있습니다. Mac의 언어와
+Siri의 언어가 같은 지원 언어여야 하고 중국 본토에서는 쓸 수 없습니다. Mwoyeo가 번역하는 언어 가운데 영어,
+한국어, 일본어, 중국어, 프랑스어, 독일어, 스페인어, 이탈리아어, 포르투갈어, 베트남어는 지원하지만 러시아어,
+우크라이나어, 태국어는 지원하지 않습니다. 이 세 언어는 언어 팩으로만 번역됩니다. Apple Intelligence가 없으면
+Mwoyeo는 모든 번역을 언어 팩으로 합니다.
 
-- **Stuck on "Translating…"?** Usually the language pack is missing; download it in Settings › Translation. The very
-  first lens after installing also takes a while, because macOS loads its text recognition models once.
-- **Names come out wrong** (characters, places, usernames)? Add them to the glossary and choose *Glossary first*.
-- **Nothing shows up after an update?** macOS sometimes asks for Screen Recording again. Check it in System Settings,
-  then reopen Mwoyeo.
-- **Want to compare with the original?** Press ⌃⌥O to see the original, and again to go back.
-- **Privacy.** Mwoyeo reads only what is under a lens, never stores or sends it, and leaves its own overlays out of
-  what it captures. The only thing it ever asks the internet is GitHub's latest version number, once a day, and
-  you can turn that off in Settings › About.
+**언어.** 영어, 한국어, 일본어, 중국어(간체, 번체), 프랑스어, 독일어, 스페인어, 이탈리아어, 포르투갈어(브라질),
+러시아어, 우크라이나어, 베트남어, 태국어 사이에서 macOS에 번역 모델이 있는 방향이면 어느 쪽으로든 번역합니다.
+원문을 *자동*으로 두면 줄마다 언어를 알아냅니다. 앱 화면은 영어, 한국어, 일본어, 중국어(간체, 번체), 프랑스어,
+독일어, 스페인어, 이탈리아어, 포르투갈어(브라질), 러시아어, 우크라이나어로 나옵니다.
 
-## Under the hood
+## 시작하기
 
-Every stage uses Apple's on-device frameworks:
+1. **Mwoyeo를 엽니다.** 메뉴 막대(뷰파인더 아이콘)에 자리를 잡고 환영 창이 나머지 과정을 안내합니다.
+2. **화면 기록을 허용합니다.** **허용하기**를 누르고 시스템 설정 › 개인정보 보호 및 보안 › 화면 및 시스템 오디오
+   녹음에서 Mwoyeo를 켭니다. 그 뒤에도 렌즈가 비어 있으면 Mwoyeo를 종료했다가 다시 엽니다.
+3. **언어를 고릅니다.** *원문*은 **자동**으로 두어도 되고 *번역*은 처음에 Mac의 언어로 맞춰져 있습니다.
+4. **언어 팩을 받습니다**(권장). Mwoyeo 설정 › 번역에서 언어 쌍 옆의 **내려받기**를 누릅니다. 언어 팩이 있으면
+   번역이 거의 바로 나오고 오프라인에서도 됩니다. 없으면 Apple Intelligence가 대신 번역합니다. 따로 받을 것은
+   없지만 한 줄에 0.5초쯤 걸립니다.
+5. **⌃⌥L을 누르고 읽고 싶은 글자 위로 상자를 끕니다.** 디스코드 채널의 메시지 목록이나 레딧 스레드 같은 곳입니다.
+   그냥 클릭하면 클릭한 자리에 렌즈가 놓입니다. 이때 ⌥를 누르고 있으면 렌즈가 창 대신 화면에 고정됩니다(아래 참고).
 
-| Stage | Technology |
+## 렌즈 쓰기
+
+- **옮기기:** 빛나는 테두리나 위쪽 이름표를 끌면 됩니다. 번역은 아래 글자에 붙어 있고 렌즈 안에 든 부분만 보입니다.
+- **크기 바꾸기:** 오른쪽 아래 모서리를 끕니다.
+- **닫기:** 이름표의 ✕를 누릅니다. ✕는 렌즈 위에 포인터를 올리면 나타납니다.
+- **평소처럼 스크롤하고 채팅하세요.** 렌즈 안쪽은 클릭이 그대로 통과해서 아래 페이지를 평소처럼 쓸 수 있습니다.
+  새 메시지는 올라오는 대로 번역되고 스크롤하면 번역도 함께 움직입니다.
+- **창 렌즈와 화면 렌즈.** 창 위에 놓은 렌즈는 *창 렌즈*(이름표에 🪟)입니다. 그 창을 따라 움직이고 창이 최소화되거나
+  가려지면 숨습니다. *화면 렌즈*(📌)는 놓은 자리에 그대로 있으면서 아래에 어떤 앱이 오든 번역합니다. 자막 줄이나
+  앱을 바꿔 가며 보는 자리에 쓰기 좋습니다. 이름표의 아이콘을 누르면 서로 바뀝니다.
+- **렌즈는 작게 쓰세요.** 브라우저 전체가 아니라 채팅처럼 읽는 부분만 감싸면 번역이 빠르고 전력도 덜 씁니다.
+  렌즈는 여러 개 둘 수 있습니다.
+
+메뉴 막대 아이콘을 누르면 렌즈 목록이 나옵니다. 렌즈마다 켜고 끄거나 지울 수 있고 새 렌즈도 추가할 수 있습니다.
+**원문 보기**, **일시정지**, 설정도 여기에 있습니다.
+
+### 단축키
+
+어느 앱에서나 동작합니다. 설정 › 단축키에서 단축키를 누르고 새 키를 입력하면 바꾸거나 지울 수 있습니다. 다른
+앱이 같은 키를 이미 쓰고 있어도 macOS는 앱에 알려 주지 않습니다. 그러니 단축키가 다른 곳에서도 무언가를 한다면
+다른 키로 바꿔 주세요. 기본 단축키는 Rectangle이나 Magnet 같은 창 관리 앱과 겹치지 않게 골랐습니다.
+
+| | |
 |---|---|
-| Capture | ScreenCaptureKit — one stream per lens, Mwoyeo's own overlays excluded, frames only when pixels change |
-| Text recognition | Vision `RecognizeDocumentsRequest` (paragraphs) and `RecognizeTextRequest` (lines, regions of interest) |
-| Translation | Translation framework — low-latency language packs, or the high-fidelity Apple Intelligence model without a pack |
-| Glossary-aware translation | Foundation Models (on-device language model), optional |
-| Erasing | Core ML MI-GAN inpainting on the GPU for textured backgrounds, a fast diffusion fill for flat ones |
-| Interface | SwiftUI with Liquid Glass, a menu bar extra, global shortcuts, in 12 languages |
+| ⌃⌥L | 렌즈 추가(영역을 끌거나 클릭해서 놓기. ⌥를 누르고 있으면 화면에 고정) |
+| ⌃⌥O | 원문 보기 / 번역 보기 |
+| 없음 | 모든 렌즈 일시정지, 다시 번역(메뉴에 있습니다. 원하면 설정에서 키를 지정하세요) |
 
-### How it works
+## 설정
+
+| 탭 | 바꿀 수 있는 것 |
+|---|---|
+| 일반 | 언어 · **표시 방식**: *적응형*(기본. 움직이는 동안엔 상자, 멈추면 원문을 지우고 자연스럽게 다시 씀), *빠르게*(항상 상자, 배터리를 가장 적게 씀), *자연스럽게*(항상 다시 씀) · 화면 확인 빈도(4, 8, 15fps) · 로그인 시 실행 |
+| 번역 | **엔진**: *자동*(언어 팩이 있으면 언어 팩, 없으면 Apple Intelligence), *고품질*(항상 Apple Intelligence), *용어집 우선* · 언어 팩 · **번역 메모리**: 다시 쓰려고 기억해 둘 번역 수(1,000, 5,000, 20,000개. 메모리에만 두고 Mwoyeo를 종료하면 지움) · 이름을 정해 두는 **용어집**(한 줄에 `원문 = 번역` 하나) |
+| 표시 | **렌즈 스타일**: *글로우*, *은은하게*(읽는 동안에만 빛남), *최소*(옅은 선만 보이고 이름표는 포인터를 올렸을 때 나타남) · 글꼴(기본, 둥근, 명조) · 상자 불투명도 · 사진과 그림 위 글자를 AI로 지우기 |
+
+## 팁과 문제 해결
+
+- **"번역 중…"에서 멈춰 있나요?** 대개 언어 팩이 없어서입니다. 설정 › 번역에서 받으세요. 설치하고 처음 만든 렌즈도
+  시간이 좀 걸립니다. macOS가 글자 인식 모델을 처음 한 번 불러오기 때문입니다.
+- **이름이 이상하게 번역되나요?**(등장인물, 지명, 사용자 이름) 용어집에 넣고 *용어집 우선*을 고르세요.
+- **업데이트한 뒤 아무것도 안 보이나요?** macOS가 화면 기록 권한을 다시 묻는 경우가 있습니다. 시스템 설정에서
+  확인한 뒤 Mwoyeo를 다시 여세요.
+- **원문과 비교하고 싶나요?** ⌃⌥O를 누르면 원문이 보이고 한 번 더 누르면 돌아옵니다.
+- **개인정보.** Mwoyeo는 렌즈 아래에 있는 것만 읽고 저장하거나 보내지 않습니다. 화면을 담을 때 자기 오버레이는
+  빼고 담습니다. 인터넷에 묻는 것은 하루 한 번 GitHub의 최신 버전 번호뿐이고 설정 › 정보에서 끌 수 있습니다.
+
+## 내부 구조
+
+모든 단계에 Apple의 온디바이스 프레임워크를 씁니다.
+
+| 단계 | 기술 |
+|---|---|
+| 화면 담기 | ScreenCaptureKit. 렌즈마다 스트림 하나, Mwoyeo 오버레이는 제외, 픽셀이 바뀔 때만 프레임 |
+| 글자 인식 | Vision `RecognizeDocumentsRequest`(문단)와 `RecognizeTextRequest`(줄, 관심 영역) |
+| 번역 | Translation 프레임워크. 저지연 언어 팩, 언어 팩이 없으면 Apple Intelligence의 고품질 모델 |
+| 용어집 반영 번역 | Foundation Models(기기 안 언어 모델), 선택 사항 |
+| 원문 지우기 | 무늬 있는 배경은 GPU에서 Core ML MI-GAN 인페인팅, 단색 배경은 빠른 확산 채우기 |
+| 인터페이스 | SwiftUI와 Liquid Glass, 메뉴 막대 앱, 전역 단축키, 12개 언어 |
+
+### 동작 방식
 
 ```
 ScreenCaptureKit ──► change map (16 px tiles) ──► scroll? shift blocks, read only the new strip
@@ -147,80 +143,34 @@ ScreenCaptureKit ──► change map (16 px tiles) ──► scroll? shift bloc
       └─► still for 0.5 s ──► whole-frame paragraph pass ──► seamless re-render, cross-faded in
 ```
 
-The capture is larger than the lens ("overscan"). At rest the margin is about 30 % of the lens on each side; while
-content or the lens moves it grows to about 40 %, shifted toward where things are heading. The lens moves freely
-inside the captured area and the capture only re-centres when the lens nears its edge — then just the uncovered strips are read. Unchanged text keeps its
-erased background across passes, results computed while content moved are shifted rather than thrown away, and the
-translation queue always serves what is visible first.
+화면은 렌즈보다 넓게 담습니다(오버스캔). 가만히 있을 때는 렌즈 둘레로 각각 렌즈의 30%쯤 여유를 두고 내용이나
+렌즈가 움직이면 40%쯤으로 늘려 움직이는 쪽으로 치우칩니다. 렌즈는 담은 영역 안에서 자유롭게 움직이고 가장자리에
+가까워질 때만 담는 영역의 중심을 다시 잡습니다. 그때도 새로 드러난 띠만 읽습니다. 바뀌지 않은 글자는 지운
+배경을 다음 처리에도 그대로 씁니다. 내용이 움직이는 동안 계산한 결과도 버리지 않고 옮겨서 씁니다. 번역은 언제나
+화면에 보이는 것부터 처리합니다.
 
-Scrolling is tracked twice. Trackpad and wheel input move the translations with the page before the next frame
-arrives; each captured frame then settles them to the exact offset, measured per column to a fraction of a pixel, so
-a fixed sidebar or message box never drags the chat along with it. Only the strip that scrolled into view is read.
+스크롤은 두 번 따라갑니다. 트랙패드와 휠 입력이 들어오면 다음 프레임이 오기 전에 번역을 페이지와 함께 먼저
+움직입니다. 그다음 담은 프레임마다 열 단위로 픽셀 이하까지 재서 정확한 위치에 맞춥니다. 그래서 고정된 사이드바나
+입력창이 채팅을 끌고 가지 않습니다. 새로 스크롤되어 들어온 띠만 읽습니다.
 
-Erasing fills flat and gradient backgrounds from their surroundings; on textured ones (artwork, game scenes) an
-on-device inpainting model rebuilds the background, and the translation is set in a matching weight and size.
+단색이나 그라데이션 배경은 주변 색으로 채웁니다. 그림이나 게임 장면처럼 무늬 있는 배경은 기기 안의 인페인팅
+모델이 배경을 다시 그리고 번역은 원래 글자와 비슷한 굵기와 크기로 씁니다.
 
-The clip above is the real app on a made-up chat page (`demo/chat.html?lang=ja`), recorded with a real mouse and
-trackpad scrolls; `docs/HERO.md` has the shot list.
+위 영상은 실제 앱을 지어낸 채팅 페이지(`demo/chat.html?lang=ja`) 위에서 실제 마우스와 트랙패드 스크롤로 찍은
+것입니다. 촬영 순서는 `docs/HERO.md`에 있습니다.
 
-The name is Korean: *mwoyeo* (뭐여) is a dialect way of saying "what's that?"
+이름 *mwoyeo*는 "뭐여?"에서 왔습니다.
 
-## Development
+## 개발
 
-### Building
+빌드, 테스트, 릴리즈 방법은 [영어 README](README.en.md#development)에 있습니다.
 
-```bash
-brew install xcodegen
-xcodegen generate
-xcodebuild -project Mwoyeo.xcodeproj -scheme Mwoyeo -configuration Release -derivedDataPath build/dd build
-```
+## 크레딧
 
-Builds are ad-hoc signed by default, which makes macOS ask for Screen Recording again after every rebuild. Put a
-stable identity in `Config/Local.xcconfig` (git-ignored):
+인페인팅 모델: Picsart AI Research의 [MI-GAN](https://github.com/Picsart-AI-Research/MI-GAN), MIT 라이선스
+(`tools/inpaint/models/LICENSE-MI-GAN-WEIGHTS`). `tools/inpaint/models`의 Core ML 버전은
+`tools/inpaint/convert_migan.sh`로 변환했습니다.
 
-```
-MWOYEO_SIGN_IDENTITY = <SHA-1 from `security find-identity -v -p codesigning`>
-MWOYEO_TEAM = <team id>
-```
-
-Core logic (change detection, scroll detection, erasing masks, text fitting, overscan planning) lives in the
-`MwoyeoCore` package with its own tests: `cd Core && swift test`.
-
-#### Headless checks
-
-The app binary doubles as a test harness that runs the real pipeline on images:
-
-```bash
-APP=build/dd/Build/Products/Release/Mwoyeo.app/Contents/MacOS/Mwoyeo
-$APP --render in.png out.png --src ja --tgt ko                     # one still: read, erase, translate, composite
-$APP --render page.png frames/ --pan --src ja --tgt ko \
-     --lens 200,560,600,300 --to 200,860                            # simulated lens drag, one PNG per step
-$APP --render page.png frames/ --pan --scroll --src ja --tgt ko \
-     --lens 200,300,600,300 --to 0,400                              # simulated scroll under a still lens
-```
-
-`MWOYEO_TRACE=1` prints stage timings; in the live app `MWOYEO_DUMP=<dir>` writes what each lens captured with its
-overlay on top.
-
-#### Releasing
-
-Pushing a `v*` tag runs `.github/workflows/release.yml`: it builds with the Developer ID identity from the repository
-secrets, notarizes and staples the disk image, publishes the GitHub release and updates the Homebrew cask. Running the
-workflow by hand builds and notarizes without releasing. `scripts/release.sh <version> [--publish]` does the same on
-a Mac that holds the identity.
-
-#### Demo pages
-
-`demo/chat.html` (a Discord-like server) and `demo/forum.html` (a Reddit-like thread) are made-up pages for
-recordings; their parameters (language, new-message rate, scripted scrolls) are listed at the top of each file.
-`docs/HERO.md` has the shot list.
-
-## Credits
-
-Inpainting model: [MI-GAN](https://github.com/Picsart-AI-Research/MI-GAN) by Picsart AI Research, MIT licensed
-(`tools/inpaint/models/LICENSE-MI-GAN-WEIGHTS`). The Core ML version in `tools/inpaint/models` was converted with
-`tools/inpaint/convert_migan.sh`.
-
-## License
+## 라이선스
 
 MIT
