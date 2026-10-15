@@ -28,6 +28,9 @@ enum BlockRenderer {
         var scale: CGFloat
     }
 
+    /// Background around the text (pixels) that an erased block takes in, for the glyph mask's ring.
+    static func eraseMargin(lineHeight: CGFloat) -> Int { max(3, Int(lineHeight * 0.18)) }
+
     static func render(_ input: Input) -> CGImage? {
         let w = Int(input.size.width.rounded(.up)), h = Int(input.size.height.rounded(.up))
         guard w > 0, h > 0,
@@ -47,7 +50,10 @@ enum BlockRenderer {
             ctx.fillPath()
         }
 
-        let padX = max(1, input.lineHeight * 0.06), padY = max(0, input.lineHeight * 0.02)
+        // An erased patch reaches `eraseMargin` past the original text on each side: start the text where it started.
+        var padX = max(1, input.lineHeight * 0.06)
+        if case .erased = input.background { padX = CGFloat(eraseMargin(lineHeight: input.lineHeight)) }
+        let padY = max(0, input.lineHeight * 0.02)
         // The text box is the original block; `spareWidth` on the right is only used if the text needs it.
         let full = bounds.insetBy(dx: padX, dy: padY)
         let original = CGRect(x: full.minX, y: full.minY, width: max(1, full.width - input.spareWidth), height: full.height)

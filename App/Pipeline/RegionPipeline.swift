@@ -625,7 +625,7 @@ actor RegionPipeline {
     /// (textured ones). The patch also takes in free background to the right for longer translations.
     private func erase(_ block: OCRBlock, in full: RGBAImage) -> Erased? {
         let lineHeight = block.lines.map(\.rect.height).sorted()[block.lines.count / 2]
-        let ring = max(3, Int(lineHeight * 0.18))
+        let ring = BlockRenderer.eraseMargin(lineHeight: lineHeight)
         var rect = PixelRect(block.rect.insetBy(dx: -CGFloat(ring), dy: -CGFloat(ring))).clamped(width: full.width, height: full.height)
         guard !rect.isEmpty else { return nil }
 
