@@ -16,6 +16,8 @@ import UniformTypeIdentifiers
 /// `--wheel N` also sends N trackpad scroll events per captured frame and shows the translations where the scroll
 /// predictor puts them between frames (`--no-predict`: where the last frame left them).
 /// Each step prints how far the shown translations are from the text they translate ("drift", points).
+/// `--blink x,y,w,h` (with `--pan`): instead of moving, an animated emoji plays there for `--hold-ms`, a frame every
+/// 100 ms; the work it causes is printed.
 enum SelfTest {
     static func run(_ args: [String]) -> Never {
         setvbuf(stdout, nil, _IOLBF, 0)
@@ -161,6 +163,8 @@ enum SelfTest {
         var scrollArea: CGRect?
         // Content offset (points): the screen shows the page from here. Only `--scroll` changes it.
         var scroll = CGVector.zero
+        let bl = numbers("--blink"), blink = bl.count == 4 ? CGRect(x: bl[0], y: bl[1], width: bl[2], height: bl[3]) : nil
+        var blinkFrame = 0
         let steps = Int(option("--steps") ?? "40") ?? 40
         let stepMs = Int(option("--step-ms") ?? "100") ?? 100
         let holdMs = Int(option("--hold-ms") ?? "3000") ?? 3000
@@ -193,6 +197,14 @@ enum SelfTest {
             if !s.isNull {
                 ctx.clip(to: CGRect(x: (s.minX - r.minX) * scale, y: CGFloat(h) - (s.maxY - r.minY) * scale, width: s.width * scale, height: s.height * scale))
                 draw(from: CGPoint(x: r.minX + scroll.dx, y: r.minY + scroll.dy))
+            }
+            // A face that pulses and changes colour, like an animated emoji.
+            if let blink, case let s = blink.intersection(r), !s.isNull {
+                ctx.resetClip()
+                let hue = CGFloat(blinkFrame % 6) / 6, inset = CGFloat(blinkFrame % 3) * blink.width * 0.08
+                ctx.setFillColor(NSColor(hue: hue, saturation: 0.8, brightness: 1, alpha: 1).cgColor)
+                ctx.fillEllipse(in: CGRect(x: (blink.minX - r.minX) * scale, y: CGFloat(h) - (blink.maxY - r.minY) * scale,
+                                           width: blink.width * scale, height: blink.height * scale).insetBy(dx: inset * scale, dy: inset * scale))
             }
             return ctx.makeImage()
         }
@@ -267,7 +279,15 @@ enum SelfTest {
         printCounts("start")
         try shoot()
 
-        if scrolling {
+        if blink != nil {
+            for i in 1 ... max(1, holdMs / 100) {
+                blinkFrame += 1
+                await feed()
+                try await Task.sleep(for: .milliseconds(100))
+                if i % 5 == 0 { try shoot() }
+            }
+            printCounts("blink")
+        } else if scrolling {
             // Scroll: frames change under a still capture; the pipeline notices the motion and asks for wide margins.
             let sub = max(1, wheelsPerFrame)
             // `--back`: hold at the end, then scroll back to the start (revisiting what was already read).

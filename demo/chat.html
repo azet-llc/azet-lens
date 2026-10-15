@@ -10,6 +10,7 @@
     every=N               a new message every N seconds (0 = none, default 4)
     history=N             messages already in the log (default 10)
     scroll=t:px,t:px      at t seconds, scroll the log smoothly by px (negative = up)
+    animoji=1             animated emoji (reactions, and one in every third message)
 -->
 <style>
   :root { color-scheme: dark; --bg: #313338; --side: #2b2d31; --rail: #1e1f22; --text: #dbdee1; --muted: #949ba4; --hover: #2e3035; }
@@ -54,6 +55,7 @@
   .embed { margin-top: 8px; max-width: 440px; background: #2b2d31; border-left: 4px solid #f0b232; border-radius: 4px; padding: 10px 14px 12px; }
   .embed small { display: block; color: var(--muted); font-size: 12px; } .embed b { display: block; color: #00a8fc; font-size: 15px; margin: 4px 0; }
   .embed p { margin: 0; font-size: 14px; line-height: 1.4; color: #dbdee1; }
+  .wob { display: inline-block; animation: wob .6s steps(6) infinite; } @keyframes wob { 50% { transform: rotate(-14deg) scale(1.2); filter: hue-rotate(90deg); } }
   .new { animation: pop .35s ease-out; } @keyframes pop { from { opacity: 0; transform: translateY(8px); } }
   footer { padding: 0 16px 8px; flex: none; }
   footer .box { background: #383a40; border-radius: 8px; padding: 12px 16px; color: var(--muted); display: flex; gap: 12px; align-items: center; }
@@ -184,6 +186,11 @@ function add(animate) {
 for (let k = 0; k < Number(params.get("history") || 10); k++) add(false);
 log.scrollTop = log.scrollHeight;
 const every = Number(params.get("every") || 4);
+// `animoji=1`: animated emoji, like Discord's: the reactions, and one at the end of every third message.
+if (params.get("animoji")) for (const [k, m] of [...log.querySelectorAll(".msg")].entries()) {
+  m.querySelectorAll(".reacts span").forEach(r => r.innerHTML = r.innerHTML.replace(/^(\S+)/, '<i class="wob">$1</i>'));
+  if (k % 3 == 1) m.querySelector(".body").insertAdjacentHTML("beforeend", ' <i class="wob">🎉</i>');
+}
 const typing = document.getElementById("typing");
 if (every > 0) {
   setInterval(() => {

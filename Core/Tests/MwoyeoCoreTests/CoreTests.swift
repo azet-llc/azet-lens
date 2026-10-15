@@ -16,6 +16,41 @@ func texture(width: Int, height: Int, seed: Int = 1) -> GrayImage {
 }
 
 @Suite struct FrameDiffTests {
+    @Test func wobbleOneTileTallIsNotAScroll() {
+        let a = GrayImage(width: 96, height: 96, fill: 40)
+        var b = a, c = a
+        for y in 36..<44 { for x in 40..<52 { b[x, y] = 220 } }   // an emoji, then the same a pixel lower
+        for y in 37..<45 { for x in 40..<52 { c[x, y] = 220 } }
+        #expect(FrameDiff.scrollRegions(from: b, to: c, change: FrameDiff.changeMap(from: b, to: c, tile: 16), maxShift: 32).isEmpty)
+    }
+
+    @Test func animatedTileIsIgnoredUntilItGoesStill() {
+        let a = GrayImage(width: 96, height: 96, fill: 200)
+        var b = a, c = a
+        for y in 36..<44 { for x in 36..<44 { b[x, y] = 20; c[x, y] = 120 } }   // an emoji in tile (2, 2), two frames
+        var churn = Churn()
+        churn.window = 1
+        var prev = a, masked: [Bool] = []
+        for (i, f) in [b, c, b, c].enumerated() {
+            let m = FrameDiff.changeMap(from: prev, to: f, tile: 16)
+            churn.add(m, at: Double(i) * 0.1)
+            masked.append(churn.masking(m, at: Double(i) * 0.1).isUnchanged)
+            prev = f
+        }
+        #expect(masked == [false, false, true, true])
+        #expect(churn.coolsIn(at: 0.3).map { abs($0 - 1) < 1e-9 } == true)
+        // Its edge reaching into a neighbouring tile is masked with it; an edit further off is not.
+        var d = c
+        for y in 30..<33 { for x in 50..<53 { d[x, y] = 20 } }   // tile (3, 1)
+        #expect(churn.masking(FrameDiff.changeMap(from: c, to: d, tile: 16), at: 0.35).isUnchanged)
+        d = c
+        for y in 84..<88 { for x in 4..<8 { d[x, y] = 20 } }     // tile (0, 5)
+        #expect(churn.masking(FrameDiff.changeMap(from: c, to: d, tile: 16), at: 0.35).intersects(PixelRect(x: 0, y: 80, width: 16, height: 16)))
+        // A second later it is still: the change it made since is seen again.
+        #expect(!churn.masking(FrameDiff.changeMap(from: a, to: c, tile: 16), at: 1.4).isUnchanged)
+        #expect(churn.coolsIn(at: 1.4) == nil)
+    }
+
     @Test func identicalFramesAreUnchanged() {
         let a = texture(width: 64, height: 48)
         let m = FrameDiff.changeMap(from: a, to: a, tile: 16)

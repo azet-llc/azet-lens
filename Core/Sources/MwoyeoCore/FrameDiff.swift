@@ -50,6 +50,58 @@ public struct ChangeMap: Sendable, Equatable {
     }
 }
 
+/// Tiles that keep changing: an animated emoji, a spinner, a typing indicator, a blinking caret. An edit changes its
+/// tiles once and then holds still; these change again and again, and re-reading them each time only burns OCR (and an
+/// emoji can read as a different letter every time, which retranslates its line).
+public struct Churn: Sendable {
+    /// A tile is animated once it changed `hotStreak` times with less than `window` seconds between changes, and stays
+    /// so until it has been still for `window`. Three seconds also catches what ticks every second or two (a menu bar
+    /// meter caught in the capture's margin).
+    public var window: Double = 3
+    public var hotStreak = 3
+    private var streak: [Int] = []
+    private var last: [Double] = []
+
+    public init() {}
+
+    public mutating func reset() { streak = []; last = [] }
+
+    public mutating func add(_ change: ChangeMap, at t: Double) {
+        if streak.count != change.changed.count {
+            streak = Array(repeating: 0, count: change.changed.count)
+            last = Array(repeating: -.infinity, count: change.changed.count)
+        }
+        for i in change.changed.indices where change.changed[i] {
+            streak[i] = t - last[i] < window ? streak[i] + 1 : 1
+            last[i] = t
+        }
+    }
+
+    func isHot(_ i: Int, at t: Double) -> Bool { streak[i] >= hotStreak && t - last[i] < window }
+
+    /// `change` without the animated tiles and the tiles around them: an emoji's edge reaches into its neighbours
+    /// only now and then, too seldom to count as animated by itself.
+    public func masking(_ change: ChangeMap, at t: Double) -> ChangeMap {
+        guard streak.count == change.changed.count else { return change }
+        let hot = streak.indices.filter { isHot($0, at: t) }
+        guard !hot.isEmpty else { return change }
+        var changed = change.changed
+        for i in hot {
+            let r = i / change.columns, c = i % change.columns
+            for y in max(0, r - 1)...min(change.rows - 1, r + 1) {
+                for x in max(0, c - 1)...min(change.columns - 1, c + 1) { changed[y * change.columns + x] = false }
+            }
+        }
+        return ChangeMap(tile: change.tile, columns: change.columns, rows: change.rows, changed: changed,
+                         imageWidth: change.imageWidth, imageHeight: change.imageHeight)
+    }
+
+    /// Seconds until the first animated tile counts as still again; nil when none is animated.
+    public func coolsIn(at t: Double) -> Double? {
+        streak.indices.filter { isHot($0, at: t) }.map { last[$0] + window - t }.min()
+    }
+}
+
 public enum FrameDiff {
     /// A tile counts as changed when at least `minPixels` of its pixels moved by more than `delta` luma levels.
     /// Counting strong pixel changes (instead of averaging) keeps a single edited glyph from being diluted
@@ -182,7 +234,8 @@ public enum FrameDiff {
                 open = true
             }
         }
-        return regions
+        // A region a tile or two tall is something moving in place (an animated emoji wobbling by a pixel), not a scroll.
+        return regions.filter { $0.rect.height >= 3 * change.tile }
     }
 }
 

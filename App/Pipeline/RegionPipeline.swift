@@ -112,6 +112,9 @@ actor RegionPipeline {
     private var baseGray: GrayImage?
     /// Gray-pixel areas the blocks know nothing about (uncovered by a shift or a larger capture).
     private var forcedDirty: [PixelRect] = []
+    /// Tiles that keep changing (animated emoji, typing indicators): their changes are left out until they go still.
+    /// ponytail: forgotten on every move, so it re-learns for a second after a scroll; shift it with the move if that shows.
+    private var churn = Churn()
     private var lastChange: TimeInterval = 0
     /// The lens moving inside the capture changes no pixels, but the settled re-read still waits for it to stop.
     private var lensMoved: TimeInterval = 0
@@ -187,6 +190,7 @@ actor RegionPipeline {
         baseGray = nil
         prevGray = nil
         forcedDirty = []
+        churn.reset()
         seamlessDone = false
         pending = []
         emit(animated: false)
@@ -224,18 +228,26 @@ actor RegionPipeline {
         if let full = prevGray, full.width == frame.gray.width, full.height == frame.gray.height {
             let prev = prevValid.map { full.cropped(to: $0) } ?? full
             let gray = prevValid.map { frame.gray.cropped(to: $0) } ?? frame.gray
-            let change = FrameDiff.changeMap(from: prev, to: gray)
-            if !change.isUnchanged {
-                lastChange = frame.time
-                seamlessDone = false
-                let scrolled = blocks.isEmpty ? [] : FrameDiff.scrollRegions(from: prev, to: gray, change: change, maxShift: gray.height / 3)
-                Trace.mark("\(Int(captureSize.width))×\(Int(captureSize.height)): changed \(Int(change.ratio * 100)) %, scrolled "
-                           + scrolled.map { "\($0.dy) in \($0.rect.width)×\($0.rect.height)" }.joined(separator: ", "), since: frame.time)
+            let raw = FrameDiff.changeMap(from: prev, to: gray)
+            if !raw.isUnchanged {
+                let scrolled = blocks.isEmpty ? [] : FrameDiff.scrollRegions(from: prev, to: gray, change: raw, maxShift: gray.height / 3)
                 if !scrolled.isEmpty { followScroll(scrolled, offset: prevValid, frame: frame, since: previous) }
+                // Small changes that keep coming back are animation; big ones are motion (a scroll it could not follow).
+                else if prevValid == nil, raw.ratio <= 0.2 { churn.add(raw, at: frame.time) }
+                let change = churn.masking(raw, at: frame.time)
+                Trace.mark("\(Int(captureSize.width))×\(Int(captureSize.height)): changed \(Int(raw.ratio * 100)) %"
+                           + (change.changedCount < raw.changedCount ? " (\(raw.changedCount - change.changedCount) tiles animated)" : "")
+                           + (change.dirtyRect.map { " dirty \($0.x),\($0.y) \($0.width)×\($0.height)" } ?? "")
+                           + ", scrolled " + scrolled.map { "\($0.dy) in \($0.rect.width)×\($0.rect.height)" }.joined(separator: ", "),
+                           since: frame.time)
+                if !change.isUnchanged {
+                    lastChange = frame.time
+                    seamlessDone = false
+                }
                 if let d = change.dirtyRect(outside: scrolled.map(\.rect)) {
                     unexplained.append(PixelRect(x: d.x + (prevValid?.x ?? 0), y: d.y + (prevValid?.y ?? 0), width: d.width, height: d.height))
                 }
-                if change.ratio > 0.2 || !scrolled.isEmpty { noteMotion(frame.time) }
+                if raw.ratio > 0.2 || !scrolled.isEmpty { noteMotion(frame.time) }
             }
         } else {
             lastChange = frame.time
@@ -263,6 +275,9 @@ actor RegionPipeline {
     private func run() async {
         while let frame = latest {
             let now = ProcessInfo.processInfo.systemUptime
+            let stale = staleness(for: frame)
+            // Seamless mode re-reads on change only, and a tile that stopped animating changed while it was left out.
+            if options.renderMode == .seamless, seamlessDone, stale.change?.isUnchanged == false { seamlessDone = false }
             let settled = now - max(lastChange, lensMoved) >= options.settleDelay
             let wantsSeamless = options.renderMode != .fast && !seamlessDone && (settled || options.renderMode == .seamless)
             if wantsSeamless {
@@ -270,7 +285,6 @@ actor RegionPipeline {
                 if await seamlessPass(frame) { seamlessDone = lastChange <= frame.time }
                 continue
             }
-            let stale = staleness(for: frame)
             if options.renderMode != .seamless, let dirty = dirtyRect(for: frame, stale) {
                 await fastPass(frame, dirty: dirty, stale: stale)
                 continue
@@ -279,8 +293,14 @@ actor RegionPipeline {
         }
         working = false
         setActivity(translating && lensPending ? .translating : .idle)
+        let now = ProcessInfo.processInfo.systemUptime
+        var wait: TimeInterval?
         if options.renderMode == .adaptive, !seamlessDone, latest != nil {
-            let wait = max(0.05, options.settleDelay - (ProcessInfo.processInfo.systemUptime - max(lastChange, lensMoved)))
+            wait = max(0.05, options.settleDelay - (now - max(lastChange, lensMoved)))
+        }
+        // An animation that stops sends no more frames: look again once its tiles count as still.
+        if latest != nil, let c = churn.coolsIn(at: now) { wait = min(wait ?? .infinity, c + 0.05) }
+        if let wait {
             settleTask?.cancel()
             settleTask = Task { [weak self] in
                 try? await Task.sleep(for: .seconds(wait))
@@ -306,7 +326,8 @@ actor RegionPipeline {
         guard let base = baseGray, base.width == frame.gray.width, base.height == frame.gray.height else {
             return Staleness(change: nil, forced: [])
         }
-        return Staleness(change: FrameDiff.changeMap(from: base, to: frame.gray), forced: forcedDirty)
+        return Staleness(change: churn.masking(FrameDiff.changeMap(from: base, to: frame.gray), at: ProcessInfo.processInfo.systemUptime),
+                         forced: forcedDirty)
     }
 
     /// Image-pixel rect needing a re-read, or nil when the blocks still describe the frame.
@@ -441,6 +462,7 @@ actor RegionPipeline {
         origin = rect.origin
         captureSize = rect.size
         geometryEpoch += 1
+        churn.reset()
         lastChange = ProcessInfo.processInfo.systemUptime
         seamlessDone = false
         latest = nil
@@ -475,6 +497,7 @@ actor RegionPipeline {
 
     private func apply(_ m: Move) {
         moves.append(m)
+        churn.reset()
         unexplained = unexplained.map { m.apply(to: $0) }
         let bounds = CGRect(x: 0, y: 0, width: captureSize.width * scale, height: captureSize.height * scale)
         blocks = blocks.compactMap { m.apply(to: $0, bounds: bounds) }
