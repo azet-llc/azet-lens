@@ -1,59 +1,73 @@
-# Hero clip
+# Hero clips
 
-One short loop for the README and social posts. Everything in it is the real app on a real screen; the lens moves
-and the page scrolls by script, so a take can be repeated exactly.
+One short loop per README language. Everything in them is the real app on a real screen; the page scrolls by
+synthesized trackpad events, so a take can be repeated exactly.
+
+| README | Chat (`demo/chat.html?lang=`) | Translated into | GIF |
+|---|---|---|---|
+| Korean | `ja` | Korean | `docs/media/hero.ko.gif` |
+| English | `ko` | English | `docs/media/hero.en.gif` |
+| Japanese | `ko` | Japanese | `docs/media/hero.ja.gif` |
+| Simplified Chinese | `ko` | Simplified Chinese | `docs/media/hero.zh-CN.gif` |
 
 ## Shot list
 
-1:1 (1000×1000 pt content, exported at 1080×1080), Japanese chat → Korean, about 23 s after cutting:
+680×720 pt around the lens (exported 600 px wide), about 17 s:
 
-| Clip | What happens | What it shows |
+| Time | What happens | Caption |
 |---|---|---|
-| 1 | A Discord-style chat in Japanese (`demo/chat.html?lang=ja&every=4`); a new message arrives under the lens and turns Korean in place. | Reading a live chat in another language |
-| 2 | The cursor takes the lens by its name pill and drags it up over older messages, then back. | A lens you can drag; reading ahead |
-| 3 | The resize corner: smaller, then back. | |
-| 4 | Trackpad scroll up through the history, then down. | Translations ride the scroll |
-| 5 | ⌃⌥O: the original, then the translation. | Before / after in one beat |
-| End | `docs/media/endcard.html` rendered at 1080×1080, cross-faded in. | |
+| 0–4 s | A lens over the chat log; the visible messages are already translated. | Text under the lens, rewritten in place |
+| 4.5 s, 8.5 s | Two trackpad swipes up through the history. Older messages scroll into view and are translated as they appear. | Scroll, and new lines are translated as they appear |
+| 13.5 s | ⌃⌥O: the original, then the translation. | ⌃⌥O shows the original |
 
 ## Setting up
 
 ```bash
 # The chat: content area 1000×1000 at (140, 96) — the --app title bar sits above it; no translate bubble
 open -na "Google Chrome" --args --user-data-dir=/tmp/mwoyeo-demo --no-first-run \
-  --app="file://$PWD/demo/chat.html?lang=ja&every=4&history=14" \
+  --disable-features=Translate,TranslateUI \
+  --app="file://$PWD/demo/chat.html?lang=ko&every=5&history=16" \
   --window-position=140,68 --window-size=1000,1028
 
-# The source language must match the page (Settings › Translate from: Japanese).
-# A lens over the newest messages (global points, top-left origin). Launch the binary from a terminal that has
+# Settings › Translate from must match the page, Translate to the README's language.
+# A lens over the message log (global points, top-left origin). Launch the binary from a terminal that has
 # Screen Recording permission, so a rebuilt ad-hoc app needs no new grant.
-build/dd/Build/Products/Release/Mwoyeo.app/Contents/MacOS/Mwoyeo --add-region 470,596,620,420 &
+build/dd/Build/Products/Release/Mwoyeo.app/Contents/MacOS/Mwoyeo --add-region 480,206,620,640 &
 ```
 
-`--add-region` stores the lens like any other; remove it from the menu afterwards. Drag, resize and scroll with the
-real mouse and trackpad: the lens's name pill moves it, its bottom-right corner resizes it.
+`--add-region` stores the lens like any other; remove it from the menu afterwards.
 
 ## Before recording
 
-1. **Warm up.** Wait about 20 s after launch: the first recognition loads models and translations are cached.
-2. **Scroll once over the chat.** The first gesture over a window teaches the lens which area scrolls; until then a
-   scroll is followed frame by frame instead of predicted.
-3. **Language pack.** Japanese → Korean installed (System Settings › General › Language & Region › Translation
-   Languages) for sub-second translation.
-4. **Clean screen.** Nothing but the demo window in the recorded rect; park the cursor outside it between moves.
+1. **Warm up.** Wait about 18 s after launch: the first recognition loads models. Don't scroll yet; the history
+   should be read for the first time on camera.
+2. **Language pack** for the pair installed (System Settings › General › Language & Region › Translation Languages).
+3. **Clean screen.** Nothing over the recorded rect (no dialogs or notifications); park the cursor outside it
+   between moves.
 
 ## Recording and cutting
 
 Screen recording captures Mwoyeo's overlays (only Mwoyeo's own capture leaves them out):
 
 ```bash
-screencapture -v -V 30 -R 140,96,1000,1000 take.mov
-# keep the five clips, drop the waits between them
-ffmpeg -i take.mov -filter_complex "[0:v]trim=1:5.6,setpts=PTS-STARTPTS[a];[0:v]trim=6.2:11.8,setpts=PTS-STARTPTS[b];\
-[0:v]trim=12.6:16.4,setpts=PTS-STARTPTS[c];[0:v]trim=18.2:24.6,setpts=PTS-STARTPTS[d];[0:v]trim=25.7:28.2,setpts=PTS-STARTPTS[e];\
-[a][b][c][d][e]concat=n=5,scale=1080:1080:flags=lanczos,fps=30,format=yuv420p" -c:v libx264 -crf 16 cut.mp4
-ffmpeg -i cut.mp4 -vf "fps=12,scale=640:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=128[p];[b][p]paletteuse" \
-  docs/media/hero.gif
+screencapture -v -V 20 -R 450,166,680,720 take.mov
+# t = 6.5 s and 10.5 s: swipe up 330 pt over 1.1 s at the lens centre; t = 15.5 s and 17.3 s: ⌃⌥O
 ```
 
-Keep the GIF under 10 MB; the 1080×1080 video with the end card goes on the release page.
+Captions are HTML pills (system font per language, 52 px on the 1360 px wide take) rendered to transparent PNGs
+with headless Chrome, then laid over the bottom of the take:
+
+```bash
+ffmpeg -ss 2 -t 17.2 -i take.mov \
+  -loop 1 -framerate 30 -t 17.2 -i cap0.png -loop 1 -framerate 30 -t 17.2 -i cap1.png -loop 1 -framerate 30 -t 17.2 -i cap2.png \
+  -filter_complex "[0:v]fps=30,setpts=PTS-STARTPTS[v];\
+[1]format=rgba,fade=in:st=0.3:d=0.3:alpha=1,fade=out:st=4.0:d=0.3:alpha=1[c0];\
+[2]format=rgba,fade=in:st=4.4:d=0.3:alpha=1,fade=out:st=12.9:d=0.3:alpha=1[c1];\
+[3]format=rgba,fade=in:st=13.3:d=0.3:alpha=1[c2];\
+[v][c0]overlay=0:H-h-60:enable='between(t,0.3,4.3)'[a];[a][c1]overlay=0:H-h-60:enable='between(t,4.4,13.2)'[b];\
+[b][c2]overlay=0:H-h-60:enable='gte(t,13.3)',format=yuv420p" -c:v libx264 -crf 16 cut.mp4
+ffmpeg -i cut.mp4 -vf "fps=12,scale=600:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=128[p];[b][p]paletteuse=dither=sierra2_4a" \
+  docs/media/hero.ko.gif
+```
+
+Keep each GIF under 10 MB.

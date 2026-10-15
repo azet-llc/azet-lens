@@ -12,7 +12,7 @@ Put a lens over a chat, a feed or a game. The original text disappears and the t
   <sub>macOS 27 · Apple silicon · everything on-device · <a href="https://github.com/midagedev/mwoyeo/releases/latest">v1.0.2</a></sub>
 </p>
 
-<p align="center"><img src="docs/media/hero.gif" width="640" alt="A lens over a Japanese chat: new messages are rewritten in Korean in place; the lens is dragged and resized, the chat scrolls under it, and ⌃⌥O flips back to the original."></p>
+<p align="center"><img src="docs/media/hero.en.gif" width="600" alt="A lens over a Korean chat: the text is rewritten in English in place; scrolling up, older messages are translated as they come into view; ⌃⌥O shows the original and back."></p>
 
 Mwoyeo reads the text under a lens, **erases it from the picture**, and paints the translation back in the same
 place, size and colour. It is not a popup or a subtitle bar: the screen simply reads in your language, and keeps
@@ -161,7 +161,7 @@ a fixed sidebar or message box never drags the chat along with it. Only the stri
 Erasing fills flat and gradient backgrounds from their surroundings; on textured ones (artwork, game scenes) an
 on-device inpainting model rebuilds the background, and the translation is set in a matching weight and size.
 
-The clip above is the real app on a made-up chat page (`demo/chat.html?lang=ja`), recorded with a real mouse and
+The clip above is the real app on a made-up chat page (`demo/chat.html?lang=ko`), recorded with a real mouse and
 trackpad scrolls; `docs/HERO.md` has the shot list.
 
 The name is Korean: *mwoyeo* (뭐여) is a dialect way of saying "what's that?"
