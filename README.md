@@ -35,12 +35,24 @@ notes and issue tracker.
 | | |
 |---|---|
 | **macOS** | 27.0 or later |
-| **Mac** | Apple silicon (M1 or later). There is no Intel build; macOS 27 itself runs only on Apple silicon. |
+| **Mac** | Any Mac that runs macOS 27: Apple silicon, M1 or later, or MacBook Neo. There is no Intel build. |
 | **Permission** | Screen Recording, nothing else: no Accessibility, no keyboard monitoring |
-| **Language packs** | Optional, recommended. Downloaded by macOS from Mwoyeo's Settings › Translation (or System Settings › General › Language & Region › Translation Languages); with one, translation is near-instant and works offline. |
-| **Apple Intelligence** | Optional. Turned on in System Settings › Apple Intelligence & Siri, it translates pairs you have no pack for and powers the *High fidelity* and *Glossary first* engines. Its availability depends on your Mac's language and region. Without it, Mwoyeo uses language packs only. |
 | **Network** | None for translating. The only request is the daily update check, which you can turn off. |
-| **Disk** | About 20 MB for the app. Language packs and Apple Intelligence models are managed and stored by macOS. |
+| **Disk** | About 20 MB for the app. Language packs (and Apple Intelligence's model, up to 8–14 GB) are downloaded and stored by macOS. |
+
+**What runs on device, and what it needs.** Everything runs on your Mac; the only question is which engine is there.
+
+| Part | Needs |
+|---|---|
+| Reading the text (Vision), erasing it (Core ML) | Nothing more: every Mac that runs macOS 27 |
+| Translating with a **language pack** (fastest, offline) | The pack for your language pair, downloaded once from Mwoyeo's Settings › Translation or System Settings › General › Language & Region › Translation Languages |
+| Translating **without a pack**, the *High fidelity* engine and *Glossary first* | **Apple Intelligence** turned on in System Settings › Apple Intelligence & Siri |
+
+Apple Intelligence runs on every Mac that runs macOS 27, but it has two more conditions: your Mac's language and Siri's
+language must be the same supported language, and it is not available in mainland China. It supports English,
+Korean, Japanese, Chinese, French, German, Spanish, Italian, Portuguese and Vietnamese among Mwoyeo's languages, but
+not Russian, Ukrainian or Thai: those translate with language packs only. Without Apple Intelligence, Mwoyeo uses
+language packs for everything.
 | **Displays** | Any number; a lens can go on any display |
 
 **Languages.** Translate from and into English, Korean, Japanese, Chinese (Simplified and Traditional), French,
