@@ -9,7 +9,7 @@ import UniformTypeIdentifiers
 /// Prints what was read and translated, and writes the composited result. Exits when done.
 ///
 /// Simulated lens drag over a still "screen" (points; writes the lens view per step as outdir/frame_NNN.png):
-///   Mwoyea --render screen.png outdir --pan --lens x,y,w,h --to x,y [--steps 40] [--step-ms 100] [--hold-ms 3000]
+///   Mwoyeo --render screen.png outdir --pan --lens x,y,w,h --to x,y [--steps 40] [--step-ms 100] [--hold-ms 3000]
 /// With `--scroll`, the lens stays and the content scrolls by `--to` instead (screen.png is the whole page); `--scroll-rect x,y,w,h`
 /// scrolls only that part (a message log between a fixed sidebar, header and footer), `--ease` decelerates like inertial scrolling.
 /// `--wheel N` also sends N trackpad scroll events per captured frame and shows the translations where the scroll

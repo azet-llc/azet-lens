@@ -47,7 +47,7 @@ final class RegionSession {
     private var scrollArea: CGRect?
     private var scrollWindow: CGWindowID?
     private var lastWheel: TimeInterval = 0
-    private let log = Logger(subsystem: "dev.midagedev.mwoyea", category: "session")
+    private let log = Logger(subsystem: "dev.midagedev.mwoyeo", category: "session")
 
     init(config: RegionConfig, settings: AppSettings, translator: TranslationService, inpainter: Inpainter?) {
         self.config = config
