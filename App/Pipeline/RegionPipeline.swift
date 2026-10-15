@@ -372,13 +372,18 @@ actor RegionPipeline {
         /// Rows of `grayArea` that scrolled into view.
         var strip: PixelRect?
 
+        /// Where a block belongs to a scrolled area: near the start of its text. A scroll is often found in only part of
+        /// a column's width (the side with avatars and line starts; line ends are too sparse to match), and a long
+        /// line's middle can lie outside it; one point also keeps a block from moving with two areas.
+        static func anchor(_ r: CGRect) -> CGPoint { CGPoint(x: r.minX + min(r.width, r.height) / 2, y: r.midY) }
+
         /// The block moved along, or nil when it left the frame or scrolled out of its area (under a fixed header).
         func apply(to b: Block, bounds: CGRect) -> Block? {
-            if let area, !area.contains(CGPoint(x: b.rect.midX, y: b.rect.midY)) { return b }
+            if let area, !area.contains(Self.anchor(b.rect)) { return b }
             var b = b
             b.rect = b.rect.offsetBy(dx: dx, dy: dy)
             b.lines = b.lines.map { $0.offsetBy(dx: dx, dy: dy) }
-            if let area { return area.contains(CGPoint(x: b.rect.midX, y: b.rect.midY)) ? b : nil }
+            if let area { return area.contains(Self.anchor(b.rect)) ? b : nil }
             // Blocks cut by the edge stay (the overlay clips them, like a lens); gone ones are dropped.
             return b.rect.intersects(bounds) ? b : nil
         }
@@ -391,7 +396,7 @@ actor RegionPipeline {
 
         /// Where a rect now in the newer frame was before the move.
         func undo(_ r: CGRect) -> CGRect {
-            if let area, !area.contains(CGPoint(x: r.midX, y: r.midY)) { return r }
+            if let area, !area.contains(Self.anchor(r)) { return r }
             return r.offsetBy(dx: -dx, dy: -dy)
         }
     }
