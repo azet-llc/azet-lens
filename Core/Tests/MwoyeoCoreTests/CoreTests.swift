@@ -322,6 +322,9 @@ func texture(width: Int, height: Int, seed: Int = 1) -> GrayImage {
         #expect(c.count == 1)
         c["d"] = 4; c["e"] = 5
         #expect(c["c"] == nil && c["d"] == 4 && c["e"] == 5)
+        _ = c["d"]
+        c.capacity = 1      // keeps the most recent
+        #expect(c.count == 1 && c["d"] == 4 && c["e"] == nil)
     }
 
     @Test func fitFontSizeBinarySearch() {

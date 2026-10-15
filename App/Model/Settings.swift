@@ -96,6 +96,8 @@ struct AppSettings: Codable, Equatable {
     /// Opacity of the box behind text in fast mode.
     var boxOpacity = 0.94
     var lensStyle = LensStyle.glow
+    /// Translations kept in memory for reuse.
+    var cacheSize = 5000
     var hasCompletedOnboarding = false
 
     var glossaryPairs: [(String, String)] {
@@ -122,6 +124,7 @@ struct AppSettings: Codable, Equatable {
         fontStyle = (try? c.decodeIfPresent(FontStyleChoice.self, forKey: .fontStyle)) ?? d.fontStyle
         boxOpacity = try c.decodeIfPresent(Double.self, forKey: .boxOpacity) ?? d.boxOpacity
         lensStyle = (try? c.decodeIfPresent(LensStyle.self, forKey: .lensStyle)) ?? d.lensStyle
+        cacheSize = max(100, try c.decodeIfPresent(Int.self, forKey: .cacheSize) ?? d.cacheSize)
         hasCompletedOnboarding = try c.decodeIfPresent(Bool.self, forKey: .hasCompletedOnboarding) ?? d.hasCompletedOnboarding
     }
 }

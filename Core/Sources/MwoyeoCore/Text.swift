@@ -67,7 +67,7 @@ public enum BlockMatcher {
     }
 }
 
-/// Fixed-capacity least-recently-used cache. Not thread-safe; own it from one actor.
+/// Least-recently-used cache. Not thread-safe; own it from one actor.
 public final class LRUCache<Key: Hashable, Value> {
     private final class Node {
         let key: Key
@@ -77,7 +77,13 @@ public final class LRUCache<Key: Hashable, Value> {
         init(key: Key, value: Value) { self.key = key; self.value = value }
     }
 
-    public let capacity: Int
+    /// Lowering it drops the least recently used entries.
+    public var capacity: Int {
+        didSet {
+            precondition(capacity > 0)
+            while map.count > capacity, let lru = tail { unlink(lru); map[lru.key] = nil }
+        }
+    }
     private var map: [Key: Node] = [:]
     private var head: Node? // most recent
     private var tail: Node? // least recent

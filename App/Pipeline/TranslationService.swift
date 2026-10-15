@@ -41,12 +41,14 @@ actor TranslationService {
     init(settings: AppSettings) {
         self.settings = settings
         cache.use(Self.namespace(settings))
+        cache.capacity = settings.cacheSize
     }
 
     func update(settings new: AppSettings) {
         let changed = new.sourceLanguage != settings.sourceLanguage || new.targetLanguage != settings.targetLanguage
             || new.glossary != settings.glossary || new.engine != settings.engine
         settings = new
+        cache.capacity = new.cacheSize
         if changed {
             // Translations for the previous settings stay cached: switching back costs nothing.
             cache.use(Self.namespace(new))
@@ -77,6 +79,10 @@ actor TranslationService {
     /// Cached translation, without doing any work.
     /// Never waits, even while a translation is in progress.
     nonisolated func cached(_ text: String) -> String? { cache[text] }
+
+    /// Translations held, over every language pair and engine.
+    nonisolated var cachedCount: Int { cache.count }
+    nonisolated func clearCache() { cache.removeAll() }
 
     /// Translates `texts` (in the given order — callers pass reading order so results fill the screen top to
     /// bottom), returning source → translation for those that succeeded. `onResult` fires as each one lands.
@@ -238,6 +244,12 @@ private final class Memory: @unchecked Sendable {
     private var space = ""
     var namespace: String { lock.withLock { space } }
     func use(_ namespace: String) { lock.withLock { space = namespace } }
+    var capacity: Int {
+        get { lock.withLock { lru.capacity } }
+        set { lock.withLock { lru.capacity = max(1, newValue) } }
+    }
+    var count: Int { lock.withLock { lru.count } }
+    func removeAll() { lock.withLock { lru.removeAll() } }
     /// For the current settings.
     subscript(text: String) -> String? { lock.withLock { lru[Self.key(text, space)] } }
     func store(_ translation: String, for text: String, in namespace: String) {

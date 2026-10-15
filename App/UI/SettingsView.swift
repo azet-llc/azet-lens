@@ -75,6 +75,7 @@ private struct GeneralSettings: View {
 
 private struct TranslationSettings: View {
     @Environment(AppModel.self) private var model
+    @State private var cached = 0
     private let intelligence = IntelligenceTranslator()
 
     var body: some View {
@@ -108,6 +109,29 @@ private struct TranslationSettings: View {
             } footer: {
                 Text("Language packs are stored on this Mac and translate quickly, even offline.").font(.caption).foregroundStyle(.secondary)
             }
+            Section {
+                Picker("Keep up to", selection: $model.settings.cacheSize) {
+                    ForEach([1000, 5000, 20000], id: \.self) { n in
+                        Text("\(n.formatted()) translations").tag(n)
+                    }
+                }
+                LabeledContent("Held now") {
+                    HStack {
+                        Text(cached.formatted()).monospacedDigit()
+                        Button("Clear") {
+                            model.translator.clearCache()
+                            cached = model.translator.cachedCount
+                        }
+                        .disabled(cached == 0)
+                    }
+                }
+            } header: {
+                Text("Translation memory")
+            } footer: {
+                Text("Text seen again is shown from memory instead of being translated again. It is kept only while Mwoyeo runs and is never written to disk.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+            .onAppear { cached = model.translator.cachedCount }
             Section {
                 TextEditor(text: $model.settings.glossary)
                     .font(.body.monospaced())
