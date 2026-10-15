@@ -16,7 +16,9 @@ Put a lens over a chat, a feed or a game. The original text disappears and the t
   <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/github/license/midagedev/mwoyeo?style=flat-square&color=8e8e93"></a>
 </p>
 
-<p align="center"><code>brew install midagedev/tap/mwoyeo</code></p>
+```sh
+brew install midagedev/tap/mwoyeo
+```
 
 <p align="center"><img src="docs/media/hero.en.gif" width="600" alt="A small lens over a Korean chat: only the text under it turns English, in place. Dragged around, it translates whatever it passes over; the chat scrolls and the translation keeps up; ⌃⌥O greys the ring and shows the original."></p>
 

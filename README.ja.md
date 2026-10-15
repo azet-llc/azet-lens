@@ -16,7 +16,9 @@
   <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/github/license/midagedev/mwoyeo?style=flat-square&color=8e8e93"></a>
 </p>
 
-<p align="center"><code>brew install midagedev/tap/mwoyeo</code></p>
+```sh
+brew install midagedev/tap/mwoyeo
+```
 
 <p align="center"><img src="docs/media/hero.ja.gif" width="600" alt="韓国語のチャットに小さなレンズを重ねると、その下の文字だけがその場で日本語になります。レンズを動かすと通った場所がすぐ翻訳され、スクロールしても翻訳がついてきます。最後に⌃⌥Oでリングがグレーになり、原文が表示されます。"></p>
 

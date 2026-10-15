@@ -16,7 +16,9 @@
   <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/github/license/midagedev/mwoyeo?style=flat-square&color=8e8e93"></a>
 </p>
 
-<p align="center"><code>brew install midagedev/tap/mwoyeo</code></p>
+```sh
+brew install midagedev/tap/mwoyeo
+```
 
 <p align="center"><img src="docs/media/hero.zh-CN.gif" width="600" alt="一个小透镜罩在韩语聊天上，只有透镜下的文字原地变成中文。拖动透镜，经过的地方马上翻译；滚动聊天，翻译也紧跟着。最后按 ⌃⌥O，圆环变灰，显示原文。"></p>
 
