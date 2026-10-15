@@ -18,7 +18,7 @@
 
 <p align="center"><code>brew install midagedev/tap/mwoyeo</code></p>
 
-<p align="center"><img src="docs/media/hero.zh-CN.gif" width="600" alt="透镜罩在一段韩语聊天上：文字原地变成中文，向上滚动时新出现的消息也马上翻译；最后按 ⌃⌥O 查看原文再切回。"></p>
+<p align="center"><img src="docs/media/hero.zh-CN.gif" width="600" alt="一个小透镜罩在韩语聊天上，只有透镜下的文字原地变成中文。拖动透镜，经过的地方马上翻译；滚动聊天，翻译也紧跟着。最后按 ⌃⌥O，圆环变灰，显示原文。"></p>
 
 Mwoyeo 会识别透镜下的文字，**把原文从画面上抹掉**，再按原来的位置、大小和颜色写上译文。没有弹窗，也没有字幕条，屏幕上直接就是中文（或你设定的其他语言）；新消息进来、页面滚动，翻译也一直跟着走。所有处理都在 Mac 本地完成，屏幕上的内容不会发往任何地方。
 

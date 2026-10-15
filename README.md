@@ -18,7 +18,7 @@
 
 <p align="center"><code>brew install midagedev/tap/mwoyeo</code></p>
 
-<p align="center"><img src="docs/media/hero.ko.gif" width="600" alt="일본어 채팅 위에 올린 렌즈. 글자가 그 자리에서 한국어로 바뀌어요. 위로 스크롤하면 새로 보이는 메시지도 곧바로 번역돼요. 마지막에 ⌃⌥O로 원문을 띄웠다가 돌아와요."></p>
+<p align="center"><img src="docs/media/hero.ko.gif" width="600" alt="일본어 채팅 한가운데 작은 렌즈. 렌즈 아래 글자만 그 자리에서 한국어로 바뀌어요. 렌즈를 끌고 다니면 지나가는 곳마다 바로 번역되고 스크롤해도 번역이 따라와요. 마지막에 ⌃⌥O를 누르면 링이 회색으로 바뀌며 원문이 보여요."></p>
 
 번역 팝업도, 화면 아래 자막 줄도 없어요. Mwoyeo는 렌즈 아래 글자를 읽어서 **화면에서 지우고** 같은 자리에 같은
 크기와 색으로 번역을 다시 써요. 그래서 원래 한국어로 된 화면을 보는 것처럼 읽히고 새 메시지가 올라오거나

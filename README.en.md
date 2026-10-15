@@ -18,7 +18,7 @@ Put a lens over a chat, a feed or a game. The original text disappears and the t
 
 <p align="center"><code>brew install midagedev/tap/mwoyeo</code></p>
 
-<p align="center"><img src="docs/media/hero.en.gif" width="600" alt="A lens over a Korean chat: the text is rewritten in English in place; scrolling up, older messages are translated as they come into view; ⌃⌥O shows the original and back."></p>
+<p align="center"><img src="docs/media/hero.en.gif" width="600" alt="A small lens over a Korean chat: only the text under it turns English, in place. Dragged around, it translates whatever it passes over; the chat scrolls and the translation keeps up; ⌃⌥O greys the ring and shows the original."></p>
 
 Mwoyeo reads the text under a lens, **erases it from the picture**, and paints the translation back in the same
 place, size and colour. It is not a popup or a subtitle bar: the screen simply reads in your language, and keeps
