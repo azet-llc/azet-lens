@@ -94,6 +94,8 @@ actor RegionPipeline {
     private var options: PipelineOptions
     private var latest: CapturedFrame?
     private var prevGray: GrayImage?
+    /// Part of `prevGray` that holds real pixels (after the capture grew); nil = all of it.
+    private var prevValid: PixelRect?
     /// Gray of the frame the current blocks describe (shifted along with scrolls).
     private var baseGray: GrayImage?
     /// Gray-pixel areas the blocks know nothing about (uncovered by a shift or a larger capture).
@@ -184,14 +186,16 @@ actor RegionPipeline {
         }
         scale = frame.scale
         lastStep = frame.grayStep
-        if let prev = prevGray, prev.width == frame.gray.width, prev.height == frame.gray.height {
-            let change = FrameDiff.changeMap(from: prev, to: frame.gray)
+        if let full = prevGray, full.width == frame.gray.width, full.height == frame.gray.height {
+            let prev = prevValid.map { full.cropped(to: $0) } ?? full
+            let gray = prevValid.map { frame.gray.cropped(to: $0) } ?? frame.gray
+            let change = FrameDiff.changeMap(from: prev, to: gray)
             if !change.isUnchanged {
                 lastChange = frame.time
                 seamlessDone = false
                 if change.ratio > 0.2 {
                     noteMotion(frame.time)
-                    if !blocks.isEmpty, let dy = FrameDiff.verticalShift(from: prev, to: frame.gray, maxShift: frame.gray.height / 3) {
+                    if !blocks.isEmpty, let dy = FrameDiff.verticalShift(from: prev, to: gray, maxShift: gray.height / 3) {
                         followScroll(dyGray: dy, frame: frame)
                     }
                 }
@@ -200,6 +204,7 @@ actor RegionPipeline {
             lastChange = frame.time
         }
         prevGray = frame.gray
+        prevValid = nil
         latest = frame
         kick()
     }
@@ -254,7 +259,9 @@ actor RegionPipeline {
         var forced: [PixelRect]
         func touches(_ r: CGRect, step: Int) -> Bool {
             let g = PixelRect(r.insetBy(dx: -1, dy: -1).applying(CGAffineTransform(scaleX: 1 / CGFloat(step), y: 1 / CGFloat(step))))
-            return change.map { $0.intersects(g) } ?? true || forced.contains { $0.cgRect.intersects(g.cgRect) }
+            // A block cut off at the old capture edge ends right where the uncovered strip begins: touching counts.
+            let near = g.cgRect.insetBy(dx: -2, dy: -2)
+            return change.map { $0.intersects(g) } ?? true || forced.contains { $0.cgRect.intersects(near) }
         }
     }
 
@@ -312,7 +319,12 @@ actor RegionPipeline {
         let gx = grayShiftX.add(px / step), gy = grayShiftY.add(py / step)
         lastChange = ProcessInfo.processInfo.systemUptime
         seamlessDone = false
-        if gx != 0 || gy != 0 { prevGray = prevGray?.shifted(dx: gx, dy: gy) }
+        if (gx != 0 || gy != 0), let prev = prevGray {
+            prevGray = prev.shifted(dx: gx, dy: gy)
+            let valid = prevValid ?? PixelRect(x: 0, y: 0, width: prev.width, height: prev.height)
+            prevValid = PixelRect(x: valid.x + gx, y: valid.y + gy, width: valid.width, height: valid.height)
+                .clamped(width: prev.width, height: prev.height)
+        }
         shiftContent(dx: px, dy: py, dxGray: gx, dyGray: gy, imageSize: CGSize(width: captureSize.width * scale, height: captureSize.height * scale))
         kick()
     }
@@ -328,7 +340,6 @@ actor RegionPipeline {
         geometryEpoch += 1
         lastChange = ProcessInfo.processInfo.systemUptime
         seamlessDone = false
-        prevGray = nil
         latest = nil
         grayShiftX.reset(); grayShiftY.reset()
         let bounds = CGRect(origin: .zero, size: size)
@@ -343,6 +354,13 @@ actor RegionPipeline {
             let gx = Int((px / step).rounded()), gy = Int((py / step).rounded())
             let gw = Int(size.width) / Int(step), gh = Int(size.height) / Int(step)
             baseGray = base.reframed(dx: gx, dy: gy, width: gw, height: gh)
+            // Scroll detection keeps working across the resize, compared only where the old frame had pixels.
+            if let prev = prevGray, prev.width == base.width, prev.height == base.height {
+                prevGray = prev.reframed(dx: gx, dy: gy, width: gw, height: gh)
+                prevValid = PixelRect(x: gx, y: gy, width: prev.width, height: prev.height).clamped(width: gw, height: gh)
+            } else {
+                prevGray = nil
+            }
             forcedDirty = forcedDirty.map { PixelRect(x: $0.x + gx, y: $0.y + gy, width: $0.width, height: $0.height) }
                 + base.uncovered(dx: gx, dy: gy, width: gw, height: gh)
         }

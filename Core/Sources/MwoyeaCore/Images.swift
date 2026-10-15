@@ -41,6 +41,16 @@ public struct GrayImage: Sendable, Equatable {
         return out
     }
 
+    public func cropped(to r: PixelRect) -> GrayImage {
+        let c = r.clamped(width: width, height: height)
+        var out = GrayImage(width: c.width, height: c.height)
+        for y in 0..<c.height {
+            let src = (c.y + y) * width + c.x
+            out.pixels.replaceSubrange(y * c.width ..< (y + 1) * c.width, with: pixels[src ..< src + c.width])
+        }
+        return out
+    }
+
     /// Pixels a `shifted(dx:dy:)` leaves without content.
     public func vacatedStrips(dx: Int, dy: Int) -> [PixelRect] {
         uncovered(dx: dx, dy: dy, width: width, height: height)

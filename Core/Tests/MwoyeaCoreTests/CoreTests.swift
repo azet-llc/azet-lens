@@ -301,3 +301,10 @@ func texture(width: Int, height: Int, seed: Int = 1) -> GrayImage {
         else { Issue.record("expected a resize"); return }
     }
 }
+
+@Test func grayCropKeepsRows() {
+    var a = GrayImage(width: 4, height: 3)
+    for y in 0..<3 { for x in 0..<4 { a[x, y] = UInt8(10 * y + x) } }
+    let c = a.cropped(to: PixelRect(x: 1, y: 1, width: 2, height: 2))
+    #expect(c.pixels == [11, 12, 21, 22])
+}

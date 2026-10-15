@@ -10,6 +10,7 @@ import UniformTypeIdentifiers
 ///
 /// Simulated lens drag over a still "screen" (points; writes the lens view per step as outdir/frame_NNN.png):
 ///   Mwoyea --render screen.png outdir --pan --lens x,y,w,h --to x,y [--steps 40] [--step-ms 100] [--hold-ms 3000]
+/// With `--scroll`, the lens stays and the content scrolls by `--to` instead (screen.png is the whole page).
 enum SelfTest {
     static func run(_ args: [String]) -> Never {
         setvbuf(stdout, nil, _IOLBF, 0)
@@ -117,10 +118,14 @@ enum SelfTest {
         }
         let l = numbers("--lens"), to = numbers("--to")
         guard l.count == 4, to.count == 2 else { throw Failure(description: "--pan needs --lens x,y,w,h and --to x,y") }
+        let scrolling = option("--scroll") != nil || CommandLine.arguments.contains("--scroll")
+        // Content offset (points): the screen shows the page from here. Only `--scroll` changes it.
+        var scroll = CGVector.zero
         let steps = Int(option("--steps") ?? "40") ?? 40
         let stepMs = Int(option("--step-ms") ?? "100") ?? 100
         let holdMs = Int(option("--hold-ms") ?? "3000") ?? 3000
-        let display = CGRect(x: 0, y: 0, width: CGFloat(screen.width) / scale, height: CGFloat(screen.height) / scale)
+        var display = CGRect(x: 0, y: 0, width: CGFloat(screen.width) / scale, height: CGFloat(screen.height) / scale)
+        if scrolling { display.size.width -= max(0, to[0]); display.size.height -= max(0, to[1]) }
         try FileManager.default.createDirectory(at: outdir, withIntermediateDirectories: true)
 
         var lens = CGRect(x: l[0], y: l[1], width: l[2], height: l[3])
@@ -130,9 +135,12 @@ enum SelfTest {
         let pipeline = RegionPipeline(options: PipelineOptions(settings), capture: capture, translator: translator, inpainter: inpainter,
                                       onSnapshot: { collector.put($0) })
         await pipeline.setVisible(lens)
+        let motion = Collector()   // reused as a flag: any snapshot stored = motion seen
+        await pipeline.setMotionHandler { motion.put(OverlaySnapshot(version: 0, blocks: [], animated: false, origin: .zero)) }
 
         func feed() async {
-            let px = CGRect(x: capture.minX * scale, y: capture.minY * scale, width: capture.width * scale, height: capture.height * scale)
+            let c = capture.offsetBy(dx: scroll.dx, dy: scroll.dy)
+            let px = CGRect(x: c.minX * scale, y: c.minY * scale, width: c.width * scale, height: c.height * scale)
             guard let crop = screen.cropping(to: px), let rgba = RGBAImage(cgImage: crop), let image = rgba.cgImage else { return }
             let gray = rgba.withBGRA { GrayImage(bgra: $0, width: rgba.width, height: rgba.height, bytesPerRow: rgba.width * 4, step: 4) }
             await pipeline.ingest(CapturedFrame(image: image, gray: gray, grayStep: 4, scale: scale, rect: capture,
@@ -151,7 +159,8 @@ enum SelfTest {
             let w = Int(lens.width * scale), h = Int(lens.height * scale)
             guard let ctx = CGContext(data: nil, width: w, height: h, bitsPerComponent: 8, bytesPerRow: 0,
                                       space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue),
-                  let under = screen.cropping(to: CGRect(x: lens.minX * scale, y: lens.minY * scale, width: CGFloat(w), height: CGFloat(h)))
+                  let under = screen.cropping(to: CGRect(x: (lens.minX + scroll.dx) * scale, y: (lens.minY + scroll.dy) * scale,
+                                                         width: CGFloat(w), height: CGFloat(h)))
             else { throw Failure(description: "context") }
             ctx.draw(under, in: CGRect(x: 0, y: 0, width: w, height: h))
             var shown = 0
@@ -186,17 +195,32 @@ enum SelfTest {
         print("settled at start: \(ms(start)) ms")
         try shoot()
 
-        // Drag: margins widen at once (as `noteMotion` does), then the lens moves in steps.
-        wide = true
-        await apply(Overscan.plan(lens: lens, capture: capture, wide: wide, allowResize: true, display: display))
-        let from = lens.origin
-        for i in 1...steps {
-            let f = CGFloat(i) / CGFloat(steps)
-            lens.origin = CGPoint(x: from.x + (to[0] - from.x) * f, y: from.y + (to[1] - from.y) * f)
-            await pipeline.setVisible(lens)
-            await apply(Overscan.plan(lens: lens, capture: capture, wide: wide, allowResize: false, display: display))
-            try await Task.sleep(for: .milliseconds(stepMs))
-            try shoot()
+        if scrolling {
+            // Scroll: frames change under a still capture; the pipeline notices the motion and asks for wide margins.
+            for i in 1...steps {
+                let f = CGFloat(i) / CGFloat(steps)
+                scroll = CGVector(dx: (to[0] * f).rounded(), dy: (to[1] * f).rounded())
+                if !wide, motion.latest != nil {
+                    wide = true
+                    await apply(Overscan.plan(lens: lens, capture: capture, wide: wide, allowResize: true, display: display))
+                }
+                await feed()
+                try await Task.sleep(for: .milliseconds(stepMs))
+                try shoot()
+            }
+        } else {
+            // Drag: margins widen at once (as `noteMotion` does), then the lens moves in steps.
+            wide = true
+            await apply(Overscan.plan(lens: lens, capture: capture, wide: wide, allowResize: true, display: display))
+            let from = lens.origin
+            for i in 1...steps {
+                let f = CGFloat(i) / CGFloat(steps)
+                lens.origin = CGPoint(x: from.x + (to[0] - from.x) * f, y: from.y + (to[1] - from.y) * f)
+                await pipeline.setVisible(lens)
+                await apply(Overscan.plan(lens: lens, capture: capture, wide: wide, allowResize: false, display: display))
+                try await Task.sleep(for: .milliseconds(stepMs))
+                try shoot()
+            }
         }
         // Dropped: keep watching while it settles into seamless.
         for _ in 0 ..< max(1, holdMs / 250) {
