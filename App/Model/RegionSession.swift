@@ -79,6 +79,7 @@ final class RegionSession {
         panel.orderFrontRegardless()
         chrome.orderFrontRegardless()
         panel.setTranslationsVisible(translationsVisible, animated: false)
+        chrome.setOriginal(!translationsVisible)
         do {
             try await capturer.start(rect: capture, fps: fps)
             errorMessage = nil
@@ -123,6 +124,7 @@ final class RegionSession {
     func setTranslationsVisible(_ visible: Bool) {
         translationsVisible = visible
         panel.setTranslationsVisible(visible && !hiddenByOcclusion)
+        chrome.setOriginal(!visible)
     }
 
     /// Window lens ↔ screen lens. A screen lens follows the window under its centre, if there is one.

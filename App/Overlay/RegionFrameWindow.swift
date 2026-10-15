@@ -67,6 +67,9 @@ final class RegionFrameWindow: NSPanel {
 
     func setStyle(_ style: LensStyle) { chrome.style = style }
 
+    /// Showing the original: the ring turns grey, the pill says so, and a sweep marks the switch.
+    func setOriginal(_ on: Bool) { chrome.original = on }
+
     /// A light sweep across the lens, for when it first comes alive.
     func sweep() { chrome.sweep() }
 }
@@ -76,6 +79,7 @@ private final class FrameChromeView: NSView {
     var name: String { didSet { needsDisplay = true } }
     var detail = "" { didSet { needsDisplay = true } }
     var busy = false { didSet { if busy != oldValue { updateGlow(); needsDisplay = true } } }
+    var original = false { didSet { if original != oldValue { applyStyle(); sweep() } } }
     var following = false { didSet { if following != oldValue { needsDisplay = true; updateToolTip() } } }
     var style = LensStyle.glow { didSet { if style != oldValue { applyStyle() } } }
 
@@ -137,7 +141,10 @@ private final class FrameChromeView: NSView {
     }
 
     private func applyStyle() {
-        for gradient in [ringGradient, glowGradient] { gradient.colors = style == .minimal ? Self.greys : Self.colors }
+        CATransaction.begin()
+        CATransaction.setAnimationDuration(0.35)
+        for gradient in [ringGradient, glowGradient] { gradient.colors = style == .minimal || original ? Self.greys : Self.colors }
+        CATransaction.commit()
         ringMask.lineWidth = style == .glow ? 2.5 : 1.5
         updateGlow()
         needsDisplay = true
@@ -225,7 +232,7 @@ private final class FrameChromeView: NSView {
     /// Calm and slow at rest; brighter and faster while reading or translating, or under the pointer.
     /// Subtle glows only while reading; minimal never does.
     private func updateGlow() {
-        let period: CFTimeInterval = busy ? 2.4 : 9
+        let period: CFTimeInterval = busy && !original ? 2.4 : 9
         for gradient in [ringGradient, glowGradient] {
             let spin = CABasicAnimation(keyPath: "transform.rotation.z")
             spin.fromValue = (gradient.presentation()?.value(forKeyPath: "transform.rotation.z") as? Double) ?? 0
@@ -370,7 +377,7 @@ private final class FrameChromeView: NSView {
         pill.stroke()
 
         let dot = NSRect(x: tab.minX + 11, y: tab.midY - 4.5, width: 9, height: 9)
-        NSGradient(colors: Self.colors.prefix(4).compactMap { NSColor(cgColor: $0) })?
+        NSGradient(colors: (original ? Self.greys : Self.colors).prefix(4).compactMap { NSColor(cgColor: $0) })?
             .draw(in: NSBezierPath(ovalIn: dot), angle: busy ? 90 : -45)
 
         var x = dot.maxX + 8
@@ -379,8 +386,8 @@ private final class FrameChromeView: NSView {
         title.draw(with: NSRect(x: x, y: tab.midY - title.size().height / 2 + 1, width: limit, height: title.size().height),
                    options: [.usesLineFragmentOrigin, .truncatesLastVisibleLine])
         x += title.size().width + 10
-        if !detail.isEmpty, x < tab.maxX - 50 {
-            let sub = NSAttributedString(string: busy ? String(localized: "Translating…") : detail,
+        if original || !detail.isEmpty, x < tab.maxX - 50 {
+            let sub = NSAttributedString(string: original ? String(localized: "Original") : busy ? String(localized: "Translating…") : detail,
                                          attributes: [.font: Self.detailFont, .foregroundColor: NSColor.white.withAlphaComponent(0.6)])
             sub.draw(with: NSRect(x: x, y: tab.midY - sub.size().height / 2 + 1, width: tab.maxX - x - (strong ? 48 : 30),
                                   height: sub.size().height), options: [.usesLineFragmentOrigin, .truncatesLastVisibleLine])
