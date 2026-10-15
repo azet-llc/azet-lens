@@ -4,7 +4,7 @@
 
 <h1 align="center">Mwoyeo</h1>
 <p align="center"><b>Read any screen in your language, right where the text is.</b><br>
-Put a lens over a game, a chat or a web page. The original text disappears and the translation is written in its place.</p>
+Put a lens over a chat, a feed or a game. The original text disappears and the translation is written in its place.</p>
 
 <p align="center">
   <code>brew install midagedev/tap/mwoyeo</code><br>
@@ -15,18 +15,21 @@ Put a lens over a game, a chat or a web page. The original text disappears and t
 
 ## What it does
 
-Put a lens over any part of the screen — a game, a manga reader, a video, a web page in a language you can't read.
-Mwoyeo reads the text, **erases it from the picture**, and paints the translation back in the same place, size and
-colour. It is not a popup or a subtitle bar: the screen simply reads in your language.
+Put a lens over any part of the screen: a Discord server, a Reddit thread, a game, a manga reader, any page in a
+language you can't read. Mwoyeo reads the text, **erases it from the picture**, and paints the translation back in the
+same place, size and colour. It is not a popup or a subtitle bar: the screen simply reads in your language, and keeps
+reading as messages arrive and the page scrolls.
 
 - **Seamless, not boxed.** Flat backgrounds are filled from their surroundings; textured ones (gradients, artwork,
   game scenes) are rebuilt by an on-device inpainting model, then the translation is set in a matching weight and size.
-- **A lens you can drag.** Grab its edge and slide it across the screen; translations stay glued to the content
-  underneath, and new text is translated as it comes into view.
+- **A lens you can drag.** Grab its edge and slide it across the screen; translations stay pinned to the text
+  underneath and show only inside the lens, and new text is translated as it comes into view.
 - **Reads ahead.** Mwoyeo captures more than the lens shows and widens that margin while things move, so dragging
   the lens or scrolling reveals text that has already been read, erased and translated.
-- **Follows scrolling and windows.** A vertical scroll moves the existing translations with the page instead of
-  re-reading them; a lens placed on a window follows that window around.
+- **Keeps up with scrolling.** Trackpad and wheel input move the translations with the page before the next frame
+  arrives; each captured frame then settles them to the exact offset, measured per column to a fraction of a pixel,
+  so a fixed sidebar or header never drags the chat along with it. Only the strip that scrolled into view is read.
+- **Follows windows.** A lens dropped on a window follows that window around.
 - **Private by construction.** Capture, recognition, inpainting and translation all run on the Mac. Nothing leaves it.
 
 ## Built on Apple's on-device AI
@@ -51,10 +54,13 @@ ScreenCaptureKit ──► change map (16 px tiles) ──► scroll? shift bloc
 ```
 
 The capture is larger than the lens ("overscan"). At rest the margin is about 30 % of the lens on each side; while
-content or the lens moves it grows to about 60 %. The lens moves freely inside the captured area and the capture
+content or the lens moves it grows to about 40 %, shifted toward where things are heading. The lens moves freely inside the captured area and the capture
 only re-centres when the lens nears its edge — then just the uncovered strips are read. Unchanged text keeps its
 erased background across passes, results computed while content moved are shifted rather than thrown away, and the
 translation queue always serves what is visible first.
+
+Three render modes, in Settings: **Adaptive** (the default) draws quick translations while content moves and
+rewrites them seamlessly once it is still; **Quick** never does the slower pass; **Seamless** always does.
 
 The name is Korean: *mwoyeo* (뭐여) is a dialect way of saying "what's that?"
 
@@ -121,8 +127,16 @@ overlay on top.
 
 ### Releasing
 
-`scripts/release.sh <version> [--publish]` builds with a Developer ID identity, notarizes and staples the disk image,
-and with `--publish` creates the GitHub release and updates the Homebrew cask. The script header lists what it needs.
+Pushing a `v*` tag runs `.github/workflows/release.yml`: it builds with the Developer ID identity from the repository
+secrets, notarizes and staples the disk image, publishes the GitHub release and updates the Homebrew cask. Running the
+workflow by hand builds and notarizes without releasing. `scripts/release.sh <version> [--publish]` does the same on
+a Mac that holds the identity.
+
+### Demo pages
+
+`demo/chat.html` (a Discord-like server) and `demo/forum.html` (a Reddit-like thread) are made-up pages for
+recordings; their parameters (language, new-message rate, scripted scrolls) are listed at the top of each file.
+`docs/HERO.md` has the shot list.
 
 ## Credits
 
