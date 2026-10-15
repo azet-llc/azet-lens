@@ -61,6 +61,25 @@ enum FontStyleChoice: String, Codable, CaseIterable, Identifiable {
     }
 }
 
+/// How the lens frame looks on screen.
+enum LensStyle: String, Codable, CaseIterable, Identifiable {
+    /// The spectrum ring with its glow, turning faster while it reads.
+    case glow
+    /// A thin spectrum line; it glows only while reading.
+    case subtle
+    /// A faint grey line; the name tag shows only under the pointer.
+    case minimal
+
+    var id: String { rawValue }
+    var title: String {
+        switch self {
+        case .glow: String(localized: "Glow")
+        case .subtle: String(localized: "Subtle")
+        case .minimal: String(localized: "Minimal")
+        }
+    }
+}
+
 struct AppSettings: Codable, Equatable {
     /// BCP-47 identifier, or "auto" to detect per line.
     var sourceLanguage = "auto"
@@ -76,6 +95,7 @@ struct AppSettings: Codable, Equatable {
     var fontStyle = FontStyleChoice.system
     /// Opacity of the box behind text in fast mode.
     var boxOpacity = 0.94
+    var lensStyle = LensStyle.glow
     var hasCompletedOnboarding = false
 
     var glossaryPairs: [(String, String)] {
@@ -101,6 +121,7 @@ struct AppSettings: Codable, Equatable {
         settleDelay = try c.decodeIfPresent(Double.self, forKey: .settleDelay) ?? d.settleDelay
         fontStyle = (try? c.decodeIfPresent(FontStyleChoice.self, forKey: .fontStyle)) ?? d.fontStyle
         boxOpacity = try c.decodeIfPresent(Double.self, forKey: .boxOpacity) ?? d.boxOpacity
+        lensStyle = (try? c.decodeIfPresent(LensStyle.self, forKey: .lensStyle)) ?? d.lensStyle
         hasCompletedOnboarding = try c.decodeIfPresent(Bool.self, forKey: .hasCompletedOnboarding) ?? d.hasCompletedOnboarding
     }
 }
@@ -112,8 +133,17 @@ struct RegionConfig: Codable, Identifiable, Equatable {
     /// Global Quartz coordinates (top-left origin of the primary display), in points.
     var rect: CGRect
     var isEnabled = true
-    /// When set, the region moves with this window.
+    /// When set, the region moves with this window; otherwise it is pinned to the screen.
     var anchor: WindowAnchor?
+
+    /// Follows `window` from where the lens is now, or pins it to the screen when nil. The name says which.
+    mutating func follow(_ window: WindowInfo?) {
+        anchor = window.map { w in
+            WindowAnchor(windowID: w.id, appName: w.appName, title: w.title,
+                         offset: CGPoint(x: rect.minX - w.bounds.minX, y: rect.minY - w.bounds.minY))
+        }
+        name = window.map { $0.appName.isEmpty ? String(localized: "Window") : $0.appName } ?? String(localized: "Screen")
+    }
 }
 
 struct WindowAnchor: Codable, Equatable {

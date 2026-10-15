@@ -68,8 +68,6 @@ final class AppModel {
         if !settings.hasCompletedOnboarding || !hasScreenPermission {
             WindowPresenter.shared.showOnboarding()
         }
-        // Window IDs do not survive the target app relaunching; re-find anchors by app + title.
-        regions = regions.map(reanchor)
         if hasScreenPermission {
             for r in regions where r.isEnabled { await startSession(r) }
         }
@@ -78,7 +76,8 @@ final class AppModel {
         if let i = args.firstIndex(of: "--add-region"), i + 1 < args.count, hasScreenPermission {
             let v = args[i + 1].split(separator: ",").compactMap { Double($0) }
             if v.count == 4 {
-                let config = RegionConfig(name: String(localized: "Lens \(regions.count + 1)"), rect: CGRect(x: v[0], y: v[1], width: v[2], height: v[3]))
+                var config = RegionConfig(name: "", rect: CGRect(x: v[0], y: v[1], width: v[2], height: v[3]))
+                config.follow(nil)
                 regions.append(config)
                 await startSession(config)
                 // `--glide dx,dy,seconds,after;…` then drags that lens by script (after = pause before each move).
@@ -132,12 +131,8 @@ final class AppModel {
         picking = true
         defer { picking = false }
         guard let result = await picker.pick() else { return }
-        var config = RegionConfig(name: result.window.map { $0.appName.isEmpty ? String(localized: "Window") : $0.appName } ?? String(localized: "Lens \(regions.count + 1)"),
-                                  rect: result.rect)
-        if let w = result.window {
-            config.anchor = WindowAnchor(windowID: w.id, appName: w.appName, title: w.title,
-                                         offset: CGPoint(x: result.rect.minX - w.bounds.minX, y: result.rect.minY - w.bounds.minY))
-        }
+        var config = RegionConfig(name: "", rect: result.rect)
+        config.follow(result.window)
         regions.append(config)
         if isPaused { isPaused = false; for r in regions where r.isEnabled && sessions[r.id] == nil { await startSession(r) } }
         else { await startSession(config) }
@@ -156,26 +151,6 @@ final class AppModel {
         sessionTick += 1
     }
 
-    func toggleAnchor(_ id: UUID) {
-        guard let i = regions.firstIndex(where: { $0.id == id }) else { return }
-        if regions[i].anchor != nil {
-            regions[i].anchor = nil
-        } else {
-            let r = regions[i].rect
-            if let w = WindowInfo.onScreen().first(where: { $0.bounds.contains(r) }) {
-                regions[i].anchor = WindowAnchor(windowID: w.id, appName: w.appName, title: w.title,
-                                                 offset: CGPoint(x: r.minX - w.bounds.minX, y: r.minY - w.bounds.minY))
-            }
-        }
-        sessions[id]?.setAnchor(regions[i].anchor)
-    }
-
-    func rename(_ id: UUID, to name: String) {
-        guard let i = regions.firstIndex(where: { $0.id == id }), !name.isEmpty else { return }
-        regions[i].name = name
-        sessions[id]?.rename(name)
-    }
-
     func activity(of id: UUID) -> RegionActivity { sessions[id]?.activity ?? .idle }
     func error(of id: UUID) -> String? { sessions[id]?.errorMessage }
     func isRunning(_ id: UUID) -> Bool { sessions[id] != nil }
@@ -190,25 +165,12 @@ final class AppModel {
             guard let self, let i = regions.firstIndex(where: { $0.id == updated.id }) else { return }
             regions[i].rect = updated.rect
             regions[i].anchor = updated.anchor
+            regions[i].name = updated.name
         }
         s.onCloseRequest = { [weak self] in Task { await self?.remove(config.id) } }
         sessions[config.id] = s
         s.setTranslationsVisible(translationsVisible)
         await s.start()
-    }
-
-    private func reanchor(_ r: RegionConfig) -> RegionConfig {
-        guard let a = r.anchor, WindowInfo.window(id: a.windowID) == nil else { return r }
-        var r = r
-        let windows = WindowInfo.onScreen()
-        if let w = windows.first(where: { $0.appName == a.appName && $0.title == a.title })
-            ?? windows.first(where: { $0.appName == a.appName }) {
-            r.anchor?.windowID = w.id
-            r.rect.origin = CGPoint(x: w.bounds.minX + a.offset.x, y: w.bounds.minY + a.offset.y)
-        } else {
-            r.anchor = nil // keep the area where it was
-        }
-        return r
     }
 
     // MARK: - Global actions

@@ -57,6 +57,8 @@ final class RegionSession {
         self.panel = panel
         chrome = RegionFrameWindow(region: frame, name: config.name)
         chrome.setDetail(Self.languagePair(settings))
+        chrome.setFollowing(config.anchor != nil)
+        chrome.setStyle(settings.lensStyle)
         let capture = Self.overscan(config.rect, wide: false)
         self.capture = capture
         pipeline = RegionPipeline(options: PipelineOptions(settings), capture: capture, translator: translator,
@@ -106,6 +108,7 @@ final class RegionSession {
 
     func update(settings: AppSettings) async {
         chrome.setDetail(Self.languagePair(settings))
+        chrome.setStyle(settings.lensStyle)
         await pipeline.update(options: PipelineOptions(settings))
         if settings.framesPerSecond != fps {
             fps = settings.framesPerSecond
@@ -115,19 +118,33 @@ final class RegionSession {
 
     func refresh() async { await pipeline.refresh() }
 
-    func rename(_ name: String) {
-        config.name = name
-        chrome.setName(name)
-    }
-
     func setTranslationsVisible(_ visible: Bool) {
         translationsVisible = visible
         panel.setTranslationsVisible(visible && !hiddenByOcclusion)
     }
 
-    func setAnchor(_ anchor: WindowAnchor?) {
-        config.anchor = anchor
+    /// Window lens ↔ screen lens. A screen lens follows the window under its centre, if there is one.
+    private func toggleFollowing() {
+        if config.anchor != nil {
+            follow(nil)
+        } else if let w = windowUnderLens() {
+            follow(w)
+        } else {
+            NSSound.beep()
+            return
+        }
+        onConfigChange?(config)
+    }
+
+    private func follow(_ w: WindowInfo?) {
+        config.follow(w)
+        chrome.setName(config.name)
+        chrome.setFollowing(w != nil)
         startTracking()
+    }
+
+    private func windowUnderLens() -> WindowInfo? {
+        WindowInfo.onScreen().first { $0.bounds.contains(CGPoint(x: config.rect.midX, y: config.rect.midY)) }
     }
 
     private func setActivity(_ a: RegionActivity) {
@@ -150,6 +167,7 @@ final class RegionSession {
         chrome.onResize = { [weak self] frame in self?.lensResized(frame) }
         chrome.onCommit = { [weak self] in self?.lensDropped() }
         chrome.onClose = { [weak self] in self?.onCloseRequest?() }
+        chrome.onToggleFollowing = { [weak self] in self?.toggleFollowing() }
     }
 
     private func lensMoved(_ appKitFrame: NSRect) {
@@ -197,16 +215,9 @@ final class RegionSession {
         lastLens = nil
         setLead(.zero)
         fitCapture(allowResize: true)
-        // Re-evaluate which window (if any) the lens now sits in.
-        if config.anchor != nil {
-            if let w = WindowInfo.onScreen().first(where: { $0.bounds.contains(CGPoint(x: config.rect.midX, y: config.rect.midY)) }) {
-                config.anchor = WindowAnchor(windowID: w.id, appName: w.appName, title: w.title,
-                                             offset: CGPoint(x: config.rect.minX - w.bounds.minX, y: config.rect.minY - w.bounds.minY))
-            } else {
-                config.anchor = nil
-            }
-            startTracking()
-        }
+        // A window lens follows whichever window it was dropped on (off every window, it stays where it is).
+        // A screen lens stays pinned.
+        if config.anchor != nil { follow(windowUnderLens()) }
         onConfigChange?(config)
         updateEmphasis(NSEvent.mouseLocation)
     }
@@ -273,8 +284,11 @@ final class RegionSession {
         guard capture.contains(p), e.scrollingDeltaY != 0 || e.phase == .began else { return }
         if e.phase == .began || e.phase == .mayBegin || (e.phase.isEmpty && e.momentumPhase.isEmpty && e.timestamp - lastWheel > 0.5) {
             // A new gesture: pixels per wheel unit belong to the app (and page) under the pointer.
-            let window = WindowInfo.onScreen().first { $0.bounds.contains(p) }?.id
-            if window != scrollWindow { predictor.reset(); scrollArea = nil; scrollWindow = window }
+            let window = WindowInfo.onScreen().first { $0.bounds.contains(p) }
+            if window?.id != scrollWindow { predictor.reset(); scrollArea = nil; scrollWindow = window?.id }
+            // Until a frame shows what scrolls, guess the lens's part of that window: the lens usually sits on
+            // the feed or chat being scrolled, and the first frame that moves corrects the guess.
+            if scrollArea == nil, config.rect.contains(p) { scrollArea = config.rect.intersection(window?.bounds ?? config.rect) }
         }
         predictor.wheel(delta: Double(e.scrollingDeltaY), time: e.timestamp, precise: e.hasPreciseScrollingDeltas)
         lastWheel = e.timestamp
@@ -346,10 +360,14 @@ final class RegionSession {
     }
 
     private func trackWindow() {
-        guard let anchor = config.anchor, !dragging else { return }
-        guard let w = WindowInfo.window(id: anchor.windowID) else {
+        guard var anchor = config.anchor, !dragging else { return }
+        guard let w = WindowInfo.window(id: anchor.windowID) ?? refind(anchor) else {
             setOccluded(true) // window closed or minimized
             return
+        }
+        if w.id != anchor.windowID {
+            anchor.windowID = w.id
+            config.anchor = anchor
         }
         // Hide while another window covers the region; the capture shows that window, not ours.
         let covered = WindowInfo.windows(above: anchor.windowID).contains { $0.bounds.intersects(config.rect.insetBy(dx: 4, dy: 4)) }
@@ -370,6 +388,12 @@ final class RegionSession {
         }
         fitCapture(allowResize: false)
         onConfigChange?(config)
+    }
+
+    /// Window IDs do not survive the app relaunching (or Mwoyeo's): find the window again by app and title.
+    private func refind(_ a: WindowAnchor) -> WindowInfo? {
+        let windows = WindowInfo.onScreen()
+        return windows.first { $0.appName == a.appName && $0.title == a.title } ?? windows.first { $0.appName == a.appName }
     }
 
     private func setOccluded(_ occluded: Bool) {

@@ -38,7 +38,8 @@ You need macOS 27 on an Apple silicon Mac.
    language pair. With a pack, translation is near-instant and works offline. Without one, Apple Intelligence
    translates instead, which needs no download but takes about half a second per line.
 5. **Press ⌃⌥T and drag a box** over the text you want to read, such as the message list of a Discord channel or a
-   Reddit thread. Or just click, and a lens is dropped where you clicked.
+   Reddit thread. Or just click, and a lens is dropped where you clicked. Hold ⌥ while you do it to pin the lens to
+   the screen instead of the window (see below).
 
 ## Using a lens
 
@@ -48,8 +49,10 @@ You need macOS 27 on an Apple silicon Mac.
 - **Close it** with the ✕ on the name tag (hover over the lens to see it).
 - **Scroll and chat as usual.** The interior of a lens is click-through, so the page under it works normally. New
   messages are translated as they arrive and scrolling carries the translations along.
-- **It stays with its window.** A lens placed on a window moves with that window, and hides while the window is
-  minimized or covered by another one.
+- **Window lens or screen lens.** A lens placed on a window is a *window lens* (🪟 on its name tag): it moves with
+  that window and hides while the window is minimized or covered. A *screen lens* (📌) stays where you put it and
+  translates whatever is under it, whichever app that is: handy for a subtitle line or a spot you keep switching
+  apps under. Click the icon on the name tag to switch.
 - **Keep lenses small.** A lens around just the part you read (the chat, not the whole browser) translates faster
   and uses less power. You can have several.
 
@@ -62,7 +65,7 @@ These work in any app (Settings › Shortcuts lists them too).
 
 | | |
 |---|---|
-| ⌃⌥T | Add a lens (drag an area, or click to drop one) |
+| ⌃⌥T | Add a lens (drag an area, or click to drop one; hold ⌥ to pin it to the screen) |
 | ⌃⌥O | Show the original / the translation |
 | ⌃⌥P | Pause all lenses |
 | ⌃⌥R | Translate again |
@@ -73,7 +76,7 @@ These work in any app (Settings › Shortcuts lists them too).
 |---|---|
 | General | Languages · **Display**: *Adaptive* (default: plain boxes while things move, a seamless rewrite once still), *Quick* (always boxes, least battery) or *Seamless* (always rewrites) · how often the screen is checked (4, 8 or 15 fps) · open at login |
 | Translation | **Engine**: *Automatic* (language pack if installed, Apple Intelligence otherwise), *High fidelity* (always Apple Intelligence) or *Glossary first* · language packs · a **glossary** of names, one `original = translation` per line |
-| Appearance | Font (default, rounded, serif) · box opacity · AI erasing on photos and artwork |
+| Appearance | **Lens style**: *Glow*, *Subtle* (glows only while reading) or *Minimal* (a faint line; the name tag shows on hover) · font (default, rounded, serif) · box opacity · AI erasing on photos and artwork |
 
 ## Tips and troubleshooting
 

@@ -4,152 +4,6 @@
     "": {
       "shouldTranslate": false
     },
-    "%@ window · %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "new",
-            "value": "%1$@ window · %2$@"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ 창 · %@"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@のウインドウ · %@"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ 窗口 · %@"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ 視窗 · %@"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@-Fenster · %@"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fenêtre %@ · %@"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ventana de %@ · %@"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Окно %@ · %@"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Janela do %@ · %@"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Finestra di %@ · %@"
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Вікно %@ · %@"
-          }
-        }
-      }
-    },
-    "%@ — click to follow this window": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ — 클릭하면 이 창을 따라가요"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ — クリックしてこのウインドウに追従"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ — 点按以跟随此窗口"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ — 點按以跟隨此視窗"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ – Klicken, um diesem Fenster zu folgen"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ — Cliquez pour suivre cette fenêtre"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ — Haz clic para seguir esta ventana"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ — нажмите, чтобы следовать за этим окном"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ — clique para seguir esta janela"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ — Clicca per seguire questa finestra"
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ — натисніть, щоб слідувати за цим вікном"
-          }
-        }
-      }
-    },
     "%@ → %@ translation is not supported.": {
       "localizations": {
         "en": {
@@ -2514,72 +2368,72 @@
         }
       }
     },
-    "Drag to place a lens  ·  Click a window to follow it  ·  esc to cancel": {
+    "Drag an area or click  ·  ⌥ pins to the screen  ·  esc to cancel": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "드래그해서 렌즈를 놓으세요  ·  창을 클릭하면 그 창을 따라가요  ·  esc 취소"
+            "value": "영역을 드래그하거나 클릭  ·  ⌥ 누르면 화면에 고정  ·  esc 취소"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "ドラッグしてレンズを置く  ·  ウインドウをクリックして追従  ·  escでキャンセル"
+            "value": "範囲をドラッグまたはクリック  ·  ⌥で画面に固定  ·  escでキャンセル"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "拖移以放置透镜  ·  点按窗口以跟随它  ·  按 esc 取消"
+            "value": "拖移选择区域或点按  ·  按住 ⌥ 固定到屏幕  ·  esc 取消"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "拖移以放置透鏡  ·  點按視窗以跟隨它  ·  按 esc 取消"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ziehen, um eine Linse zu platzieren  ·  Fenster anklicken, um ihm zu folgen  ·  esc zum Abbrechen"
+            "value": "拖移選取範圍或點按  ·  按住 ⌥ 固定在螢幕上  ·  esc 取消"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Faites glisser pour placer une loupe  ·  Cliquez sur une fenêtre pour la suivre  ·  esc pour annuler"
+            "value": "Faites glisser une zone ou cliquez  ·  ⌥ épingle à l’écran  ·  esc pour annuler"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bereich aufziehen oder klicken  ·  ⌥ heftet an den Bildschirm  ·  esc bricht ab"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Arrastra para colocar una lupa  ·  Haz clic en una ventana para seguirla  ·  esc para cancelar"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Перетащите, чтобы поместить линзу  ·  Нажмите на окно, чтобы следовать за ним  ·  esc — отмена"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Arraste para posicionar uma lente  ·  Clique em uma janela para segui-la  ·  esc para cancelar"
+            "value": "Arrastra un área o haz clic  ·  ⌥ la fija a la pantalla  ·  esc para cancelar"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Trascina per posizionare una lente  ·  Clicca su una finestra per seguirla  ·  esc per annullare"
+            "value": "Trascina un’area o clicca  ·  ⌥ la fissa allo schermo  ·  esc per annullare"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arraste uma área ou clique  ·  ⌥ fixa na tela  ·  esc para cancelar"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выделите область или нажмите  ·  ⌥ закрепляет на экране  ·  esc — отмена"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Перетягніть, щоб розмістити лінзу  ·  Натисніть на вікно, щоб слідувати за ним  ·  esc — скасувати"
+            "value": "Виділіть область або натисніть  ·  ⌥ закріплює на екрані  ·  esc — скасувати"
           }
         }
       }
@@ -3074,72 +2928,212 @@
         }
       }
     },
-    "Follows the %@ window. Click to pin to the screen.": {
+    "Follows %@  ·  ⌥ pins to the screen": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ 창을 따라갑니다. 누르면 화면에 고정합니다."
+            "value": "%@ 창을 따라감  ·  ⌥ 누르면 화면에 고정"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@のウインドウに追従中。クリックすると画面に固定します。"
+            "value": "%@に追従  ·  ⌥で画面に固定"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "正在跟随 %@ 窗口。点按以固定到屏幕。"
+            "value": "跟随“%@”  ·  按住 ⌥ 固定到屏幕"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "正在跟隨 %@ 視窗。點按以固定在螢幕上。"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Folgt dem Fenster „%@“. Klicken, um an den Bildschirm anzuheften."
+            "value": "跟隨「%@」  ·  按住 ⌥ 固定在螢幕上"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Suit la fenêtre %@. Cliquez pour l’épingler à l’écran."
+            "value": "Suit %@  ·  ⌥ épingle à l’écran"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Folgt %@  ·  ⌥ heftet an den Bildschirm"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sigue la ventana de %@. Haz clic para fijarla a la pantalla."
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Следует за окном «%@». Нажмите, чтобы закрепить на экране."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Segue a janela do %@. Clique para fixar na tela."
+            "value": "Sigue a %@  ·  ⌥ la fija a la pantalla"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Segue la finestra di %@. Clicca per fissarla allo schermo."
+            "value": "Segue %@  ·  ⌥ la fissa allo schermo"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Segue %@  ·  ⌥ fixa na tela"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Следует за %@  ·  ⌥ закрепляет на экране"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Слідує за вікном «%@». Натисніть, щоб закріпити на екрані."
+            "value": "Слідує за %@  ·  ⌥ закріплює на екрані"
+          }
+        }
+      }
+    },
+    "Follows the window · %@": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "창을 따라감 · %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ウインドウに追従 · %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "跟随窗口 · %@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "跟隨視窗 · %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suit la fenêtre · %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Folgt dem Fenster · %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sigue la ventana · %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Segue la finestra · %@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Segue a janela · %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Следует за окном · %@"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Слідує за вікном · %@"
+          }
+        }
+      }
+    },
+    "Follows this window. Click to pin the lens to the screen.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 창을 따라갑니다. 누르면 화면에 고정합니다."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このウインドウに追従しています。クリックすると画面に固定します。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在跟随此窗口。点按以将透镜固定到屏幕。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在跟隨此視窗。點按以將透鏡固定在螢幕上。"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suit cette fenêtre. Cliquez pour épingler la loupe à l’écran."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Folgt diesem Fenster. Klicken, um die Linse an den Bildschirm zu heften."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sigue esta ventana. Haz clic para fijar la lupa a la pantalla."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Segue questa finestra. Clicca per fissare la lente allo schermo."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Segue esta janela. Clique para fixar a lente na tela."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Следует за этим окном. Нажмите, чтобы закрепить линзу на экране."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Слідує за цим вікном. Натисніть, щоб закріпити лінзу на екрані."
           }
         }
       }
@@ -3560,6 +3554,76 @@
           "stringUnit": {
             "state": "translated",
             "value": "Спершу глосарій"
+          }
+        }
+      }
+    },
+    "Glow": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "글로우"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "グロー"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "光晕"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "光暈"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Halo"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leuchten"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brillo"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bagliore"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brilho"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Свечение"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сяйво"
           }
         }
       }
@@ -4124,78 +4188,148 @@
         }
       }
     },
-    "Lens %lld": {
+    "Lens": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "렌즈 %lld"
+            "value": "렌즈"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "レンズ %lld"
+            "value": "レンズ"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "透镜 %lld"
+            "value": "透镜"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "透鏡 %lld"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Linse %lld"
+            "value": "透鏡"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Loupe %lld"
+            "value": "Loupe"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linse"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lupa %lld"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Линза %lld"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lente %lld"
+            "value": "Lupa"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lente %lld"
+            "value": "Lente"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lente"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Линза"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Лінза %lld"
+            "value": "Лінза"
           }
         }
       }
     },
     "MI-GAN · Core ML (GPU)": {
       "shouldTranslate": false
+    },
+    "Minimal": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "최소"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ミニマル"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "极简"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "極簡"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minimal"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minimal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mínimo"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minimale"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mínimo"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Минимальный"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Мінімальний"
+          }
+        }
+      }
     },
     "Mwoyeo": {
       "shouldTranslate": false
@@ -5390,6 +5524,146 @@
         }
       }
     },
+    "Pinned to the screen": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "화면에 고정"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "画面に固定"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "固定到屏幕"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "固定在螢幕上"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Épinglée à l’écran"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An den Bildschirm geheftet"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fijada a la pantalla"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fissata allo schermo"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fixada na tela"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Закреплено на экране"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Закріплено на екрані"
+          }
+        }
+      }
+    },
+    "Pinned to the screen · %@": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "화면에 고정 · %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "画面に固定 · %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "固定到屏幕 · %@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "固定在螢幕上 · %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Épinglée à l’écran · %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An den Bildschirm geheftet · %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fijada a la pantalla · %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fissata allo schermo · %@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fixada na tela · %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Закреплено на экране · %@"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Закріплено на екрані · %@"
+          }
+        }
+      }
+    },
     "Pinned to the screen. Click to follow the window underneath.": {
       "localizations": {
         "ko": {
@@ -5456,76 +5730,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Закріплено на екрані. Натисніть, щоб слідувати за вікном під ним."
-          }
-        }
-      }
-    },
-    "Pinned · %@": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "화면 고정 · %@"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "固定中 · %@"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "已固定 · %@"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "已固定 · %@"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Angeheftet · %@"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Épinglée · %@"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fijada · %@"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Закреплено · %@"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fixada · %@"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fissata · %@"
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Закріплено · %@"
           }
         }
       }
@@ -5600,72 +5804,72 @@
         }
       }
     },
-    "Press %@ anywhere. Drag to place a lens, or click a window to follow it.": {
+    "Press %@ anywhere, then drag an area or click. The lens follows the window it lands on; hold ⌥ to pin it to the screen.": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "어디서든 %@. 드래그한 곳에 렌즈가 놓이고, 창을 클릭하면 그 창을 따라다녀요."
+            "value": "어디서든 %@를 누른 뒤 영역을 드래그하거나 클릭하세요. 렌즈는 놓인 창을 따라가고, ⌥를 누른 채 놓으면 화면에 고정됩니다."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "どこでも%@を押します。ドラッグしてレンズを置くか、ウインドウをクリックして追従させます。"
+            "value": "どこでも%@を押して、範囲をドラッグするかクリックします。レンズは置いたウインドウに追従し、⌥を押しながら置くと画面に固定されます。"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "在任何位置按 %@。拖移以放置透镜，或点按窗口以跟随它。"
+            "value": "在任意位置按下 %@，然后拖移选择区域或点按。透镜会跟随它所在的窗口；按住 ⌥ 可将其固定到屏幕。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "在任何位置按 %@。拖移以放置透鏡，或點按視窗以跟隨它。"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Drücken Sie überall %@. Ziehen Sie, um eine Linse zu platzieren, oder klicken Sie auf ein Fenster, um ihm zu folgen."
+            "value": "在任何位置按下 %@，然後拖移選取範圍或點按。透鏡會跟隨它所在的視窗；按住 ⌥ 可將其固定在螢幕上。"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Appuyez sur %@ n’importe où. Faites glisser pour placer une loupe, ou cliquez sur une fenêtre pour la suivre."
+            "value": "Appuyez sur %@ n’importe où, puis faites glisser une zone ou cliquez. La loupe suit la fenêtre où elle se pose ; maintenez ⌥ pour l’épingler à l’écran."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drücke überall %@ und ziehe dann einen Bereich auf oder klicke. Die Linse folgt dem Fenster, auf dem sie landet; halte ⌥, um sie an den Bildschirm zu heften."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pulsa %@ en cualquier lugar. Arrastra para colocar una lupa o haz clic en una ventana para seguirla."
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Нажмите %@ где угодно. Перетащите, чтобы поместить линзу, или нажмите на окно, чтобы следовать за ним."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pressione %@ em qualquer lugar. Arraste para posicionar uma lente ou clique em uma janela para segui-la."
+            "value": "Pulsa %@ en cualquier lugar y arrastra un área o haz clic. La lupa sigue la ventana en la que cae; mantén ⌥ para fijarla a la pantalla."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Premi %@ ovunque. Trascina per posizionare una lente o clicca su una finestra per seguirla."
+            "value": "Premi %@ ovunque, poi trascina un’area o clicca. La lente segue la finestra su cui si posa; tieni premuto ⌥ per fissarla allo schermo."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pressione %@ em qualquer lugar e arraste uma área ou clique. A lente segue a janela onde é colocada; mantenha ⌥ pressionada para fixá-la na tela."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нажмите %@ где угодно, затем выделите область или щёлкните. Линза следует за окном, на котором оказалась; удерживайте ⌥, чтобы закрепить её на экране."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Натисніть %@ будь-де. Перетягніть, щоб розмістити лінзу, або натисніть на вікно, щоб слідувати за ним."
+            "value": "Натисніть %@ будь-де, потім виділіть область або клацніть. Лінза слідує за вікном, на якому опинилася; утримуйте ⌥, щоб закріпити її на екрані."
           }
         }
       }
@@ -6580,6 +6784,76 @@
         }
       }
     },
+    "Screen": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "화면"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "画面"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "屏幕"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "螢幕"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Écran"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bildschirm"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pantalla"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schermo"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tela"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Экран"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Екран"
+          }
+        }
+      }
+    },
     "Screen Recording": {
       "localizations": {
         "ko": {
@@ -7206,6 +7480,76 @@
           "stringUnit": {
             "state": "translated",
             "value": "Раніше"
+          }
+        }
+      }
+    },
+    "Subtle": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "은은하게"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "控えめ"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "柔和"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "柔和"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discret"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dezent"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sutil"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discreto"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discreto"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сдержанный"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Стриманий"
           }
         }
       }
@@ -7912,76 +8256,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Перекласти з"
-          }
-        }
-      }
-    },
-    "Translate this window": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "창 전체 번역"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "このウインドウを翻訳"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "翻译此窗口"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "翻譯此視窗"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dieses Fenster übersetzen"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Traduire cette fenêtre"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Traducir esta ventana"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Перевести это окно"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Traduzir esta janela"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Traduci questa finestra"
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Перекласти це вікно"
           }
         }
       }

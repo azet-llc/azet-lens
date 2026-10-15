@@ -1,13 +1,14 @@
 import AppKit
 
-/// Full-screen chooser: drag to select an area, or click to drop a lens of the default size there (it follows the
-/// window it lands in). A lens never defaults to a whole window: the bigger the area, the slower every read. Esc cancels.
+/// Full-screen chooser: drag to select an area, or click to drop a lens of the default size there. A lens that lands
+/// in a window follows it; holding ⌥ pins it to the screen instead. A lens never defaults to a whole window: the bigger
+/// the area, the slower every read. Esc cancels.
 @MainActor
 final class RegionPicker {
     struct Result {
         /// Global Quartz points.
         var rect: CGRect
-        /// The window the area sits in, if it lies entirely inside one.
+        /// The window to follow: the one the lens landed in, unless ⌥ pinned it to the screen.
         var window: WindowInfo?
     }
 
@@ -28,8 +29,9 @@ final class RegionPicker {
             let mouse = NSEvent.mouseLocation
             (windows.first { $0.frame.contains(mouse) } ?? windows.first)?.makeKey()
             NSCursor.crosshair.push()
-            keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] e in
-                if e.keyCode == 53 { self?.finish(nil); return nil } // esc
+            keyMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .flagsChanged]) { [weak self] e in
+                if e.type == .keyDown, e.keyCode == 53 { self?.finish(nil); return nil } // esc
+                if e.type == .flagsChanged { self?.windows.forEach { $0.contentView?.needsDisplay = true } } // ⌥ flips the label
                 return e
             }
         }
@@ -109,6 +111,9 @@ private final class PickerView: NSView {
         return NSRect(x: min(a.x, b.x), y: min(a.y, b.y), width: abs(a.x - b.x), height: abs(a.y - b.y))
     }
 
+    /// ⌥ pins the lens to the screen.
+    private var pinned: Bool { NSEvent.modifierFlags.contains(.option) }
+
     private func window(at p: NSPoint) -> WindowInfo? {
         let q = quartz(NSRect(origin: p, size: .zero)).origin
         return windows.first { $0.bounds.contains(q) }
@@ -158,12 +163,13 @@ private final class PickerView: NSView {
         defer { dragStart = nil; dragCurrent = nil }
         if let sel = selection, sel.width >= 24, sel.height >= 12 {
             let rect = quartz(sel)
-            let container = windows.first { $0.bounds.contains(rect) }
-            done(.init(rect: rect, window: container))
+            // A lens overhanging a window's edge still belongs to it: go by its centre.
+            let container = windows.first { $0.bounds.contains(CGPoint(x: rect.midX, y: rect.midY)) }
+            done(.init(rect: rect, window: pinned ? nil : container))
         } else {
             let p = convert(event.locationInWindow, from: nil)
             hovered = window(at: p)
-            done(.init(rect: quartz(clickLens(at: p)), window: hovered))
+            done(.init(rect: quartz(clickLens(at: p)), window: pinned ? nil : hovered))
         }
     }
 
@@ -178,15 +184,25 @@ private final class PickerView: NSView {
         if let sel = selection {
             punch(sel, radius: 4)
             stroke(sel, color: .white, width: 1.5, radius: 4)
-            label("\(Int(sel.width)) × \(Int(sel.height))", near: sel)
+            let w = pinned ? nil : window(at: NSPoint(x: sel.midX, y: sel.midY))
+            if let w { stroke(local(w.bounds), color: .controlAccentColor.withAlphaComponent(0.5), width: 1.5, radius: 10) }
+            label("\(Int(sel.width)) × \(Int(sel.height))  ·  \(mode(w))", near: sel)
         } else if let p = pointer {
             let r = clickLens(at: p)
-            if let w = hovered { stroke(local(w.bounds), color: .controlAccentColor.withAlphaComponent(0.5), width: 1.5, radius: 10) }
+            let w = pinned ? nil : hovered
+            if let w { stroke(local(w.bounds), color: .controlAccentColor.withAlphaComponent(0.5), width: 1.5, radius: 10) }
             punch(r, radius: 10)
             stroke(r, color: .controlAccentColor, width: 3, radius: 10)
-            if let w = hovered, !w.appName.isEmpty { label(String(localized: "\(w.appName) — click to follow this window"), near: r, inside: true) }
+            label(mode(w), near: r, inside: true)
         }
         hint()
+    }
+
+    /// What the lens will do once placed.
+    private func mode(_ w: WindowInfo?) -> String {
+        guard let w else { return String(localized: "Pinned to the screen") }
+        let app = w.appName.isEmpty ? String(localized: "Window") : w.appName
+        return String(localized: "Follows \(app)  ·  ⌥ pins to the screen")
     }
 
     private func punch(_ r: NSRect, radius: CGFloat) {
@@ -222,7 +238,7 @@ private final class PickerView: NSView {
 
     private func hint() {
         guard screenFrame.contains(NSEvent.mouseLocation) || NSScreen.screens.count == 1 else { return }
-        let text = String(localized: "Drag to place a lens  ·  Click a window to follow it  ·  esc to cancel")
+        let text = String(localized: "Drag an area or click  ·  ⌥ pins to the screen  ·  esc to cancel")
         let s = NSAttributedString(string: text, attributes: [
             .font: NSFont.systemFont(ofSize: 13, weight: .medium),
             .foregroundColor: NSColor.white,

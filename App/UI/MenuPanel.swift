@@ -134,7 +134,13 @@ private struct RegionRow: View {
             LensChip(state: dotState)
             VStack(alignment: .leading, spacing: 1) {
                 Text(region.name).font(.callout.weight(.medium)).lineLimit(1)
-                Text(subtitle).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+                HStack(spacing: 3) {
+                    if model.error(of: region.id) == nil {
+                        Image(systemName: region.anchor != nil ? "macwindow" : "pin.fill").imageScale(.small)
+                    }
+                    Text(subtitle).lineLimit(1)
+                }
+                .font(.caption2).foregroundStyle(.secondary)
             }
             Spacer(minLength: 4)
             if hovering {
@@ -146,14 +152,6 @@ private struct RegionRow: View {
                     .help("Remove Lens")
                     .transition(.opacity)
             }
-            Button {
-                model.toggleAnchor(region.id)
-            } label: {
-                Image(systemName: region.anchor != nil ? "pin.fill" : "pin.slash")
-            }
-            .buttonStyle(.borderless)
-            .foregroundStyle(region.anchor != nil ? Color.accentColor : .secondary)
-            .help(region.anchor.map { String(localized: "Follows the \($0.appName) window. Click to pin to the screen.") } ?? String(localized: "Pinned to the screen. Click to follow the window underneath."))
             Toggle("", isOn: Binding(get: { region.isEnabled }, set: { v in Task { await model.setEnabled(region.id, v) } }))
                 .toggleStyle(.switch)
                 .controlSize(.mini)
@@ -177,8 +175,8 @@ private struct RegionRow: View {
     private var subtitle: String {
         if let e = model.error(of: region.id) { return e }
         let size = "\(Int(region.rect.width))×\(Int(region.rect.height))"
-        if let a = region.anchor { return String(localized: "\(a.appName) window · \(size)") }
-        return String(localized: "Pinned · \(size)")
+        if region.anchor != nil { return String(localized: "Follows the window · \(size)") }
+        return String(localized: "Pinned to the screen · \(size)")
     }
 }
 

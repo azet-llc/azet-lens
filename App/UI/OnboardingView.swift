@@ -40,7 +40,7 @@ struct OnboardingView: View {
                         .frame(width: 230)
                 }
                 StepCard(number: 3, title: String(localized: "Place a Lens"), done: !model.regions.isEmpty,
-                         detail: String(localized: "Press \(HotKeys.addRegion.display) anywhere. Drag to place a lens, or click a window to follow it.")) {
+                         detail: String(localized: "Press \(HotKeys.addRegion.display) anywhere, then drag an area or click. The lens follows the window it lands on; hold ⌥ to pin it to the screen.")) {
                     Button("Try It Now") {
                         finish()
                         Task { await model.addRegion() }

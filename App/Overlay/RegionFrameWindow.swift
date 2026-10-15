@@ -4,6 +4,7 @@ import QuartzCore
 /// The draggable "lens" around a region: a glowing, slowly turning gradient ring (in the colours of Apple
 /// Intelligence) that brightens while the lens reads and translates, a name pill on top, and a resize corner.
 /// The ring and pill are grabbable; the interior is fully transparent, so clicks there go to the app underneath.
+/// The pill's icon says whether the lens follows a window or is pinned to the screen; clicking it switches.
 final class RegionFrameWindow: NSPanel {
     /// Room around the region for the glow and the grab band.
     static let margin: CGFloat = 18
@@ -15,6 +16,7 @@ final class RegionFrameWindow: NSPanel {
     /// Drag/resize finished.
     var onCommit: (() -> Void)?
     var onClose: (() -> Void)?
+    var onToggleFollowing: (() -> Void)?
 
     private let chrome: FrameChromeView
 
@@ -60,6 +62,11 @@ final class RegionFrameWindow: NSPanel {
 
     func setBusy(_ busy: Bool) { chrome.busy = busy }
 
+    /// Window lens (true) or screen lens.
+    func setFollowing(_ on: Bool) { chrome.following = on }
+
+    func setStyle(_ style: LensStyle) { chrome.style = style }
+
     /// A light sweep across the lens, for when it first comes alive.
     func sweep() { chrome.sweep() }
 }
@@ -69,6 +76,8 @@ private final class FrameChromeView: NSView {
     var name: String { didSet { needsDisplay = true } }
     var detail = "" { didSet { needsDisplay = true } }
     var busy = false { didSet { if busy != oldValue { updateGlow(); needsDisplay = true } } }
+    var following = false { didSet { if following != oldValue { needsDisplay = true; updateToolTip() } } }
+    var style = LensStyle.glow { didSet { if style != oldValue { applyStyle() } } }
 
     private enum Drag { case move, resize }
     private var drag: Drag?
@@ -95,6 +104,7 @@ private final class FrameChromeView: NSView {
         NSColor(srgbRed: 0.39, green: 0.82, blue: 1.00, alpha: 1), // cyan
         NSColor(srgbRed: 1.00, green: 0.62, blue: 0.04, alpha: 1),
     ].map(\.cgColor)
+    private static let greys: [CGColor] = [0.95, 0.6, 0.85, 0.55, 0.95].map { NSColor(white: $0, alpha: 1).cgColor }
 
     init(name: String) {
         self.name = name
@@ -123,7 +133,14 @@ private final class FrameChromeView: NSView {
         sweepClip.mask = sweepMask
         sweepClip.addSublayer(sweepLayer)
         layer?.addSublayer(sweepClip)
+        applyStyle()
+    }
+
+    private func applyStyle() {
+        for gradient in [ringGradient, glowGradient] { gradient.colors = style == .minimal ? Self.greys : Self.colors }
+        ringMask.lineWidth = style == .glow ? 2.5 : 1.5
         updateGlow()
+        needsDisplay = true
     }
 
     required init?(coder: NSCoder) { fatalError("not used") }
@@ -151,16 +168,23 @@ private final class FrameChromeView: NSView {
     }
 
     private var strong: Bool { emphasized || hovering || drag != nil }
+    /// Minimal lenses show their name tag only under the pointer.
+    private var showsTab: Bool { style != .minimal || strong }
 
     private var tabRect: NSRect {
         let title = (name as NSString).size(withAttributes: [.font: Self.titleFont]).width
         let sub = detail.isEmpty ? 0 : (detail as NSString).size(withAttributes: [.font: Self.detailFont]).width + 10
-        let w = min(regionRect.width, title + sub + 40 + (strong ? 22 : 0))
+        let w = min(regionRect.width, title + sub + 40 + 20 + (strong ? 22 : 0))
         return NSRect(x: regionRect.minX, y: regionRect.maxY + 6, width: max(72, w), height: RegionFrameWindow.tabHeight)
     }
 
     private var closeRect: NSRect {
         NSRect(x: tabRect.maxX - 23, y: tabRect.midY - 8, width: 16, height: 16)
+    }
+
+    /// The window / pin icon, left of the close button.
+    private var modeRect: NSRect {
+        NSRect(x: tabRect.maxX - (strong ? 44 : 25), y: tabRect.midY - 8, width: 18, height: 16)
     }
 
     private var resizeRect: NSRect {
@@ -169,7 +193,7 @@ private final class FrameChromeView: NSView {
 
     private func zone(at p: NSPoint) -> Drag? {
         if resizeRect.contains(p) { return .resize }
-        if tabRect.contains(p) { return .move }
+        if showsTab, tabRect.contains(p) { return .move }
         let outer = regionRect.insetBy(dx: -band / 2, dy: -band / 2), inner = regionRect.insetBy(dx: band / 2, dy: band / 2)
         return outer.contains(p) && !inner.contains(p) ? .move : nil
     }
@@ -199,6 +223,7 @@ private final class FrameChromeView: NSView {
     }
 
     /// Calm and slow at rest; brighter and faster while reading or translating, or under the pointer.
+    /// Subtle glows only while reading; minimal never does.
     private func updateGlow() {
         let period: CFTimeInterval = busy ? 2.4 : 9
         for gradient in [ringGradient, glowGradient] {
@@ -211,9 +236,19 @@ private final class FrameChromeView: NSView {
         }
         CATransaction.begin()
         CATransaction.setAnimationDuration(0.35)
-        ring.opacity = busy || strong ? 1 : 0.8
-        glow.opacity = busy ? 0.95 : strong ? 0.75 : 0.45
+        switch style {
+        case .glow:
+            ring.opacity = busy || strong ? 1 : 0.8
+            glow.opacity = busy ? 0.95 : strong ? 0.75 : 0.45
+        case .subtle:
+            ring.opacity = busy || strong ? 1 : 0.7
+            glow.opacity = busy ? 0.7 : strong ? 0.3 : 0
+        case .minimal:
+            ring.opacity = strong ? 0.9 : busy ? 0.6 : 0.35
+            glow.opacity = strong ? 0.25 : 0
+        }
         CATransaction.commit()
+        updateToolTip() // the icon shifts when the close button shows
     }
 
     func sweep() {
@@ -232,6 +267,11 @@ private final class FrameChromeView: NSView {
 
     // MARK: - Events
 
+    private func updateToolTip() {
+        removeAllToolTips()
+        addToolTip(modeRect, owner: self, userData: nil)
+    }
+
     override func updateTrackingAreas() {
         super.updateTrackingAreas()
         if let t = tracking { removeTrackingArea(t) }
@@ -246,7 +286,7 @@ private final class FrameChromeView: NSView {
     private func updateCursor(_ p: NSPoint) {
         switch zone(at: p) {
         case .resize?: NSCursor.frameResize(position: .bottomRight, directions: .all).set()
-        case .move?: (strong && closeRect.contains(p) ? NSCursor.arrow : NSCursor.openHand).set()
+        case .move?: ((strong && closeRect.contains(p)) || (showsTab && modeRect.contains(p)) ? NSCursor.arrow : NSCursor.openHand).set()
         case nil: NSCursor.arrow.set()
         }
     }
@@ -257,6 +297,7 @@ private final class FrameChromeView: NSView {
     override func mouseDown(with event: NSEvent) {
         let p = convert(event.locationInWindow, from: nil)
         if strong, closeRect.contains(p) { window_?.onClose?(); return }
+        if showsTab, modeRect.contains(p) { window_?.onToggleFollowing?(); return }
         drag = zone(at: p)
         startMouse = NSEvent.mouseLocation
         startRegion = window_?.regionFrame ?? .zero
@@ -311,6 +352,7 @@ private final class FrameChromeView: NSView {
         NSColor.black.withAlphaComponent(0.004).setFill()
         bandPath.fill()
 
+        guard showsTab else { return }
         // Name pill: dark glass with a gradient dot that pulses while busy.
         let tab = tabRect
         let pill = NSBezierPath(roundedRect: tab, xRadius: tab.height / 2, yRadius: tab.height / 2)
@@ -333,15 +375,22 @@ private final class FrameChromeView: NSView {
 
         var x = dot.maxX + 8
         let title = NSAttributedString(string: name, attributes: [.font: Self.titleFont, .foregroundColor: NSColor.white])
-        let limit = tab.maxX - x - (strong ? 28 : 12)
+        let limit = tab.maxX - x - (strong ? 48 : 30)
         title.draw(with: NSRect(x: x, y: tab.midY - title.size().height / 2 + 1, width: limit, height: title.size().height),
                    options: [.usesLineFragmentOrigin, .truncatesLastVisibleLine])
         x += title.size().width + 10
-        if !detail.isEmpty, x < tab.maxX - 30 {
+        if !detail.isEmpty, x < tab.maxX - 50 {
             let sub = NSAttributedString(string: busy ? String(localized: "Translating…") : detail,
                                          attributes: [.font: Self.detailFont, .foregroundColor: NSColor.white.withAlphaComponent(0.6)])
-            sub.draw(with: NSRect(x: x, y: tab.midY - sub.size().height / 2 + 1, width: tab.maxX - x - (strong ? 28 : 10),
+            sub.draw(with: NSRect(x: x, y: tab.midY - sub.size().height / 2 + 1, width: tab.maxX - x - (strong ? 48 : 30),
                                   height: sub.size().height), options: [.usesLineFragmentOrigin, .truncatesLastVisibleLine])
+        }
+
+        if let icon = NSImage(systemSymbolName: following ? "macwindow" : "pin.fill", accessibilityDescription: modeHelp)?
+            .withSymbolConfiguration(.init(pointSize: 11, weight: .semibold)) {
+            let m = modeRect, s = icon.size
+            icon.tinted(.white.withAlphaComponent(strong ? 0.9 : 0.6))
+                .draw(in: NSRect(x: m.midX - s.width / 2, y: m.midY - s.height / 2, width: s.width, height: s.height))
         }
 
         guard strong else { return }
@@ -361,6 +410,17 @@ private final class FrameChromeView: NSView {
         g.lineCapStyle = .round
         NSColor.white.withAlphaComponent(0.9).setStroke()
         g.stroke()
+    }
+}
+
+extension FrameChromeView: NSViewToolTipOwner {
+    fileprivate var modeHelp: String {
+        following ? String(localized: "Follows this window. Click to pin the lens to the screen.")
+            : String(localized: "Pinned to the screen. Click to follow the window underneath.")
+    }
+
+    func view(_ view: NSView, stringForToolTip tag: NSView.ToolTipTag, point: NSPoint, userData data: UnsafeMutableRawPointer?) -> String {
+        modeHelp
     }
 }
 

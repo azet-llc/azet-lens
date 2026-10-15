@@ -185,6 +185,14 @@ private struct AppearanceSettings: View {
     var body: some View {
         @Bindable var model = model
         Form {
+            Section("Lens") {
+                HStack(spacing: 12) {
+                    ForEach(LensStyle.allCases) { style in
+                        LensStyleCard(style: style, selected: model.settings.lensStyle == style) { model.settings.lensStyle = style }
+                    }
+                }
+                .frame(maxWidth: .infinity)
+            }
             Section("Text") {
                 Picker("Font", selection: $model.settings.fontStyle) {
                     ForEach(FontStyleChoice.allCases) { Text($0.title).tag($0) }
@@ -215,6 +223,50 @@ private struct AppearanceSettings: View {
             }
         }
         .formStyle(.grouped)
+    }
+}
+
+/// A lens in miniature, drawn in one style, to pick from.
+private struct LensStyleCard: View {
+    let style: LensStyle
+    let selected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 8) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color(white: 0.13))
+                    VStack(alignment: .leading, spacing: 5) {
+                        ForEach([0.9, 0.7, 0.8, 0.45], id: \.self) { f in
+                            Capsule().fill(.white.opacity(0.75)).frame(width: 64 * f, height: 3)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.leading, 22)
+                    ring.padding(10)
+                }
+                .frame(width: 112, height: 70)
+                .overlay {
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .strokeBorder(selected ? Color.accentColor : .clear, lineWidth: 2.5)
+                        .padding(-4)
+                }
+                Text(style.title).font(.callout.weight(selected ? .semibold : .regular))
+            }
+            .padding(4)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(selected ? .isSelected : [])
+    }
+
+    @ViewBuilder private var ring: some View {
+        switch style {
+        case .glow: LensRing(cornerRadius: 7, lineWidth: 2, glow: 4, spinning: true, period: 9)
+        case .subtle: LensRing(cornerRadius: 7, lineWidth: 1.2, glow: 0)
+        case .minimal: RoundedRectangle(cornerRadius: 7, style: .continuous).stroke(.white.opacity(0.4), lineWidth: 1.2)
+        }
     }
 }
 
