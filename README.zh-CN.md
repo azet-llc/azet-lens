@@ -7,9 +7,10 @@
 <p align="center"><b>不管什么画面，外文都在原处变成中文。</b><br>
 把透镜罩在聊天、信息流或游戏画面上，原文随即消失，译文就写在原来的位置。</p>
 
-<p align="center"><a href="https://github.com/midagedev/mwoyeo/releases/latest"><img src="https://raw.githubusercontent.com/midagedev/mwoyeo/stats/card.zh-CN.svg" width="520" alt="Mwoyeo 安装数、本月活跃数和下载数"></a></p>
-
 <p align="center">
+  <a href="https://github.com/midagedev/mwoyeo/releases/latest"><img alt="Release" src="https://img.shields.io/github/v/release/midagedev/mwoyeo?style=flat-square&label=release&color=ff9f0a"></a>
+  <a href="https://github.com/midagedev/mwoyeo/releases"><img alt="Downloads" src="https://img.shields.io/endpoint?style=flat-square&url=https%3A%2F%2Fraw.githubusercontent.com%2Fmidagedev%2Fmwoyeo%2Fstats%2Fdownloads.json"></a>
+  <a href="https://github.com/midagedev/mwoyeo/releases"><img alt="Installs" src="https://img.shields.io/endpoint?style=flat-square&url=https%3A%2F%2Fraw.githubusercontent.com%2Fmidagedev%2Fmwoyeo%2Fstats%2Finstalls.json"></a>
   <img alt="macOS 27+" src="https://img.shields.io/badge/macOS-27%2B-bf5af2?style=flat-square&logo=apple&logoColor=white">
   <img alt="Apple silicon" src="https://img.shields.io/badge/Apple_silicon-native-5e5ce6?style=flat-square">
   <img alt="Privacy: on-device" src="https://img.shields.io/badge/privacy-on--device-64d2ff?style=flat-square">
@@ -98,7 +99,7 @@ Mwoyeo 每天会到 GitHub 检查一次新版本，有更新时菜单里会提�
 - **名字翻得不对**（角色名、地名、用户名）？把它们加进术语表，再选*术语表优先*。
 - **更新后什么都不显示？** macOS 有时会重新索要屏幕录制权限。到“系统设置”里确认一下，然后重新打开 Mwoyeo。
 - **想对照原文？** 按 ⌃⌥O 看原文，再按一次切回来。
-- **隐私。** Mwoyeo 只读取透镜下方的内容，从不保存或发送，截取画面时也会把自己的叠加层排除在外。它唯一会向互联网查询的，是 GitHub 上的最新版本号，每天一次，可以在“设置 › 关于”中关闭。检查更新的方式是下载发布页附带的一个小文件，所以 GitHub 的下载次数就是使用统计：安装只计一次，使用每月只计一次，不会发送任何能识别你这台 Mac 的信息。页面顶部的数字卡片就是这样统计出来的。
+- **隐私。** Mwoyeo 只读取透镜下方的内容，从不保存或发送，截取画面时也会把自己的叠加层排除在外。它唯一会向互联网查询的，是 GitHub 上的最新版本号，每天一次，可以在“设置 › 关于”中关闭。检查更新的方式是下载发布页附带的一个小文件，所以 GitHub 的下载次数就是使用统计：安装只计一次，使用每月只计一次，不会发送任何能识别你这台 Mac 的信息。页面顶部的安装数徽章就是这样统计出来的。
 
 ## 技术细节
 

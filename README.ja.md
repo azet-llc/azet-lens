@@ -7,9 +7,10 @@
 <p align="center"><b>画面の文字を、その場で読める言葉に。</b><br>
 チャットやフィード、ゲームにレンズを重ねるだけ。元の文字が消えて、同じ場所に訳文が書き込まれます。</p>
 
-<p align="center"><a href="https://github.com/midagedev/mwoyeo/releases/latest"><img src="https://raw.githubusercontent.com/midagedev/mwoyeo/stats/card.ja.svg" width="520" alt="Mwoyeo のインストール数、今月のアクティブ数、ダウンロード数"></a></p>
-
 <p align="center">
+  <a href="https://github.com/midagedev/mwoyeo/releases/latest"><img alt="Release" src="https://img.shields.io/github/v/release/midagedev/mwoyeo?style=flat-square&label=release&color=ff9f0a"></a>
+  <a href="https://github.com/midagedev/mwoyeo/releases"><img alt="Downloads" src="https://img.shields.io/endpoint?style=flat-square&url=https%3A%2F%2Fraw.githubusercontent.com%2Fmidagedev%2Fmwoyeo%2Fstats%2Fdownloads.json"></a>
+  <a href="https://github.com/midagedev/mwoyeo/releases"><img alt="Installs" src="https://img.shields.io/endpoint?style=flat-square&url=https%3A%2F%2Fraw.githubusercontent.com%2Fmidagedev%2Fmwoyeo%2Fstats%2Finstalls.json"></a>
   <img alt="macOS 27+" src="https://img.shields.io/badge/macOS-27%2B-bf5af2?style=flat-square&logo=apple&logoColor=white">
   <img alt="Apple silicon" src="https://img.shields.io/badge/Apple_silicon-native-5e5ce6?style=flat-square">
   <img alt="Privacy: on-device" src="https://img.shields.io/badge/privacy-on--device-64d2ff?style=flat-square">
@@ -98,7 +99,7 @@ Apple IntelligenceはmacOS 27が動くすべてのMacで使えますが、条件
 - **キャラクター名や地名、ユーザー名の訳がおかしい？** 用語集に登録して、*用語集を優先*を選んでください。
 - **アップデートしたら何も表示されなくなった？** macOSが画面収録の許可をもう一度求めることがあります。システム設定で確認してから、Mwoyeoを開き直してください。
 - **原文と見比べたい？** ⌃⌥Oで原文に切り替わり、もう一度押すと訳文に戻ります。
-- **プライバシー。** Mwoyeoが読み取るのはレンズの下にあるものだけで、保存も送信もしません。Mwoyeo自身のオーバーレイもキャプチャから除外しています。インターネットに問い合わせるのは、1日1回GitHubで最新のバージョン番号を確認するときだけです。これも設定 › 情報でオフにできます。この確認はリリースに添付された小さなファイルをダウンロードする仕組みなので、GitHubのダウンロード数がそのまま利用統計になります。インストールは1回、利用は月に1回だけ数え、Macを特定できる情報は一切送りません。冒頭の数字カードはこうして集めたものです。
+- **プライバシー。** Mwoyeoが読み取るのはレンズの下にあるものだけで、保存も送信もしません。Mwoyeo自身のオーバーレイもキャプチャから除外しています。インターネットに問い合わせるのは、1日1回GitHubで最新のバージョン番号を確認するときだけです。これも設定 › 情報でオフにできます。この確認はリリースに添付された小さなファイルをダウンロードする仕組みなので、GitHubのダウンロード数がそのまま利用統計になります。インストールは1回、利用は月に1回だけ数え、Macを特定できる情報は一切送りません。冒頭のインストール数バッジはこうして集めた数字です。
 
 ## 内部の仕組み
 

@@ -1,7 +1,7 @@
 name: Stats
 
 # Once a day (and after each release): usage numbers from the release files' download counts → the `stats` branch,
-# which the README's card is drawn from.
+# which the README's badges read.
 on:
   schedule:
     - cron: "17 0 * * *"
