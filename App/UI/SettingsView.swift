@@ -409,7 +409,7 @@ private struct AboutView: View {
             Divider().frame(width: 300).padding(.vertical, 6)
             VStack(alignment: .leading, spacing: 6) {
                 Label("Screen text is read, erased and translated on this Mac and never leaves it", systemImage: "lock.shield")
-                Label("Update checks only ask GitHub for the latest version number", systemImage: "arrow.down.circle")
+                Label("Update checks ask GitHub for the latest version and count installs without any identifier", systemImage: "arrow.down.circle")
                 Label("Vision · Translation · Apple Intelligence · Core ML", systemImage: "apple.intelligence")
                 Label("Inpainting: MI-GAN (Picsart AI Research, MIT)", systemImage: "paintbrush")
             }

@@ -10360,72 +10360,72 @@
         }
       }
     },
-    "Update checks only ask GitHub for the latest version number": {
+    "Update checks ask GitHub for the latest version and count installs without any identifier": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "업데이트 확인은 GitHub에 최신 버전 번호만 물어봅니다"
+            "value": "업데이트 확인은 GitHub에 최신 버전만 묻고, 설치 수는 식별자 없이 숫자로만 셉니다"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "アップデートの確認ではGitHubに最新のバージョン番号だけを問い合わせます"
+            "value": "アップデートの確認ではGitHubに最新バージョンを問い合わせるだけで、インストール数は識別子なしで数えます"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "检查更新只会向 GitHub 查询最新版本号"
+            "value": "检查更新只向 GitHub 查询最新版本，安装数仅作计数，不含任何标识符"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "檢查更新只會向 GitHub 查詢最新版本號碼"
+            "value": "檢查更新只向 GitHub 查詢最新版本，安裝數僅作計數，不含任何識別碼"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "La recherche de mises à jour ne demande à GitHub que le dernier numéro de version"
+            "value": "La recherche de mises à jour demande la dernière version à GitHub et compte les installations sans aucun identifiant"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Die Update-Suche fragt GitHub nur nach der neuesten Versionsnummer"
+            "value": "Die Update-Suche fragt GitHub nach der neuesten Version und zählt Installationen ohne jede Kennung"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "La búsqueda de actualizaciones solo pregunta a GitHub el número de la última versión"
+            "value": "La búsqueda de actualizaciones pregunta a GitHub la última versión y cuenta las instalaciones sin ningún identificador"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "La verifica degli aggiornamenti chiede a GitHub solo il numero dell’ultima versione"
+            "value": "La verifica degli aggiornamenti chiede a GitHub l’ultima versione e conta le installazioni senza alcun identificativo"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "A verificação de atualizações só pergunta ao GitHub o número da versão mais recente"
+            "value": "A verificação de atualizações pergunta ao GitHub a versão mais recente e conta as instalações sem nenhum identificador"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Проверка обновлений лишь запрашивает у GitHub номер последней версии"
+            "value": "Проверка обновлений запрашивает у GitHub последнюю версию и считает установки без каких-либо идентификаторов"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Перевірка оновлень лише запитує в GitHub номер останньої версії"
+            "value": "Перевірка оновлень запитує в GitHub останню версію й рахує встановлення без жодних ідентифікаторів"
           }
         }
       }

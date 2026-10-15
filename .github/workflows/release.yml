@@ -93,6 +93,12 @@ jobs:
         run: |
           gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 || gh release create "$GITHUB_REF_NAME" --title "Mwoyeo $VERSION" --generate-notes
           gh release upload "$GITHUB_REF_NAME" build/release/Mwoyeo-"$VERSION"-arm64.dmg --clobber
+          # What the app's update check downloads; their download counts are the usage numbers (scripts/stats.py).
+          mkdir -p build/counters
+          printf '{"version":"%s","page":"https://github.com/%s/releases/tag/%s"}\n' "$VERSION" "$GITHUB_REPOSITORY" "$GITHUB_REF_NAME" > build/counters/version.json
+          echo '{}' > build/counters/install.json
+          echo '{}' > build/counters/month.json
+          gh release upload "$GITHUB_REF_NAME" build/counters/version.json build/counters/install.json build/counters/month.json --clobber
 
       - name: Homebrew cask
         if: startsWith(github.ref, 'refs/tags/')
