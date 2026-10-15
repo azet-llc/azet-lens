@@ -30,7 +30,24 @@ Mwoyeo checks GitHub once a day for a new version and says so in its menu. Updat
 download the new disk image. Settings › About has the check, the switch to turn it off, and links to the release
 notes and issue tracker.
 
-You need macOS 27 on an Apple silicon Mac.
+### Requirements
+
+| | |
+|---|---|
+| **macOS** | 27.0 or later |
+| **Mac** | Apple silicon (M1 or later). There is no Intel build; macOS 27 itself runs only on Apple silicon. |
+| **Permission** | Screen Recording, nothing else: no Accessibility, no keyboard monitoring |
+| **Language packs** | Optional, recommended. Downloaded by macOS from Mwoyeo's Settings › Translation (or System Settings › General › Language & Region › Translation Languages); with one, translation is near-instant and works offline. |
+| **Apple Intelligence** | Optional. Turned on in System Settings › Apple Intelligence & Siri, it translates pairs you have no pack for and powers the *High fidelity* and *Glossary first* engines. Its availability depends on your Mac's language and region. Without it, Mwoyeo uses language packs only. |
+| **Network** | None for translating. The only request is the daily update check, which you can turn off. |
+| **Disk** | About 20 MB for the app. Language packs and Apple Intelligence models are managed and stored by macOS. |
+| **Displays** | Any number; a lens can go on any display |
+
+**Languages.** Translate from and into English, Korean, Japanese, Chinese (Simplified and Traditional), French,
+German, Spanish, Italian, Portuguese (Brazil), Russian, Ukrainian, Vietnamese and Thai, in any direction macOS has a
+translation model for. *Automatic* detects the source language per line. The app itself is in English, Korean,
+Japanese, Chinese (Simplified and Traditional), French, German, Spanish, Italian, Portuguese (Brazil), Russian and
+Ukrainian.
 
 ## Getting started
 
