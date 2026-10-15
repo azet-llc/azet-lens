@@ -52,7 +52,7 @@ final class RegionFrameWindow: NSPanel {
     }
 
     func setName(_ name: String) { chrome.name = name }
-    /// Second line of the pill, e.g. "영어 → 한국어".
+    /// Second line of the pill, e.g. "English → Korean".
     func setDetail(_ detail: String) { chrome.detail = detail }
 
     /// Handles and full brightness while the pointer is near or a drag is in progress.
@@ -338,14 +338,14 @@ private final class FrameChromeView: NSView {
                    options: [.usesLineFragmentOrigin, .truncatesLastVisibleLine])
         x += title.size().width + 10
         if !detail.isEmpty, x < tab.maxX - 30 {
-            let sub = NSAttributedString(string: busy ? "번역 중…" : detail,
+            let sub = NSAttributedString(string: busy ? String(localized: "Translating…") : detail,
                                          attributes: [.font: Self.detailFont, .foregroundColor: NSColor.white.withAlphaComponent(0.6)])
             sub.draw(with: NSRect(x: x, y: tab.midY - sub.size().height / 2 + 1, width: tab.maxX - x - (strong ? 28 : 10),
                                   height: sub.size().height), options: [.usesLineFragmentOrigin, .truncatesLastVisibleLine])
         }
 
         guard strong else { return }
-        if let xmark = NSImage(systemSymbolName: "xmark.circle.fill", accessibilityDescription: "닫기")?
+        if let xmark = NSImage(systemSymbolName: "xmark.circle.fill", accessibilityDescription: String(localized: "Close"))?
             .withSymbolConfiguration(.init(pointSize: 13, weight: .regular)) {
             xmark.tinted(.white.withAlphaComponent(0.8)).draw(in: closeRect)
         }

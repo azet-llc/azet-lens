@@ -78,9 +78,19 @@ final class AppModel {
         if let i = args.firstIndex(of: "--add-region"), i + 1 < args.count, hasScreenPermission {
             let v = args[i + 1].split(separator: ",").compactMap { Double($0) }
             if v.count == 4 {
-                let config = RegionConfig(name: "영역 \(regions.count + 1)", rect: CGRect(x: v[0], y: v[1], width: v[2], height: v[3]))
+                let config = RegionConfig(name: String(localized: "Lens \(regions.count + 1)"), rect: CGRect(x: v[0], y: v[1], width: v[2], height: v[3]))
                 regions.append(config)
                 await startSession(config)
+                // `--glide dx,dy,seconds,after;…` then drags that lens by script (after = pause before each move).
+                if let g = args.firstIndex(of: "--glide"), g + 1 < args.count, let session = sessions[config.id] {
+                    let moves = args[g + 1].split(separator: ";").map { $0.split(separator: ",").compactMap { Double($0) } }
+                    Task {
+                        for m in moves where m.count == 4 {
+                            try? await Task.sleep(for: .seconds(m[3]))
+                            await session.glide(by: CGVector(dx: m[0], dy: m[1]), duration: m[2])
+                        }
+                    }
+                }
             }
         }
     }
@@ -122,7 +132,7 @@ final class AppModel {
         picking = true
         defer { picking = false }
         guard let result = await picker.pick() else { return }
-        var config = RegionConfig(name: result.window.map { $0.appName.isEmpty ? "창" : $0.appName } ?? "영역 \(regions.count + 1)",
+        var config = RegionConfig(name: result.window.map { $0.appName.isEmpty ? String(localized: "Window") : $0.appName } ?? String(localized: "Lens \(regions.count + 1)"),
                                   rect: result.rect)
         if let w = result.window {
             config.anchor = WindowAnchor(windowID: w.id, appName: w.appName, title: w.title,

@@ -15,10 +15,10 @@ final class HotKeys {
 
     static let shared = HotKeys()
 
-    static let addRegion = Shortcut(id: 1, keyCode: UInt32(kVK_ANSI_T), modifiers: UInt32(controlKey | optionKey), display: "⌃⌥T", title: "영역 추가")
-    static let toggleOriginal = Shortcut(id: 2, keyCode: UInt32(kVK_ANSI_O), modifiers: UInt32(controlKey | optionKey), display: "⌃⌥O", title: "원문 보기")
-    static let pause = Shortcut(id: 3, keyCode: UInt32(kVK_ANSI_P), modifiers: UInt32(controlKey | optionKey), display: "⌃⌥P", title: "일시정지")
-    static let refresh = Shortcut(id: 4, keyCode: UInt32(kVK_ANSI_R), modifiers: UInt32(controlKey | optionKey), display: "⌃⌥R", title: "다시 번역")
+    static let addRegion = Shortcut(id: 1, keyCode: UInt32(kVK_ANSI_T), modifiers: UInt32(controlKey | optionKey), display: "⌃⌥T", title: String(localized: "Add Lens"))
+    static let toggleOriginal = Shortcut(id: 2, keyCode: UInt32(kVK_ANSI_O), modifiers: UInt32(controlKey | optionKey), display: "⌃⌥O", title: String(localized: "Show Original"))
+    static let pause = Shortcut(id: 3, keyCode: UInt32(kVK_ANSI_P), modifiers: UInt32(controlKey | optionKey), display: "⌃⌥P", title: String(localized: "Pause"))
+    static let refresh = Shortcut(id: 4, keyCode: UInt32(kVK_ANSI_R), modifiers: UInt32(controlKey | optionKey), display: "⌃⌥R", title: String(localized: "Translate Again"))
     static let all = [addRegion, toggleOriginal, pause, refresh]
 
     private var handlers: [UInt32: () -> Void] = [:]

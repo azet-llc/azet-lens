@@ -72,13 +72,20 @@ function add(animate) {
   el.className = "msg" + (animate ? " new" : "");
   el.innerHTML = `<div class="av" style="background:${color}"></div><div><div class="who" style="color:${color}">${name}<time>Today at 8:${String(minute).padStart(2, "0")} PM</time></div><div class="body"></div></div>`;
   el.querySelector(".body").textContent = text;
+  const atBottom = log.scrollHeight - log.scrollTop - log.clientHeight < 40;
   log.appendChild(el);
   i++; minute = Math.min(59, minute + 1);
-  log.scrollTop = log.scrollHeight;
+  if (atBottom) log.scrollTop = log.scrollHeight; // like Discord: stay put while reading back
 }
-for (let k = 0; k < 10; k++) add(false);
-const every = Number(new URLSearchParams(location.search).get("every") || 4);
+const params = new URLSearchParams(location.search);
+for (let k = 0; k < Number(params.get("history") || 10); k++) add(false);
+const every = Number(params.get("every") || 4);
 if (every > 0) setInterval(() => add(true), every * 1000);
+// ?scroll=t1:px,t2:px — at t seconds, scroll the log smoothly by px (negative = up), for scripted recordings.
+for (const step of (params.get("scroll") || "").split(",").filter(Boolean)) {
+  const [t, px] = step.split(":").map(Number);
+  setTimeout(() => log.scrollBy({ top: px, behavior: "smooth" }), t * 1000);
+}
 </script>
 </body>
 </html>

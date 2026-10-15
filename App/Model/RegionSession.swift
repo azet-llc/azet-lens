@@ -66,7 +66,7 @@ final class RegionSession {
             errorMessage = nil
             chrome.sweep()
         } catch {
-            errorMessage = "캡처를 시작할 수 없습니다: \(error.localizedDescription)"
+            errorMessage = String(localized: "Couldn’t start capturing: \(error.localizedDescription)")
             log.error("capture start failed: \(error.localizedDescription)")
         }
         startTracking()
@@ -87,7 +87,7 @@ final class RegionSession {
     }
 
     private static func languagePair(_ s: AppSettings) -> String {
-        "\(s.sourceLanguage == "auto" ? "자동" : Languages.name(s.sourceLanguage)) → \(Languages.name(s.targetLanguage))"
+        "\(s.sourceLanguage == "auto" ? String(localized: "Auto") : Languages.name(s.sourceLanguage)) → \(Languages.name(s.targetLanguage))"
     }
 
     func update(settings: AppSettings) async {
@@ -144,6 +144,20 @@ final class RegionSession {
         // The content stays put: the panel slides over the blocks, which the capture already holds around the lens.
         panel.slide(to: appKitFrame)
         fitCapture(allowResize: false)
+    }
+
+    /// Moves the lens as if dragged by `delta` (Quartz points, y down) over `duration`, eased. For scripted demos.
+    func glide(by delta: CGVector, duration: TimeInterval) async {
+        let start = ScreenGeometry.appKitRect(fromQuartz: config.rect)
+        let steps = max(1, Int(duration * 60))
+        for i in 1...steps {
+            let t = Double(i) / Double(steps), e = t < 0.5 ? 2 * t * t : 1 - pow(-2 * t + 2, 2) / 2
+            let f = start.offsetBy(dx: delta.dx * e, dy: -delta.dy * e)
+            chrome.setRegion(f)
+            lensMoved(f)
+            try? await Task.sleep(for: .milliseconds(16))
+        }
+        lensDropped()
     }
 
     private func lensResized(_ appKitFrame: NSRect) {

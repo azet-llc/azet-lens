@@ -14,10 +14,10 @@ enum TranslationIssue: Error, Equatable, Sendable {
     var message: String {
         switch self {
         case let .languagePackMissing(s, t):
-            "\(Languages.name(s)) → \(Languages.name(t)) 언어 팩이 없습니다. 설정 › 번역에서 내려받으세요."
-        case let .intelligenceUnavailable(why): "Apple Intelligence를 쓸 수 없습니다: \(why)"
-        case let .unsupportedPair(s, t): "\(Languages.name(s)) → \(Languages.name(t)) 번역은 지원되지 않습니다."
-        case let .failed(why): "번역 실패: \(why)"
+            String(localized: "The \(Languages.name(s)) → \(Languages.name(t)) language pack is not installed. Download it in Settings › Translation.")
+        case let .intelligenceUnavailable(why): String(localized: "Apple Intelligence is unavailable: \(why)")
+        case let .unsupportedPair(s, t): String(localized: "\(Languages.name(s)) → \(Languages.name(t)) translation is not supported.")
+        case let .failed(why): String(localized: "Translation failed: \(why)")
         }
     }
 }
@@ -127,7 +127,7 @@ actor TranslationService {
             // Fall through to Apple Translation; say why the chosen engine is not used.
             issueHandler?(.intelligenceUnavailable(intelligence.unavailableReason ?? ""))
         }
-        guard source != "und" else { throw TranslationIssue.failed("언어를 알아볼 수 없습니다") }
+        guard source != "und" else { throw TranslationIssue.failed(String(localized: "Could not tell which language this is")) }
         let (session, _) = try await session(source: source)
         return try await stream(items, through: session, onResult: onResult)
     }
@@ -232,10 +232,10 @@ final class IntelligenceTranslator: @unchecked Sendable {
     var unavailableReason: String? {
         guard case let .unavailable(reason) = model.availability else { return nil }
         return switch reason {
-        case .appleIntelligenceNotEnabled: "시스템 설정에서 Apple Intelligence를 켜 주세요"
-        case .deviceNotEligible: "이 기기는 Apple Intelligence를 지원하지 않습니다"
-        case .modelNotReady: "모델을 내려받는 중입니다"
-        @unknown default: "알 수 없는 이유"
+        case .appleIntelligenceNotEnabled: String(localized: "Turn on Apple Intelligence in System Settings")
+        case .deviceNotEligible: String(localized: "This Mac does not support Apple Intelligence")
+        case .modelNotReady: String(localized: "The model is still downloading")
+        @unknown default: String(localized: "Unknown reason")
         }
     }
 

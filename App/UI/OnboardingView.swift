@@ -10,35 +10,38 @@ struct OnboardingView: View {
     var body: some View {
         @Bindable var model = model
         VStack(spacing: 0) {
-            VStack(spacing: 10) {
-                AppGlyph(size: 76)
-                    .shadow(color: .orange.opacity(0.35), radius: 18, y: 8)
-                Text("뭐여? 이제 바로 읽혀요")
-                    .font(.system(size: 26, weight: .bold, design: .rounded))
-                Text("화면의 원하는 곳에 영역을 걸어 두면, 글자를 지우고\n그 자리에 번역을 자연스럽게 다시 써 드려요.")
-                    .multilineTextAlignment(.center)
+            LensDemo()
+                .padding(.horizontal, 28)
+                .padding(.top, 40)
+            VStack(spacing: 6) {
+                Text("Mwoyea")
+                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                Text("Put a lens on the screen. The text under it is erased and rewritten in your language.")
                     .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            .padding(.top, 34)
-            .padding(.bottom, 24)
+            .padding(.horizontal, 40)
+            .padding(.top, 22)
+            .padding(.bottom, 22)
 
             VStack(spacing: 10) {
-                StepCard(number: 1, title: "화면 기록 권한", done: model.hasScreenPermission,
-                         detail: model.hasScreenPermission ? "허용됨. 영역 안의 글자만 읽고, 아무것도 저장하거나 보내지 않아요."
-                             : "선택한 영역의 글자를 읽으려면 필요해요. 허용한 뒤 앱을 다시 열어야 할 수 있어요.") {
+                StepCard(number: 1, title: String(localized: "Screen Recording"), done: model.hasScreenPermission,
+                         detail: model.hasScreenPermission ? String(localized: "Allowed. Mwoyea reads only what is under a lens, and never stores or sends it.")
+                             : String(localized: "Needed to read the text under a lens. You may have to reopen Mwoyea after allowing it.")) {
                     if !model.hasScreenPermission {
-                        Button("허용하기") { model.requestPermission() }.buttonStyle(.glassProminent)
+                        Button("Allow") { model.requestPermission() }.buttonStyle(.glassProminent)
                     }
                 }
-                StepCard(number: 2, title: "번역 언어", done: true,
-                         detail: intelligence.isAvailable ? "Apple Intelligence로 문맥을 살려 번역해요. 더 빠른 번역은 설정 › 번역에서 언어 팩을 받으세요."
-                             : "Apple 번역을 사용해요. 설정 › 번역에서 언어 팩을 받아 주세요.") {
+                StepCard(number: 2, title: String(localized: "Languages"), done: true,
+                         detail: intelligence.isAvailable ? String(localized: "Apple Intelligence translates with context. For faster translation, get a language pack in Settings › Translation.")
+                             : String(localized: "Mwoyea uses Apple Translation. Get a language pack in Settings › Translation.")) {
                     LanguageBar(source: $model.settings.sourceLanguage, target: $model.settings.targetLanguage)
                         .frame(width: 230)
                 }
-                StepCard(number: 3, title: "영역 고르기", done: !model.regions.isEmpty,
-                         detail: "어디서든 \(HotKeys.addRegion.display)를 누르거나 메뉴 막대의 말풍선을 누르세요. 창을 클릭하면 창을 따라다녀요.") {
-                    Button("지금 해 보기") {
+                StepCard(number: 3, title: String(localized: "Place a Lens"), done: !model.regions.isEmpty,
+                         detail: String(localized: "Press \(HotKeys.addRegion.display) anywhere. Drag to place a lens, or click a window to follow it.")) {
+                    Button("Try It Now") {
                         finish()
                         Task { await model.addRegion() }
                     }
@@ -49,10 +52,10 @@ struct OnboardingView: View {
             .padding(.horizontal, 28)
 
             HStack {
-                Text("모든 처리는 이 Mac 안에서만 이루어져요.")
+                Text("Everything happens on this Mac.")
                     .font(.caption).foregroundStyle(.tertiary)
                 Spacer()
-                Button("시작하기") { finish() }
+                Button("Get Started") { finish() }
                     .keyboardShortcut(.defaultAction)
                     .buttonStyle(.glassProminent)
                     .controlSize(.large)
@@ -97,5 +100,76 @@ private struct StepCard<Accessory: View>: View {
         }
         .padding(14)
         .background(.background.secondary, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+    }
+}
+
+/// A chat window with a lens gliding over it; under the lens the messages read in the interface language.
+private struct LensDemo: View {
+    /// (name, colour, original, translation). The originals are English, or Japanese for an English interface.
+    private let rows: [(String, Color, String, String)] = {
+        let en = Bundle.main.preferredLocalizations.first == "en"
+        return [
+            ("maya", Color(red: 0.96, green: 0.48, blue: 0.40),
+             en ? "昨夜パッチノート見るまで起きてた人いる？" : "ok who stayed up for the patch notes last night",
+             String(localized: "ok who stayed up for the patch notes last night")),
+            ("junpark", Color(red: 0.35, green: 0.65, blue: 1.00),
+             en ? "はい私。やっと二段ジャンプのバグ直ったね" : "guilty. they finally fixed the double jump bug",
+             String(localized: "guilty. they finally fixed the double jump bug")),
+            ("rinrin", Color(red: 0.94, green: 0.70, blue: 0.20),
+             en ? "今夜レイド行ける人いる？あと二人ほしい" : "anyone up for the raid tonight? need two more",
+             String(localized: "anyone up for the raid tonight? need two more")),
+            ("samwise", Color(red: 0.23, green: 0.65, blue: 0.36),
+             en ? "了解、9時に集合で！" : "count me in, see you all at 9",
+             String(localized: "count me in, see you all at 9")),
+        ]
+    }()
+
+    private let rowHeight: CGFloat = 50, top: CGFloat = 16
+
+    var body: some View {
+        TimelineView(.animation) { t in
+            GeometryReader { g in
+                // The lens glides down and back over the messages; whatever it covers reads translated, message by message.
+                let phase = (sin(t.date.timeIntervalSinceReferenceDate * 0.6 - .pi / 2) + 1) / 2
+                let lensHeight = rowHeight * 2 + 8
+                let lens = CGRect(x: 16, y: top - 4 + phase * (rowHeight * CGFloat(rows.count) - lensHeight + 8),
+                                  width: g.size.width - 32, height: lensHeight)
+                ZStack(alignment: .topLeading) {
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .fill(Color(red: 0.19, green: 0.20, blue: 0.22))
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .fill(Color(red: 0.15, green: 0.16, blue: 0.18))
+                        .frame(width: lens.width, height: lens.height)
+                        .offset(x: lens.minX, y: lens.minY)
+                    ForEach(Array(rows.enumerated()), id: \.offset) { i, r in
+                        let mid = top + rowHeight * (CGFloat(i) + 0.5)
+                        message(r, translated: lens.minY < mid && mid < lens.maxY)
+                            .offset(x: 34, y: top + rowHeight * CGFloat(i) + 6)
+                    }
+                    LensRing(cornerRadius: 14, lineWidth: 2.5, glow: 9, spinning: true, period: 7)
+                        .frame(width: lens.width, height: lens.height)
+                        .offset(x: lens.minX, y: lens.minY)
+                }
+            }
+        }
+        .frame(height: top * 2 + rowHeight * CGFloat(rows.count))
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .shadow(color: .black.opacity(0.25), radius: 16, y: 8)
+        .accessibilityLabel("A lens turning text into your language")
+    }
+
+    private func message(_ r: (String, Color, String, String), translated: Bool) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            Circle().fill(r.1).frame(width: 28, height: 28)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(verbatim: r.0).font(.system(size: 12, weight: .semibold)).foregroundStyle(r.1)
+                Text(verbatim: translated ? r.3 : r.2)
+                    .font(.system(size: 14))
+                    .foregroundStyle(.white.opacity(translated ? 1 : 0.72))
+                    .lineLimit(1)
+                    .contentTransition(.opacity)
+                    .animation(.easeInOut(duration: 0.3), value: translated)
+            }
+        }
     }
 }

@@ -3,10 +3,15 @@
 </p>
 
 <h1 align="center">Mwoyea</h1>
-<p align="center"><b>뭐여? 이제 바로 읽혀요.</b><br>
-Live, in-place screen translation for macOS — the original text disappears and the translation is written right where it was.</p>
+<p align="center"><b>Read any screen in your language, right where the text is.</b><br>
+Put a lens over a game, a chat or a web page. The original text disappears and the translation is written in its place.</p>
 
-<!-- Hero clip: docs/HERO.md describes the shot list. Drop the recording at docs/hero.mp4 and link it here. -->
+<p align="center">
+  <code>brew install midagedev/tap/mwoyea</code><br>
+  <sub>macOS 27 · Apple silicon · everything on-device</sub>
+</p>
+
+<!-- HERO -->
 
 ## What it does
 
@@ -33,7 +38,7 @@ colour. It is not a popup or a subtitle bar: the screen simply reads in your lan
 | Translation | Translation framework — low-latency language packs, or the high-fidelity Apple Intelligence model without a pack |
 | Glossary-aware translation | Foundation Models (on-device language model), optional |
 | Erasing | Core ML MI-GAN inpainting on the GPU for textured backgrounds, a fast diffusion fill for flat ones |
-| Interface | SwiftUI with Liquid Glass, a menu bar extra, global shortcuts |
+| Interface | SwiftUI with Liquid Glass, a menu bar extra, global shortcuts, in 12 languages |
 
 ## How it works
 
@@ -50,6 +55,17 @@ content or the lens moves it grows to about 60 %. The lens moves freely inside t
 only re-centres when the lens nears its edge — then just the uncovered strips are read. Unchanged text keeps its
 erased background across passes, results computed while content moved are shifted rather than thrown away, and the
 translation queue always serves what is visible first.
+
+The name is Korean: *mwoyea* (뭐여) is a dialect way of saying "what's that?"
+
+## Install
+
+```bash
+brew install midagedev/tap/mwoyea
+```
+
+Or download the disk image from [Releases](https://github.com/midagedev/mwoyea/releases). The app is signed and
+notarized.
 
 ## Requirements
 
@@ -72,7 +88,6 @@ translation queue always serves what is visible first.
 
 ```bash
 brew install xcodegen
-tools/inpaint/convert_migan.sh        # optional: MI-GAN → Core ML (needs uv); without it textured text gets a flat fill
 xcodegen generate
 xcodebuild -project Mwoyea.xcodeproj -scheme Mwoyea -configuration Release -derivedDataPath build/dd build
 ```
@@ -104,7 +119,17 @@ $APP --render page.png frames/ --pan --scroll --src ja --tgt ko \
 `MWOYEA_TRACE=1` prints stage timings; in the live app `MWOYEA_DUMP=<dir>` writes what each lens captured with its
 overlay on top.
 
+### Releasing
+
+`scripts/release.sh <version> [--publish]` builds with a Developer ID identity, notarizes and staples the disk image,
+and with `--publish` creates the GitHub release and updates the Homebrew cask. The script header lists what it needs.
+
 ## Credits
 
-Inpainting model: [MI-GAN](https://github.com/Picsart-AI-Research/MI-GAN) (Picsart AI Research), converted to
-Core ML by `tools/inpaint`. The weights are not part of this repository.
+Inpainting model: [MI-GAN](https://github.com/Picsart-AI-Research/MI-GAN) by Picsart AI Research, MIT licensed
+(`tools/inpaint/models/LICENSE-MI-GAN-WEIGHTS`). The Core ML version in `tools/inpaint/models` was converted with
+`tools/inpaint/convert_migan.sh`.
+
+## License
+
+MIT

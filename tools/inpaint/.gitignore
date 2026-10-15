@@ -1,4 +1,6 @@
 .venv/
 vendor/
-models/
+models/*
+!models/MIGAN_512.mlpackage/
+!models/LICENSE-MI-GAN-WEIGHTS
 out/

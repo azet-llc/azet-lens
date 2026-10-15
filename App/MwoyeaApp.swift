@@ -35,13 +35,19 @@ struct MwoyeaApp: App {
     private var menuSymbol: String {
         if model.isPaused { return "pause.circle" }
         if !model.translationsVisible { return "eye.slash" }
-        return model.regions.contains(where: \.isEnabled) ? "character.bubble.fill" : "character.bubble"
+        return model.regions.contains(where: \.isEnabled) ? "text.viewfinder" : "viewfinder"
     }
 }
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         Task { @MainActor in await AppModel.shared.bootstrap() }
+        // `MWOYEA_PREVIEW=menu|onboarding` shows that window on launch, for screenshots.
+        switch ProcessInfo.processInfo.environment["MWOYEA_PREVIEW"] {
+        case "menu": Task { @MainActor in WindowPresenter.shared.showMenuPreview() }
+        case "onboarding": Task { @MainActor in WindowPresenter.shared.showOnboarding() }
+        default: break
+        }
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
@@ -74,6 +80,19 @@ final class WindowPresenter {
         w.makeKeyAndOrderFront(nil)
         onboarding = w
     }
+
+    func showMenuPreview() {
+        let w = NSWindow(contentViewController: NSHostingController(rootView: MenuPanel().environment(AppModel.shared)))
+        w.styleMask = [.titled, .fullSizeContentView]
+        w.titlebarAppearsTransparent = true
+        w.titleVisibility = .hidden
+        w.isReleasedWhenClosed = false
+        w.setFrameTopLeftPoint(CGPoint(x: 200, y: (NSScreen.main?.frame.maxY ?? 900) - 120))
+        w.makeKeyAndOrderFront(nil)
+        preview = w
+    }
+
+    private var preview: NSWindow?
 
     func closeOnboarding() {
         onboarding?.close()

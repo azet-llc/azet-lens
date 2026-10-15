@@ -11,7 +11,7 @@ import os
 final class RegionCapturer: NSObject, SCStreamOutput, SCStreamDelegate, @unchecked Sendable {
     enum CaptureError: LocalizedError {
         case displayNotFound
-        var errorDescription: String? { "영역이 있는 화면을 찾을 수 없습니다." }
+        var errorDescription: String? { String(localized: "Can’t find the display this lens is on.") }
     }
 
     var onFrame: (@Sendable (CapturedFrame) -> Void)?

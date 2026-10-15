@@ -2,12 +2,17 @@ import AppKit
 import QuartzCore
 
 /// Transparent, click-through panel floating over a region. Shows one layer per translated block.
+///
+/// The panel is larger than the lens by `spill` on every side, so a block that is mostly inside the lens is drawn
+/// whole instead of being cut at the lens edge; blocks mostly outside it are hidden and the original shows.
 final class OverlayPanel: NSPanel {
+    static let spill: CGFloat = 160
     private let host = OverlayHostView()
     private var lastVersion = 0
 
+    /// `frame` is the lens, AppKit coordinates.
     init(frame: NSRect) {
-        super.init(contentRect: frame, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
+        super.init(contentRect: frame.insetBy(dx: -Self.spill, dy: -Self.spill), styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
         isOpaque = false
         backgroundColor = .clear
         hasShadow = false
@@ -32,19 +37,22 @@ final class OverlayPanel: NSPanel {
         host.apply(snapshot, offset: CGVector(dx: snapshot.origin.x - here.x, dy: snapshot.origin.y - here.y))
     }
 
-    func move(to frame: NSRect) {
-        setFrame(frame, display: false)
+    func move(to lens: NSRect) {
+        setFrame(lens.insetBy(dx: -Self.spill, dy: -Self.spill), display: false)
+        host.updateVisibility(animated: false)
     }
 
     /// Moves the panel while keeping its blocks fixed on screen, so translations stay glued to the content
     /// under a dragged lens until the pipeline catches up.
-    func slide(to newFrame: NSRect) {
+    func slide(to lens: NSRect) {
+        let newFrame = lens.insetBy(dx: -Self.spill, dy: -Self.spill)
         let dx = newFrame.minX - frame.minX, dyDown = -(newFrame.maxY - frame.maxY)
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         host.offsetBlocks(dx: -dx, dy: -dyDown)
         setFrame(newFrame, display: false)
         CATransaction.commit()
+        host.updateVisibility(animated: true)
     }
 
     /// Fades the translations out (show original) or back in.
@@ -128,6 +136,23 @@ private final class OverlayHostView: NSView {
             } else {
                 l.removeFromSuperlayer()
             }
+        }
+        CATransaction.commit()
+        updateVisibility(animated: snapshot.animated)
+    }
+
+    /// Shows a block when at least half of it, or half of the lens, is covered by it; hides the rest.
+    func updateVisibility(animated: Bool) {
+        let lens = bounds.insetBy(dx: OverlayPanel.spill, dy: OverlayPanel.spill)
+        CATransaction.begin()
+        CATransaction.setAnimationDuration(animated ? 0.15 : 0)
+        CATransaction.setDisableActions(!animated)
+        for l in layersByID.values {
+            let inter = l.frame.intersection(lens)
+            let area = inter.isNull ? 0 : inter.width * inter.height
+            let show = area >= 0.5 * l.frame.width * l.frame.height || area >= 0.5 * lens.width * lens.height
+            let opacity: Float = show ? 1 : 0
+            if l.opacity != opacity { l.opacity = opacity }
         }
         CATransaction.commit()
     }

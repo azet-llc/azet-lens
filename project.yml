@@ -1,6 +1,7 @@
 name: Mwoyea
 options:
   bundleIdPrefix: dev.midagedev
+  developmentLanguage: en
   deploymentTarget:
     macOS: "27.0"
   createIntermediateGroups: true
@@ -16,7 +17,7 @@ targets:
     platform: macOS
     sources:
       - path: App
-      # Built by tools/inpaint/convert_migan.sh; the app falls back to flat fill without it.
+      # MI-GAN (MIT), converted by tools/inpaint/convert_migan.sh; the app falls back to flat fill without it.
       - path: tools/inpaint/models/MIGAN_512.mlpackage
         optional: true
     dependencies:
@@ -26,24 +27,26 @@ targets:
       properties:
         CFBundleDisplayName: Mwoyea
         CFBundleName: Mwoyea
-        CFBundleShortVersionString: "1.0.0"
-        CFBundleVersion: "1"
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         LSApplicationCategoryType: public.app-category.productivity
         LSMinimumSystemVersion: "27.0"
         LSUIElement: true
         NSHumanReadableCopyright: "© 2026 midagedev"
-        NSScreenCaptureUsageDescription: "Mwoyea reads the text inside the screen areas you choose so it can translate it in place."
+        NSScreenCaptureUsageDescription: "Mwoyea reads the text under your lenses so it can translate it in place."
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: dev.midagedev.mwoyea
         PRODUCT_NAME: Mwoyea
         SWIFT_VERSION: "5.0"
         MARKETING_VERSION: "1.0.0"
+        CURRENT_PROJECT_VERSION: "1"
         ENABLE_HARDENED_RUNTIME: YES
         CODE_SIGN_STYLE: Manual
         CODE_SIGN_IDENTITY: $(MWOYEA_SIGN_IDENTITY)
         DEVELOPMENT_TEAM: $(MWOYEA_TEAM)
         PROVISIONING_PROFILE_SPECIFIER: ""
+        # Local builds skip the timestamp server; scripts/release.sh signs with --timestamp for notarization.
         OTHER_CODE_SIGN_FLAGS: --timestamp=none
         CODE_SIGN_ENTITLEMENTS: App/Mwoyea.entitlements
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon

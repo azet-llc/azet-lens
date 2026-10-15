@@ -171,7 +171,7 @@ private final class PickerView: NSView {
             NSColor.controlAccentColor.withAlphaComponent(0.12).setFill()
             NSBezierPath(roundedRect: r, xRadius: 10, yRadius: 10).fill()
             stroke(r, color: .controlAccentColor, width: 3, radius: 10)
-            label(w.appName.isEmpty ? "창 전체 번역" : "\(w.appName) — 클릭하면 창 전체", near: r, inside: true)
+            label(w.appName.isEmpty ? String(localized: "Translate this window") : String(localized: "\(w.appName) — click to follow this window"), near: r, inside: true)
         }
         hint()
     }
@@ -209,7 +209,7 @@ private final class PickerView: NSView {
 
     private func hint() {
         guard screenFrame.contains(NSEvent.mouseLocation) || NSScreen.screens.count == 1 else { return }
-        let text = "드래그해서 번역할 영역을 고르세요  ·  창을 클릭하면 창 전체  ·  esc 취소"
+        let text = String(localized: "Drag to place a lens  ·  Click a window to follow it  ·  esc to cancel")
         let s = NSAttributedString(string: text, attributes: [
             .font: NSFont.systemFont(ofSize: 13, weight: .medium),
             .foregroundColor: NSColor.white,

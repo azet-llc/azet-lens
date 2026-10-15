@@ -6,3 +6,7 @@
 MWOYEA_SIGN_IDENTITY = -
 MWOYEA_TEAM =
 #include? "Local.xcconfig"
+
+// Extract localizable strings for the string catalog (xcstringstool sync).
+SWIFT_EMIT_LOC_STRINGS = YES
+LOCALIZATION_PREFERS_STRING_CATALOGS = YES

@@ -12,16 +12,16 @@ enum TranslationEngineChoice: String, Codable, CaseIterable, Identifiable {
     var id: String { rawValue }
     var title: String {
         switch self {
-        case .auto: "자동"
-        case .highFidelity: "고품질"
-        case .customModel: "용어집 우선"
+        case .auto: String(localized: "Automatic")
+        case .highFidelity: String(localized: "High fidelity")
+        case .customModel: String(localized: "Glossary first")
         }
     }
     var detail: String {
         switch self {
-        case .auto: "언어 팩이 있으면 가장 빠른 번역, 없으면 Apple Intelligence 번역"
-        case .highFidelity: "항상 Apple Intelligence 번역 모델 · 한 줄에 0.5초 안팎"
-        case .customModel: "Foundation Models가 용어집을 지켜 번역 · 게임·작품 고유명사에"
+        case .auto: String(localized: "The fastest translation when a language pack is installed, Apple Intelligence otherwise")
+        case .highFidelity: String(localized: "Always Apple Intelligence’s translation model · about 0.5 s a line")
+        case .customModel: String(localized: "Foundation Models follows your glossary · for names in games and stories")
         }
     }
 }
@@ -35,16 +35,16 @@ enum RenderMode: String, Codable, CaseIterable, Identifiable {
     var id: String { rawValue }
     var title: String {
         switch self {
-        case .adaptive: "적응형"
-        case .fast: "빠르게"
-        case .seamless: "자연스럽게"
+        case .adaptive: String(localized: "Adaptive")
+        case .fast: String(localized: "Quick")
+        case .seamless: String(localized: "Seamless")
         }
     }
     var detail: String {
         switch self {
-        case .adaptive: "움직이는 동안엔 상자, 멈추면 원문을 지우고 그 자리에 다시 씁니다"
-        case .fast: "항상 단색 상자 위에 번역을 띄웁니다. 배터리를 가장 적게 씁니다"
-        case .seamless: "항상 원문을 지우고 다시 씁니다"
+        case .adaptive: String(localized: "Boxes while things move; once still, the original is erased and rewritten in place")
+        case .fast: String(localized: "Always shows translations on solid boxes. Uses the least battery")
+        case .seamless: String(localized: "Always erases the original and rewrites it")
         }
     }
 }
@@ -54,9 +54,9 @@ enum FontStyleChoice: String, Codable, CaseIterable, Identifiable {
     var id: String { rawValue }
     var title: String {
         switch self {
-        case .system: "기본"
-        case .rounded: "둥근"
-        case .serif: "명조"
+        case .system: String(localized: "Default")
+        case .rounded: String(localized: "Rounded")
+        case .serif: String(localized: "Serif")
         }
     }
 }
@@ -64,7 +64,7 @@ enum FontStyleChoice: String, Codable, CaseIterable, Identifiable {
 struct AppSettings: Codable, Equatable {
     /// BCP-47 identifier, or "auto" to detect per line.
     var sourceLanguage = "auto"
-    var targetLanguage = Locale.current.language.languageCode?.identifier ?? "ko"
+    var targetLanguage = Languages.preferredTarget
     var engine = TranslationEngineChoice.auto
     var renderMode = RenderMode.adaptive
     var useInpaintingModel = true
@@ -126,12 +126,23 @@ struct WindowAnchor: Codable, Equatable {
 
 /// Common source languages offered in the UI; anything Vision + Translation support works via "auto".
 enum Languages {
-    static let sources = ["auto", "ja", "zh-Hans", "zh-Hant", "en", "ko", "fr", "de", "es", "ru", "vi", "th"]
-    static let targets = ["ko", "en", "ja", "zh-Hans", "zh-Hant", "fr", "de", "es", "vi"]
+    static let sources = ["auto", "en", "ja", "ko", "zh-Hans", "zh-Hant", "fr", "de", "es", "it", "pt-BR", "ru", "uk", "vi", "th"]
+    static let targets = ["en", "ko", "ja", "zh-Hans", "zh-Hant", "fr", "de", "es", "it", "pt-BR", "ru", "uk", "vi", "th"]
+
+    /// The first of the user's preferred languages that Mwoyea can translate into.
+    static var preferredTarget: String {
+        for id in Locale.preferredLanguages {
+            let l = Locale.Language(identifier: id)
+            if l.languageCode == "zh" { return l.script == .hanTraditional || l.region == "TW" || l.region == "HK" ? "zh-Hant" : "zh-Hans" }
+            if l.languageCode == "pt" { return "pt-BR" }
+            if let code = l.languageCode?.identifier, targets.contains(code) { return code }
+        }
+        return "en"
+    }
 
     static func name(_ id: String) -> String {
-        if id == "auto" { return "자동 감지" }
-        return Locale.current.localizedString(forIdentifier: id) ?? id
+        if id == "auto" { return String(localized: "Detect") }
+        return Locale(identifier: Bundle.main.preferredLocalizations.first ?? "en").localizedString(forIdentifier: id) ?? id
     }
 
     /// Scripts Vision's fast recognizer handles; everything else needs the accurate recognizer.
