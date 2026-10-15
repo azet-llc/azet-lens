@@ -49,18 +49,7 @@ jobs:
           security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           echo "$MACOS_SIGN_P12" | base64 --decode > "$RUNNER_TEMP/certificate.p12"
-          sw_vers -productVersion
-          echo "p12: $(wc -c < "$RUNNER_TEMP/certificate.p12") bytes, password ${#MACOS_SIGN_PASSWORD} chars"
-          if ! security import "$RUNNER_TEMP/certificate.p12" -P "$MACOS_SIGN_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"; then
-            # A Keychain export from a newer macOS may use PBES2/AES, which this runner's `security` rejects as a wrong
-            # password. Re-wrap it with the legacy cipher that every `security` reads.
-            echo "re-wrapping the p12 with the legacy cipher"
-            export PW="$MACOS_SIGN_PASSWORD"
-            openssl pkcs12 -in "$RUNNER_TEMP/certificate.p12" -passin env:PW -nodes -out "$RUNNER_TEMP/id.pem"
-            openssl pkcs12 -export -legacy -in "$RUNNER_TEMP/id.pem" -passout env:PW -out "$RUNNER_TEMP/certificate.p12"
-            rm "$RUNNER_TEMP/id.pem"
-            security import "$RUNNER_TEMP/certificate.p12" -P "$MACOS_SIGN_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
-          fi
+          security import "$RUNNER_TEMP/certificate.p12" -P "$MACOS_SIGN_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
           rm "$RUNNER_TEMP/certificate.p12"
           security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security list-keychain -d user -s "$KEYCHAIN_PATH" $(security list-keychain -d user | tr -d '"')
