@@ -5,7 +5,7 @@
 <title>#general — Starfall Valley</title>
 <!--
   A made-up chat app for demos and recordings. Parameters:
-    lang=en|ja            message language (default en)
+    lang=en|ja|ko         message language (default en)
     every=N               a new message every N seconds (0 = none, default 4)
     history=N             messages already in the log (default 10)
     scroll=t:px,t:px      at t seconds, scroll the log smoothly by px (negative = up)
@@ -14,7 +14,7 @@
   :root { color-scheme: dark; --bg: #313338; --side: #2b2d31; --rail: #1e1f22; --text: #dbdee1; --muted: #949ba4; --hover: #2e3035; }
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); overflow: hidden;
-    font-family: "Helvetica Neue", "Hiragino Sans", "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
+    font-family: "Helvetica Neue", "Hiragino Sans", "Apple SD Gothic Neo", "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
   .app { display: grid; grid-template-columns: 72px 240px 1fr; grid-template-rows: minmax(0, 1fr); height: 100%; }
   .rail { background: var(--rail); display: flex; flex-direction: column; align-items: center; gap: 8px; padding-top: 12px; }
   .rail div { width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; color: #fff; font-size: 18px; }
@@ -50,6 +50,9 @@
     background: radial-gradient(circle at 70% 30%, #ffe6a7 0 6%, transparent 7%), linear-gradient(180deg, #2a3a7a 0%, #7f5aa8 45%, #f39a7a 70%, #2b2140 71%, #1a1430 100%); }
   .shot::after { content: ""; position: absolute; inset: auto 0 0 0; height: 40%;
     background: repeating-linear-gradient(90deg, #1b1430 0 18px, #241a3e 18px 30px); clip-path: polygon(0 40%, 8% 20%, 16% 45%, 26% 10%, 38% 50%, 52% 15%, 63% 40%, 75% 5%, 88% 45%, 100% 25%, 100% 100%, 0 100%); }
+  .embed { margin-top: 8px; max-width: 440px; background: #2b2d31; border-left: 4px solid #f0b232; border-radius: 4px; padding: 10px 14px 12px; }
+  .embed small { display: block; color: var(--muted); font-size: 12px; } .embed b { display: block; color: #00a8fc; font-size: 15px; margin: 4px 0; }
+  .embed p { margin: 0; font-size: 14px; line-height: 1.4; color: #dbdee1; }
   .new { animation: pop .35s ease-out; } @keyframes pop { from { opacity: 0; transform: translateY(8px); } }
   footer { padding: 0 16px 8px; flex: none; }
   footer .box { background: #383a40; border-radius: 8px; padding: 12px 16px; color: var(--muted); display: flex; gap: 12px; align-items: center; }
@@ -79,7 +82,8 @@
 </div>
 <script>
 const params = new URLSearchParams(location.search);
-const lang = params.get("lang") === "ja" ? "ja" : "en";
+const lang = ["ja", "ko"].includes(params.get("lang")) ? params.get("lang") : "en";
+document.documentElement.lang = lang;
 const people = {
   maya: ["Maya", "#f47b67", "🦊", "MOD", "#5865f2"], jun: ["junpark", "#58a6ff", "🐧"], ollie: ["Ollie 🌙", "#c27cff", "🦉"],
   sam: ["samwise", "#3ba55d", "🐸"], rin: ["rinrin", "#f0b232", "🐱", "EVENT", "#eb459e"],
@@ -87,8 +91,9 @@ const people = {
 const ui = {
   en: { topic: "Talk about anything. Be nice.", day: "Today", box: "Message #general", typing: "is typing…" },
   ja: { topic: "雑談なんでもOK。仲良くね。", day: "今日", box: "#general へメッセージを送信", typing: "が入力中…" },
+  ko: { topic: "아무 얘기나 편하게. 서로 존중해요.", day: "오늘", box: "#general에 메시지 보내기", typing: "님이 입력 중…" },
 }[lang];
-// [who, text, extra]: extra = { reply: "who", reacts: [[emoji, n, mine]], shot: true }
+// [who, text, extra]: extra = { reply: "who", reacts: [[emoji, n, mine]], shot: true, embed: [site, title, description] }
 const script = {
   en: [
     ["maya", "ok who stayed up for the patch notes last night"],
@@ -101,7 +106,7 @@ const script = {
     ["ollie", "Someone said you can catch a golden carp behind the lighthouse at night. Look at this sunset though", { shot: true }],
     ["sam", "that thread was wild, half the comments were saying it's fake", { reply: "ollie" }],
     ["maya", "I caught one yesterday!! took me like forty minutes but it's real", { reacts: [["🐟", 7], ["👑", 3, true]] }],
-    ["jun", "the devs said more secret spots are coming in the next update"],
+    ["jun", "the devs said more secret spots are coming in the next update", { embed: ["starfallvalley.game", "Patch 1.4 — The Lighthouse Update", "Double jump fixed, three new fishing spots, and something shiny swimming behind the lighthouse after dark."] }],
     ["rin", "Okay that settles it, we're going fishing after the raid"],
     ["ollie", "this is the best community I've ever been part of, no joke", { reacts: [["💜", 9, true]] }],
     ["sam", "don't get sappy on us now ollie"],
@@ -119,12 +124,30 @@ const script = {
     ["ollie", "灯台の裏で夜に金のコイが釣れるって噂あるよね。それよりこの夕焼け見て", { shot: true }],
     ["sam", "あのスレやばかったよね、コメントの半分はガセだって言ってた", { reply: "ollie" }],
     ["maya", "昨日釣れたよ！！40分くらいかかったけど本当にいる", { reacts: [["🐟", 7], ["👑", 3, true]] }],
-    ["jun", "運営が次のアプデで隠しスポットもっと増やすって言ってた"],
+    ["jun", "運営が次のアプデで隠しスポットもっと増やすって言ってた", { embed: ["starfallvalley.game", "パッチ1.4「灯台アップデート」", "二段ジャンプを修正、新しい釣りスポットを3か所追加。夜になると灯台の裏で何かが光っている…？"] }],
     ["rin", "よし決まり、レイド終わったら釣り行こう"],
     ["ollie", "マジでここが今までで一番いいコミュニティだわ", { reacts: [["💜", 9, true]] }],
     ["sam", "急にしんみりするのやめてｗ"],
     ["maya", "もう遅い、すでに泣いてる"],
     ["rin", "レイドあと5分で始まるよ、みんな装備準備して！", { reacts: [["⚔️", 5]] }],
+  ],
+  ko: [
+    ["maya", "어젯밤에 패치 노트 기다리느라 밤샌 사람?"],
+    ["jun", "저요ㅋㅋ 이단 점프 버그 드디어 고쳤더라, 석 달이나 걸릴 줄은 몰랐네", { reacts: [["😭", 4], ["🙏", 2, true]] }],
+    ["ollie", "잠깐 그럼 월드 4 지름길 이제 못 써?? 주말 내내 연습했는데", { reply: "jun" }],
+    ["sam", "ㅋㅋㅋ 명복을. 솔직히 그 지름길 좀 버그 같긴 했어"],
+    ["rin", "오늘 밤 협동 이벤트 갈 사람? 레이드에 두 명 더 필요해", { reacts: [["🙋", 3]] }],
+    ["maya", "나 갈래! 몇 시에 할까?"],
+    ["rin", "우리 시간으로 9시쯤, 그러니까 한 시간 뒤?"],
+    ["ollie", "밤에 등대 뒤에서 황금 잉어 잡힌다는 소문 있던데. 그건 그렇고 이 노을 좀 봐", { shot: true }],
+    ["sam", "그 글 난리였잖아, 댓글 반은 주작이라고 하던데", { reply: "ollie" }],
+    ["maya", "나 어제 잡았어!! 40분 걸리긴 했는데 진짜 있어", { reacts: [["🐟", 7], ["👑", 3, true]] }],
+    ["jun", "다음 업데이트에 숨은 낚시터 더 늘린다고 운영진이 그러더라", { embed: ["starfallvalley.game", "1.4 패치 — 등대 업데이트", "이단 점프 버그 수정, 새 낚시터 3곳 추가. 밤이 되면 등대 뒤에서 무언가 반짝인다는데…"] }],
+    ["rin", "좋아 결정, 레이드 끝나고 낚시 가자"],
+    ["ollie", "진짜 여기가 내가 있어 본 커뮤니티 중에 최고야", { reacts: [["💜", 9, true]] }],
+    ["sam", "갑자기 감성 터지지 마 올리"],
+    ["maya", "이미 늦었어, 나 벌써 울컥함"],
+    ["rin", "레이드 5분 뒤 시작! 다들 장비 챙겨!", { reacts: [["⚔️", 5]] }],
   ],
 }[lang];
 
@@ -139,15 +162,18 @@ function add(animate) {
   const [name, color, emoji, tag, tagColor] = people[who];
   const el = document.createElement("div");
   el.className = "msg" + (animate ? " new" : "");
-  const time = `${lang === "ja" ? "今日 20:" : "Today at 8:"}${String(minute).padStart(2, "0")}${lang === "ja" ? "" : " PM"}`;
+  const mm = String(minute).padStart(2, "0");
+  const time = { en: `Today at 8:${mm} PM`, ja: `今日 20:${mm}`, ko: `오늘 오후 8:${mm}` }[lang];
   el.innerHTML = `<div class="av" style="background:${color}33">${emoji}</div><div>`
     + (extra.reply ? `<div class="reply"><span style="color:${people[extra.reply][1]}">@${people[extra.reply][0]}</span></div>` : "")
     + `<div class="who" style="color:${color}">${name}${tag ? `<span class="tag" style="background:${tagColor}">${tag}</span>` : ""}<time>${time}</time></div>`
     + `<div class="body"></div>`
     + (extra.shot ? `<div class="shot"></div>` : "")
+    + (extra.embed ? `<div class="embed"><small></small><b></b><p></p></div>` : "")
     + (extra.reacts ? `<div class="reacts">${extra.reacts.map(([e, n, mine]) => `<span class="${mine ? "mine" : ""}">${e} ${n}</span>`).join("")}</div>` : "")
     + `</div>`;
   el.querySelector(".body").textContent = text;
+  if (extra.embed) ["small", "b", "p"].forEach((t, k) => el.querySelector(`.embed ${t}`).textContent = extra.embed[k]);
   const atBottom = log.scrollHeight - log.scrollTop - log.clientHeight < 40;
   log.appendChild(el);
   i++; minute = Math.min(59, minute + 1);
