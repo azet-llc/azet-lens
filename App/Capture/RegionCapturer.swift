@@ -20,7 +20,10 @@ final class RegionCapturer: NSObject, SCStreamOutput, SCStreamDelegate, @uncheck
     private let queue = DispatchQueue(label: "dev.midagedev.mwoyea.capture", qos: .userInitiated)
     private let log = Logger(subsystem: "dev.midagedev.mwoyea", category: "capture")
     private var stream: SCStream?
+    private var filter: SCContentFilter?
     private var scale: CGFloat = 2
+    /// The rect the stream is known to deliver; nil while a reconfiguration is in flight (frames are ambiguous then).
+    private let configured = OSAllocatedUnfairLock<CGRect?>(initialState: nil)
 
     /// `rect` is in global Quartz points and must lie on one display.
     func start(rect: CGRect, fps: Double) async throws {
@@ -32,11 +35,14 @@ final class RegionCapturer: NSObject, SCStreamOutput, SCStreamDelegate, @uncheck
         let filter = SCContentFilter(display: display, excludingApplications: me, exceptingWindows: [])
         scale = CGFloat(filter.pointPixelScale)
 
-        let stream = SCStream(filter: filter, configuration: configuration(rect: rect, display: display.frame, fps: fps), delegate: self)
+        let config = configuration(rect: rect, display: display.frame, fps: fps)
+        let stream = SCStream(filter: filter, configuration: config, delegate: self)
         try stream.addStreamOutput(self, type: .screen, sampleHandlerQueue: queue)
         try await stream.startCapture()
         self.stream = stream
+        self.filter = filter
         displayFrame = display.frame
+        await settle(rect: rect, config: config)
     }
 
     private var displayFrame: CGRect = .zero
@@ -48,12 +54,26 @@ final class RegionCapturer: NSObject, SCStreamOutput, SCStreamDelegate, @uncheck
             try await start(rect: rect, fps: fps)
             return
         }
-        try await stream.updateConfiguration(configuration(rect: rect, display: displayFrame, fps: fps))
+        configured.withLock { $0 = nil }
+        let config = configuration(rect: rect, display: displayFrame, fps: fps)
+        try await stream.updateConfiguration(config)
+        await settle(rect: rect, config: config)
+    }
+
+    /// Marks `rect` as what the stream now shows and delivers one fresh frame of it. ScreenCaptureKit only sends
+    /// frames when pixels change, so without this a lens moved over static content would never see what it uncovered.
+    private func settle(rect: CGRect, config: SCStreamConfiguration) async {
+        configured.withLock { $0 = rect }
+        guard let filter, let buffer = try? await SCScreenshotManager.captureSampleBuffer(contentFilter: filter, configuration: config),
+              let pb = buffer.imageBuffer, configured.withLock({ $0 }) == rect,
+              let frame = Self.makeFrame(pb, rect: rect, scale: scale) else { return }
+        onFrame?(frame)
     }
 
     func stop() async {
         guard let s = stream else { return }
         stream = nil
+        configured.withLock { $0 = nil }
         try? await s.stopCapture()
     }
 
@@ -86,12 +106,12 @@ final class RegionCapturer: NSObject, SCStreamOutput, SCStreamDelegate, @uncheck
               SCFrameStatus(rawValue: statusRaw) == .complete,
               let pixelBuffer = sampleBuffer.imageBuffer
         else { return }
-        guard let frame = Self.makeFrame(pixelBuffer, scale: scale) else { return }
+        guard let rect = configured.withLock({ $0 }), let frame = Self.makeFrame(pixelBuffer, rect: rect, scale: scale) else { return }
         onFrame?(frame)
     }
 
     /// Copies the (pooled, soon reused) pixel buffer into an owned CGImage and a downsampled gray image.
-    static func makeFrame(_ pb: CVPixelBuffer, scale: CGFloat) -> CapturedFrame? {
+    static func makeFrame(_ pb: CVPixelBuffer, rect: CGRect, scale: CGFloat) -> CapturedFrame? {
         CVPixelBufferLockBaseAddress(pb, .readOnly)
         defer { CVPixelBufferUnlockBaseAddress(pb, .readOnly) }
         guard let base = CVPixelBufferGetBaseAddress(pb) else { return nil }
@@ -105,7 +125,7 @@ final class RegionCapturer: NSObject, SCStreamOutput, SCStreamDelegate, @uncheck
                                   bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedFirst.rawValue | CGBitmapInfo.byteOrder32Little.rawValue),
                                   provider: provider, decode: nil, shouldInterpolate: false, intent: .defaultIntent)
         else { return nil }
-        return CapturedFrame(image: image, gray: gray, grayStep: step, scale: scale, time: ProcessInfo.processInfo.systemUptime)
+        return CapturedFrame(image: image, gray: gray, grayStep: step, scale: scale, rect: rect, time: ProcessInfo.processInfo.systemUptime)
     }
 
     // MARK: - SCStreamDelegate

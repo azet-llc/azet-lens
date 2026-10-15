@@ -24,26 +24,38 @@ public struct GrayImage: Sendable, Equatable {
 
     /// Content moved right by `dx` and down by `dy` pixels (negative = left/up). Vacated pixels get `fill`.
     public func shifted(dx: Int, dy: Int, fill: UInt8 = 0) -> GrayImage {
-        var out = GrayImage(width: width, height: height, fill: fill)
-        let x0 = max(0, dx), x1 = min(width, width + dx)
+        reframed(dx: dx, dy: dy, width: width, height: height, fill: fill)
+    }
+
+    /// This image placed at (`dx`, `dy`) inside a new `width`×`height` canvas; the rest gets `fill`.
+    public func reframed(dx: Int, dy: Int, width w: Int, height h: Int, fill: UInt8 = 0) -> GrayImage {
+        var out = GrayImage(width: w, height: h, fill: fill)
+        let x0 = max(0, dx), x1 = min(w, width + dx)
         guard x1 > x0 else { return out }
-        for y in 0..<height {
+        for y in 0..<h {
             let sy = y - dy
             guard sy >= 0, sy < height else { continue }
-            let src = sy * width + (x0 - dx), dst = y * width + x0
+            let src = sy * width + (x0 - dx), dst = y * w + x0
             out.pixels.replaceSubrange(dst ..< dst + (x1 - x0), with: pixels[src ..< src + (x1 - x0)])
         }
         return out
     }
 
-    /// Pixels a `shifted(dx:dy:)` leaves without content: up to one horizontal and one vertical strip.
+    /// Pixels a `shifted(dx:dy:)` leaves without content.
     public func vacatedStrips(dx: Int, dy: Int) -> [PixelRect] {
-        var strips: [PixelRect] = []
-        if dy > 0 { strips.append(PixelRect(x: 0, y: 0, width: width, height: min(dy, height))) }
-        if dy < 0 { strips.append(PixelRect(x: 0, y: max(0, height + dy), width: width, height: min(-dy, height))) }
-        if dx > 0 { strips.append(PixelRect(x: 0, y: 0, width: min(dx, width), height: height)) }
-        if dx < 0 { strips.append(PixelRect(x: max(0, width + dx), y: 0, width: min(-dx, width), height: height)) }
-        return strips
+        uncovered(dx: dx, dy: dy, width: width, height: height)
+    }
+
+    /// Parts of a `width`×`height` canvas that `reframed(dx:dy:width:height:)` leaves without content:
+    /// up to four strips (top, bottom across the full width; left, right between them).
+    public func uncovered(dx: Int, dy: Int, width w: Int, height h: Int) -> [PixelRect] {
+        let x0 = min(w, max(0, dx)), x1 = max(x0, min(w, width + dx))
+        let y0 = min(h, max(0, dy)), y1 = max(y0, min(h, height + dy))
+        guard x1 > x0, y1 > y0 else { return w > 0 && h > 0 ? [PixelRect(x: 0, y: 0, width: w, height: h)] : [] }
+        return [PixelRect(x: 0, y: 0, width: w, height: y0),
+                PixelRect(x: 0, y: y1, width: w, height: h - y1),
+                PixelRect(x: 0, y: y0, width: x0, height: y1 - y0),
+                PixelRect(x: x1, y: y0, width: w - x1, height: y1 - y0)].filter { !$0.isEmpty }
     }
 
     /// Box-downsamples a BGRA8 buffer by `step` (each output pixel = mean luma of a step×step block).

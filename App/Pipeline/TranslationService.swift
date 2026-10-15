@@ -32,7 +32,7 @@ actor TranslationService {
     private typealias Strategy = TranslationSession.Strategy
 
     private var settings: AppSettings
-    private let cache = LRUCache<String, String>(capacity: 5000)
+    private let cache = Memory()
     private var sessions: [String: TranslationSession] = [:]
     private var pairStatus: [String: LanguageAvailability.Status] = [:]
     private let intelligence = IntelligenceTranslator()
@@ -68,7 +68,8 @@ actor TranslationService {
     }
 
     /// Cached translation, without doing any work.
-    func cached(_ text: String) -> String? { cache[key(text)] }
+    /// Never waits, even while a translation is in progress.
+    nonisolated func cached(_ text: String) -> String? { cache[text] }
 
     /// Translates `texts` (in the given order — callers pass reading order so results fill the screen top to
     /// bottom), returning source → translation for those that succeeded. `onResult` fires as each one lands.
@@ -77,7 +78,7 @@ actor TranslationService {
         var todo: [String] = []
         var seen = Set<String>()
         for t in texts where seen.insert(t).inserted {
-            if let hit = cache[key(t)] {
+            if let hit = cache[t] {
                 result[t] = hit
                 onResult?(t, hit)
             } else {
@@ -102,7 +103,7 @@ actor TranslationService {
                 let translated = try await translateGroup(items, source: source, onResult: deliver)
                 for (s, t) in translated {
                     result[s] = t
-                    cache[key(s)] = t
+                    cache[s] = t
                 }
                 issueHandler?(nil)
             } catch let issue as TranslationIssue {
@@ -183,9 +184,6 @@ actor TranslationService {
 
     // MARK: - Helpers
 
-    private func key(_ text: String) -> String {
-        "\(settings.engine.rawValue)|\(settings.targetLanguage)|\(text)"
-    }
 
     /// The configured source language, or the dominant language of `text` when set to auto ("und" if unsure).
     func sourceLanguage(for text: String) -> String {
@@ -200,6 +198,18 @@ actor TranslationService {
         default: return lang.rawValue
         }
     }
+}
+
+/// Source → translation for the current engine and target (cleared when they change), lock-guarded so regions can
+/// read it from outside the actor.
+private final class Memory: @unchecked Sendable {
+    private let lock = NSLock()
+    private let lru = LRUCache<String, String>(capacity: 5000)
+    subscript(text: String) -> String? {
+        get { lock.withLock { lru[text] } }
+        set { lock.withLock { lru[text] = newValue } }
+    }
+    func removeAll() { lock.withLock { lru.removeAll() } }
 }
 
 /// On-device Apple Intelligence (Foundation Models) translator: natural phrasing, glossary-aware.

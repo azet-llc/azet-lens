@@ -2,6 +2,7 @@ import CoreGraphics
 import Foundation
 import NaturalLanguage
 import Vision
+import os
 
 /// One recognized line, in image pixels (top-left origin).
 struct OCRLine: Sendable {
@@ -33,18 +34,16 @@ enum TextRecognizer {
         let size = CGSize(width: image.width, height: image.height)
         let region = roi.map { normalized($0, in: size) } ?? NormalizedRect(x: 0, y: 0, width: 1, height: 1)
         req.regionOfInterest = region
-        let observations = try await req.perform(on: image)
+        let observations = try await deadline { try await req.perform(on: image) }
         return observations.compactMap { obs in
             guard let candidate = obs.topCandidates(1).first, candidate.confidence >= 0.3 else { return nil }
             // Boxes come back normalized to the region of interest, not the whole image.
-            let r = region.cgRect, b = obs.boundingBox.cgRect
-            let full = CGRect(x: r.minX + b.minX * r.width, y: r.minY + b.minY * r.height, width: b.width * r.width, height: b.height * r.height)
-            return OCRLine(rect: pixelRect(full, in: size), text: candidate.string)
+            return OCRLine(rect: pixelRect(unclip(obs.boundingBox.cgRect, from: region), in: size), text: candidate.string)
         }
     }
 
     /// Paragraph-level recognition via the document recognizer, which groups lines into reading units.
-    static func blocks(in image: CGImage, languages: [Locale.Language], customWords: [String] = []) async throws -> [OCRBlock] {
+    static func blocks(in image: CGImage, roi: CGRect? = nil, languages: [Locale.Language], customWords: [String] = []) async throws -> [OCRBlock] {
         var req = RecognizeDocumentsRequest()
         req.textRecognitionOptions.customWords = customWords
         if languages.isEmpty {
@@ -53,19 +52,37 @@ enum TextRecognizer {
             req.textRecognitionOptions.recognitionLanguages = languages
         }
         let size = CGSize(width: image.width, height: image.height)
-        let docs = try await req.perform(on: image)
+        let region = roi.map { normalized($0, in: size) } ?? NormalizedRect(x: 0, y: 0, width: 1, height: 1)
+        req.regionOfInterest = region
+        let docs = try await deadline { try await req.perform(on: image) }
         var out: [OCRBlock] = []
         for doc in docs {
             for paragraph in doc.document.paragraphs {
                 let lines = paragraph.lines.compactMap { obs -> OCRLine? in
                     guard let s = obs.topCandidates(1).first?.string, !s.isEmpty else { return nil }
-                    return OCRLine(rect: pixelRect(obs.boundingBox.cgRect, in: size), text: s)
+                    return OCRLine(rect: pixelRect(unclip(obs.boundingBox.cgRect, from: region), in: size), text: s)
                 }
                 guard !lines.isEmpty else { continue }
                 out.append(makeBlock(lines))
             }
         }
         return out
+    }
+
+    struct Timeout: Error {}
+
+    /// Vision requests occasionally never return (seen with the document recognizer after many runs). A stuck
+    /// request must not stall the region forever: give up after `seconds` and let the caller fall back or retry.
+    /// The abandoned request keeps running in the background; it cannot be cancelled.
+    static func deadline<T: Sendable>(_ seconds: Double = 6, _ work: @escaping @Sendable () async throws -> T) async throws -> T {
+        try await withCheckedThrowingContinuation { (cont: CheckedContinuation<T, Error>) in
+            let done = OSAllocatedUnfairLock(initialState: false)
+            let finish: @Sendable (Result<T, Error>) -> Void = { r in
+                if done.withLock({ was in defer { was = true }; return !was }) { cont.resume(with: r) }
+            }
+            Task { do { finish(.success(try await work())) } catch { finish(.failure(error)) } }
+            Task { try? await Task.sleep(for: .seconds(seconds)); finish(.failure(Timeout())) }
+        }
     }
 
     /// Lines → block, joining text the way the script expects (no spaces between CJK lines).
@@ -106,6 +123,12 @@ enum TextRecognizer {
                 (0xF900...0xFAFF).contains(s.value) || (0xFF00...0xFFEF).contains(s.value) ||
                 (0x3000...0x303F).contains(s.value)
         }
+    }
+
+    /// Region-of-interest-relative normalized box → image-relative normalized box.
+    private static func unclip(_ b: CGRect, from region: NormalizedRect) -> CGRect {
+        let r = region.cgRect
+        return CGRect(x: r.minX + b.minX * r.width, y: r.minY + b.minY * r.height, width: b.width * r.width, height: b.height * r.height)
     }
 
     private static func pixelRect(_ n: CGRect, in size: CGSize) -> CGRect {

@@ -11,6 +11,8 @@ struct CapturedFrame: @unchecked Sendable {
     let grayStep: Int
     /// Image pixels per point.
     let scale: CGFloat
+    /// The captured rect, global Quartz points.
+    let rect: CGRect
     /// `ProcessInfo.systemUptime` at capture.
     let time: TimeInterval
 }
@@ -27,8 +29,8 @@ struct OverlaySnapshot: @unchecked Sendable {
     let version: Int
     let blocks: [OverlayBlock]
     let animated: Bool
-    /// Region origin (global Quartz points) the block frames are relative to. The overlay compensates
-    /// if the region has moved since, so a late snapshot never makes text jump.
+    /// Capture origin (global Quartz points) the block frames are relative to. The capture is wider than the visible
+    /// lens, so blocks may lie outside the overlay; the overlay offsets them by its own origin and clips the rest.
     let origin: CGPoint
 }
 
@@ -59,6 +61,9 @@ struct PipelineOptions: Sendable, Equatable {
 }
 
 /// Turns a stream of frames into overlay snapshots.
+///
+/// The capture covers more than the visible lens ("overscan"), so text next to the lens is already read, erased and
+/// translated by the time a drag or scroll brings it into view.
 ///
 /// - While content moves: re-read only the changed band (tile diff), show translations on plain boxes
 ///   ("fast"), follow scrolls by shifting existing blocks instead of re-reading them.
@@ -91,28 +96,42 @@ actor RegionPipeline {
     private var prevGray: GrayImage?
     /// Gray of the frame the current blocks describe (shifted along with scrolls).
     private var baseGray: GrayImage?
-    private var forcedDirty: PixelRect?
+    /// Gray-pixel areas the blocks know nothing about (uncovered by a shift or a larger capture).
+    private var forcedDirty: [PixelRect] = []
     private var lastChange: TimeInterval = 0
+    /// The lens moving inside the capture changes no pixels, but the settled re-read still waits for it to stop.
+    private var lensMoved: TimeInterval = 0
     private var seamlessDone = false
     private var blocks: [Block] = []
     private var working = false
     private var settleTask: Task<Void, Never>?
-    private var inFlight: Set<String> = []
+    /// Sources waiting for translation, and whether the translation worker runs.
+    private var pending: Set<String> = []
+    private var translating = false
     private var version = 0
     private var scale: CGFloat = 2
     private var activity = RegionActivity.idle
-    /// Bumped whenever blocks are moved by a scroll; a pass that awaited across a bump discards its result.
-    private var scrollEpoch = 0
-    private var ignoreFramesUntil: TimeInterval = 0
+    /// Bumped when the capture size changes; a pass that awaited across a bump discards its result.
+    private var geometryEpoch = 0
+    /// Total content shift applied to the blocks (image pixels) and to the gray references (gray pixels). A pass that
+    /// awaited while content moved (scroll, lens recentre) moves its results by the difference instead of dropping them.
+    private var contentShift = CGVector.zero
+    private var grayShift = (x: 0, y: 0)
     private var grayShiftX = ShiftAccumulator()
     private var grayShiftY = ShiftAccumulator()
+    private var lastMotionNote: TimeInterval = 0
+    private var onMotion: (@Sendable () -> Void)?
 
-    /// Region origin, global Quartz points.
+    /// Capture rect and the visible lens inside it, global Quartz points.
     private var origin: CGPoint
+    private var captureSize: CGSize
+    private var visible: CGRect
 
-    init(options: PipelineOptions, origin: CGPoint, translator: TranslationService, inpainter: Inpainter?,
+    init(options: PipelineOptions, capture: CGRect, translator: TranslationService, inpainter: Inpainter?,
          onSnapshot: @escaping @Sendable (OverlaySnapshot) -> Void) {
-        self.origin = origin
+        self.origin = capture.origin
+        self.captureSize = capture.size
+        self.visible = capture
         self.options = options
         self.translator = translator
         self.inpainter = inpainter
@@ -120,6 +139,8 @@ actor RegionPipeline {
     }
 
     func setActivityHandler(_ h: @escaping @Sendable (RegionActivity) -> Void) { onActivity = h }
+    /// Called (at most twice a second) when content moves a lot: scrolling, page flips, animation.
+    func setMotionHandler(_ h: @escaping @Sendable () -> Void) { onMotion = h }
 
     func update(options new: PipelineOptions) {
         guard new != options else { return }
@@ -133,9 +154,9 @@ actor RegionPipeline {
         blocks = []
         baseGray = nil
         prevGray = nil
-        forcedDirty = nil
+        forcedDirty = []
         seamlessDone = false
-        inFlight = []
+        pending = []
         emit(animated: false)
         if latest != nil { kick() }
     }
@@ -150,21 +171,29 @@ actor RegionPipeline {
 
     /// For the headless self-test: whether work is pending, and what each block reads.
     func debugState() -> (busy: Bool, blocks: [(String, String?)]) {
-        (working || !inFlight.isEmpty || settleTask != nil && !seamlessDone, blocks.map { ($0.source, $0.translation) })
+        (working || translating || settleTask != nil && !seamlessDone, blocks.map { ($0.source, $0.translation) })
     }
 
     func ingest(_ frame: CapturedFrame) {
         if let l = latest, frame.time < l.time { return }
-        if frame.time < ignoreFramesUntil { return }
+        // Frames of an older capture geometry would put text in the wrong place.
+        guard abs(frame.rect.minX - origin.x) < 0.5, abs(frame.rect.minY - origin.y) < 0.5,
+              abs(frame.rect.width - captureSize.width) < 0.5, abs(frame.rect.height - captureSize.height) < 0.5 else {
+            Trace.mark("frame dropped: \(frame.rect) vs \(origin) \(captureSize)", since: frame.time)
+            return
+        }
         scale = frame.scale
-        if let prev = prevGray {
+        lastStep = frame.grayStep
+        if let prev = prevGray, prev.width == frame.gray.width, prev.height == frame.gray.height {
             let change = FrameDiff.changeMap(from: prev, to: frame.gray)
             if !change.isUnchanged {
                 lastChange = frame.time
                 seamlessDone = false
-                if change.ratio > 0.2, !blocks.isEmpty,
-                   let dy = FrameDiff.verticalShift(from: prev, to: frame.gray, maxShift: frame.gray.height / 3) {
-                    followScroll(dyGray: dy, frame: frame)
+                if change.ratio > 0.2 {
+                    noteMotion(frame.time)
+                    if !blocks.isEmpty, let dy = FrameDiff.verticalShift(from: prev, to: frame.gray, maxShift: frame.gray.height / 3) {
+                        followScroll(dyGray: dy, frame: frame)
+                    }
                 }
             }
         } else {
@@ -173,6 +202,12 @@ actor RegionPipeline {
         prevGray = frame.gray
         latest = frame
         kick()
+    }
+
+    private func noteMotion(_ t: TimeInterval) {
+        guard t - lastMotionNote > 0.5 else { return }
+        lastMotionNote = t
+        onMotion?()
     }
 
     // MARK: - Scheduling
@@ -186,23 +221,24 @@ actor RegionPipeline {
     private func run() async {
         while let frame = latest {
             let now = ProcessInfo.processInfo.systemUptime
-            let settled = now - lastChange >= options.settleDelay
+            let settled = now - max(lastChange, lensMoved) >= options.settleDelay
             let wantsSeamless = options.renderMode != .fast && !seamlessDone && (settled || options.renderMode == .seamless)
             if wantsSeamless {
                 await seamlessPass(frame)
                 seamlessDone = lastChange <= frame.time
                 continue
             }
-            if options.renderMode != .seamless, let dirty = dirtyRect(for: frame) {
-                await fastPass(frame, dirty: dirty)
+            let stale = staleness(for: frame)
+            if options.renderMode != .seamless, let dirty = dirtyRect(for: frame, stale) {
+                await fastPass(frame, dirty: dirty, stale: stale)
                 continue
             }
             break
         }
         working = false
-        setActivity(inFlight.isEmpty ? .idle : .translating)
+        setActivity(translating ? .translating : .idle)
         if options.renderMode == .adaptive, !seamlessDone, latest != nil {
-            let wait = max(0.05, options.settleDelay - (ProcessInfo.processInfo.systemUptime - lastChange))
+            let wait = max(0.05, options.settleDelay - (ProcessInfo.processInfo.systemUptime - max(lastChange, lensMoved)))
             settleTask?.cancel()
             settleTask = Task { [weak self] in
                 try? await Task.sleep(for: .seconds(wait))
@@ -212,18 +248,40 @@ actor RegionPipeline {
         }
     }
 
+    /// What the current blocks no longer describe: gray-pixel tiles that changed, and the blocks touching them.
+    private struct Staleness {
+        var change: ChangeMap?
+        var forced: [PixelRect]
+        func touches(_ r: CGRect, step: Int) -> Bool {
+            let g = PixelRect(r.insetBy(dx: -1, dy: -1).applying(CGAffineTransform(scaleX: 1 / CGFloat(step), y: 1 / CGFloat(step))))
+            return change.map { $0.intersects(g) } ?? true || forced.contains { $0.cgRect.intersects(g.cgRect) }
+        }
+    }
+
+    private func staleness(for frame: CapturedFrame) -> Staleness {
+        guard let base = baseGray, base.width == frame.gray.width, base.height == frame.gray.height else {
+            return Staleness(change: nil, forced: [])
+        }
+        return Staleness(change: FrameDiff.changeMap(from: base, to: frame.gray), forced: forcedDirty)
+    }
+
     /// Image-pixel rect needing a re-read, or nil when the blocks still describe the frame.
-    private func dirtyRect(for frame: CapturedFrame) -> CGRect? {
+    private func dirtyRect(for frame: CapturedFrame, _ stale: Staleness) -> CGRect? {
         let full = CGRect(x: 0, y: 0, width: frame.image.width, height: frame.image.height)
-        guard let base = baseGray else { return full }
-        let change = FrameDiff.changeMap(from: base, to: frame.gray)
-        var dirty = change.dirtyRect
-        if let f = forcedDirty { dirty = dirty.map { PixelRect($0.cgRect.union(f.cgRect)) } ?? f }
-        guard let d = dirty else { return nil }
+        guard let change = stale.change else { return full }
         let step = CGFloat(frame.grayStep), pad = CGFloat(change.tile) * step
-        // Text runs horizontally: widen to full rows so partially changed lines are read whole.
-        return CGRect(x: 0, y: CGFloat(d.y) * step - pad, width: full.width, height: CGFloat(d.height) * step + 2 * pad)
-            .intersection(full)
+        var dirty: CGRect?
+        func add(_ r: CGRect) { dirty = dirty.map { $0.union(r) } ?? r }
+        // Text runs horizontally: changed tiles widen to full rows so partially changed lines are read whole.
+        if let d = change.dirtyRect {
+            add(CGRect(x: 0, y: CGFloat(d.y) * step - pad, width: full.width, height: CGFloat(d.height) * step + 2 * pad))
+        }
+        // Uncovered strips too: a line crossing into one may have been cut off at the old edge.
+        for f in stale.forced { add(CGRect(x: 0, y: CGFloat(f.y) * step - pad, width: full.width, height: CGFloat(f.height) * step + 2 * pad)) }
+        // And every stale block, whole.
+        guard let d = dirty else { return nil }
+        for b in blocks where b.rect.intersects(d) && stale.touches(b.rect, step: frame.grayStep) { add(b.rect.insetBy(dx: -pad, dy: -pad)) }
+        return dirty?.intersection(full)
     }
 
     private func followScroll(dyGray: Int, frame: CapturedFrame) {
@@ -231,40 +289,72 @@ actor RegionPipeline {
                      imageSize: CGSize(width: frame.image.width, height: frame.image.height))
     }
 
-    /// The region moved to `newOrigin` (global Quartz points).
-    ///
-    /// - `contentMoved == false` (the user dragged the lens over static content): translated blocks stay glued
-    ///   to the content — they slide the other way inside the region — and only newly revealed strips are read.
-    /// - `contentMoved == true` (the anchored window moved, carrying its content along): nothing to re-read.
-    /// Frames captured with the old geometry are skipped briefly either way.
-    func regionMoved(to newOrigin: CGPoint, contentMoved: Bool) {
-        let delta = CGVector(dx: newOrigin.x - origin.x, dy: newOrigin.y - origin.y)
+    /// The visible lens (global Quartz points), for translating what the user sees first.
+    /// A moving lens also holds off the settled re-read until it stops.
+    func setVisible(_ rect: CGRect) {
+        if rect != visible { lensMoved = ProcessInfo.processInfo.systemUptime }
+        visible = rect
+    }
+
+    /// The capture moved to `newOrigin` (global Quartz points) while the content under it moved by `contentDelta`
+    /// (zero when a lens is dragged over static content; the window's move when the capture follows a window).
+    /// Blocks stay glued to the content, and only the strips the move uncovered are read.
+    func captureMoved(to newOrigin: CGPoint, contentDelta: CGVector = .zero) {
+        let rel = CGVector(dx: newOrigin.x - origin.x - contentDelta.dx, dy: newOrigin.y - origin.y - contentDelta.dy)
         origin = newOrigin
-        ignoreFramesUntil = ProcessInfo.processInfo.systemUptime + 0.12
-        guard !contentMoved, let frame = latest else { return }
+        guard rel.dx != 0 || rel.dy != 0 else { return }
         // Blocks move by the exact pixel delta; the gray references only by whole gray pixels, with the
         // fraction carried over so a slow drag never drifts.
-        let px = -delta.dx * scale, py = -delta.dy * scale
-        let step = CGFloat(frame.grayStep)
+        let px = -rel.dx * scale, py = -rel.dy * scale
+        let step = CGFloat(lastStep)
+        // The last frame shows the old position; the capturer delivers a fresh one once it has moved.
+        latest = nil
         let gx = grayShiftX.add(px / step), gy = grayShiftY.add(py / step)
         lastChange = ProcessInfo.processInfo.systemUptime
         seamlessDone = false
         if gx != 0 || gy != 0 { prevGray = prevGray?.shifted(dx: gx, dy: gy) }
-        shiftContent(dx: px, dy: py, dxGray: gx, dyGray: gy, imageSize: CGSize(width: frame.image.width, height: frame.image.height))
+        shiftContent(dx: px, dy: py, dxGray: gx, dyGray: gy, imageSize: CGSize(width: captureSize.width * scale, height: captureSize.height * scale))
         kick()
     }
 
-    /// The region was resized: keep blocks (matched again on the next read) but read everything.
-    func regionResized() {
-        baseGray = nil
-        prevGray = nil
+    /// The capture grew or shrank (overscan widened for motion, lens resized). Blocks are kept where they are on
+    /// screen and only the newly covered area is read.
+    func captureResized(to rect: CGRect) {
+        guard rect.size != captureSize || rect.origin != origin else { return }
+        let px = (origin.x - rect.minX) * scale, py = (origin.y - rect.minY) * scale
+        let size = CGSize(width: (rect.width * scale).rounded(), height: (rect.height * scale).rounded())
+        origin = rect.origin
+        captureSize = rect.size
+        geometryEpoch += 1
         lastChange = ProcessInfo.processInfo.systemUptime
         seamlessDone = false
-        ignoreFramesUntil = ProcessInfo.processInfo.systemUptime + 0.12
+        prevGray = nil
+        latest = nil
+        grayShiftX.reset(); grayShiftY.reset()
+        let bounds = CGRect(origin: .zero, size: size)
+        blocks = blocks.compactMap { b in
+            var b = b
+            b.rect = b.rect.offsetBy(dx: px, dy: py)
+            b.lines = b.lines.map { $0.offsetBy(dx: px, dy: py) }
+            return b.rect.intersects(bounds) ? b : nil
+        }
+        if let base = baseGray {
+            let step = CGFloat(lastStep)
+            let gx = Int((px / step).rounded()), gy = Int((py / step).rounded())
+            let gw = Int(size.width) / Int(step), gh = Int(size.height) / Int(step)
+            baseGray = base.reframed(dx: gx, dy: gy, width: gw, height: gh)
+            forcedDirty = forcedDirty.map { PixelRect(x: $0.x + gx, y: $0.y + gy, width: $0.width, height: $0.height) }
+                + base.uncovered(dx: gx, dy: gy, width: gw, height: gh)
+        }
+        emit(animated: false)
     }
 
+    /// Gray step of the frames (image pixels per gray pixel).
+    private var lastStep = 4
+
     private func shiftContent(dx: CGFloat, dy: CGFloat, dxGray: Int, dyGray: Int, imageSize: CGSize) {
-        scrollEpoch += 1
+        contentShift.dx += dx; contentShift.dy += dy
+        grayShift.x += dxGray; grayShift.y += dyGray
         let bounds = CGRect(origin: .zero, size: imageSize)
         blocks = blocks.compactMap { b in
             var b = b
@@ -275,11 +365,29 @@ actor RegionPipeline {
         }
         if let base = baseGray, dxGray != 0 || dyGray != 0 {
             baseGray = base.shifted(dx: dxGray, dy: dyGray)
-            for strip in base.vacatedStrips(dx: dxGray, dy: dyGray) {
-                forcedDirty = forcedDirty.map { PixelRect($0.cgRect.union(strip.cgRect)) } ?? strip
-            }
+            forcedDirty = forcedDirty.map { PixelRect(x: $0.x + dxGray, y: $0.y + dyGray, width: $0.width, height: $0.height) }
+                + base.vacatedStrips(dx: dxGray, dy: dyGray)
         }
         emit(animated: false)
+    }
+
+    /// Where a pass started, so its results can follow content that moved while it awaited.
+    private struct PassStart {
+        let epoch: Int
+        let shift: CGVector
+        let gray: (x: Int, y: Int)
+    }
+
+    private var passStart: PassStart { PassStart(epoch: geometryEpoch, shift: contentShift, gray: grayShift) }
+
+    /// After a pass's await: the content shift to apply to its results, or nil if the geometry changed under it.
+    /// Also makes `frame` the new reference, moved by the same shift.
+    private func finishPass(_ start: PassStart, frame: CapturedFrame) -> CGVector? {
+        guard start.epoch == geometryEpoch else { return nil }
+        let gx = grayShift.x - start.gray.x, gy = grayShift.y - start.gray.y
+        baseGray = gx == 0 && gy == 0 ? frame.gray : frame.gray.shifted(dx: gx, dy: gy)
+        forcedDirty = frame.gray.vacatedStrips(dx: gx, dy: gy)
+        return CGVector(dx: contentShift.dx - start.shift.dx, dy: contentShift.dy - start.shift.dy)
     }
 
     // MARK: - Passes
@@ -288,96 +396,129 @@ actor RegionPipeline {
         options.sourceLanguage == "auto" ? [] : [Locale.Language(identifier: options.sourceLanguage)]
     }
 
-    private func fastPass(_ frame: CapturedFrame, dirty: CGRect) async {
+    private func fastPass(_ frame: CapturedFrame, dirty: CGRect, stale: Staleness) async {
         setActivity(.reading)
-        let epoch = scrollEpoch
+        let start = passStart
         let useFast = options.sourceLanguage != "auto" && Languages.isLatinScript(options.sourceLanguage)
+        // Blocks whose pixels did not change stay as they are (seamless ones keep their erased background).
+        let staleIDs = Set(blocks.filter { $0.rect.intersects(dirty) && stale.touches($0.rect, step: frame.grayStep) }.map(\.id))
+        let keptRects = blocks.filter { !staleIDs.contains($0.id) }.map(\.rect)
         let t = Trace.now
-        let lines: [OCRLine]
+        let wantsErase = options.renderMode != .fast
+        var found: [OCRBlock]
         do {
-            lines = try await TextRecognizer.lines(in: frame.image, roi: dirty, languages: ocrLanguages, fast: useFast,
-                                                  customWords: options.glossaryTerms)
+            // Erasing modes read paragraphs, like the seamless pass: the settled re-read then finds the same text and
+            // keeps its translations instead of translating everything a second time.
+            found = wantsErase ? (try? await TextRecognizer.blocks(in: frame.image, roi: dirty, languages: ocrLanguages,
+                                                                   customWords: options.glossaryTerms)) ?? [] : []
+            if found.isEmpty {
+                found = try await TextRecognizer.lines(in: frame.image, roi: dirty, languages: ocrLanguages, fast: useFast,
+                                                       customWords: options.glossaryTerms).map { TextRecognizer.makeBlock([$0]) }
+            }
         } catch {
             log.error("fast OCR failed: \(error.localizedDescription)")
-            baseGray = frame.gray
+            Trace.mark("fast: OCR failed \(error)", since: t)
+            // A stuck request is retried; any other failure would just fail again on the same pixels.
+            if !(error is TextRecognizer.Timeout) { _ = finishPass(start, frame: frame) }
             return
         }
-        // Content scrolled while we were reading: these coordinates are stale, read the newer frame instead.
-        guard epoch == scrollEpoch else { return }
-        Trace.mark("fast: OCR \(Int(dirty.height))px band → \(lines.count) lines", since: t)
-        let fresh = lines.filter { TextRecognizer.needsTranslation($0.text, target: options.targetLanguage) }
-        let (inside, outside) = blocks.partitioned { $0.rect.intersects(dirty) }
-        let matches = BlockMatcher.match(old: inside.map { .init(rect: $0.rect, text: $0.source) },
-                                         new: fresh.map { .init(rect: $0.rect, text: $0.text) })
-        var updated = outside
-        for (i, line) in fresh.enumerated() {
-            let boxRect = line.rect.insetBy(dx: -max(2, line.rect.height * 0.12), dy: -max(1, line.rect.height * 0.08))
-                .intersection(CGRect(x: 0, y: 0, width: frame.image.width, height: frame.image.height))
-            if let oi = matches[i] {
-                var b = inside[oi]
-                let moved = TextSimilarity.iou(b.rect, boxRect) < 0.9
-                let textChanged = b.source != line.text
-                b.rect = boxRect
-                b.lines = [line.rect]
-                if textChanged { b.source = line.text; b.translation = nil }
-                if moved || textChanged || b.erased != nil {
-                    b.erased = nil
-                    b.appearance = appearance(of: line.rect, in: frame.image)
-                    b.image = nil
-                }
-                updated.append(b)
-            } else {
-                updated.append(Block(id: UUID(), rect: boxRect, lines: [line.rect], source: line.text,
-                                     appearance: appearance(of: line.rect, in: frame.image)))
-            }
+        Trace.mark("fast: OCR \(Int(dirty.width))×\(Int(dirty.height))px → \(found.count) blocks", since: t)
+        let fresh = found.filter { ocr in
+            TextRecognizer.needsTranslation(ocr.text, target: options.targetLanguage)
+                && !keptRects.contains { $0.contains(CGPoint(x: ocr.rect.midX, y: ocr.rect.midY)) }
         }
-        blocks = updated
-        baseGray = frame.gray
-        forcedDirty = nil
-        await fillTranslations()
+        let full = wantsErase ? RGBAImage(cgImage: frame.image) : nil
+        let old = blocks.filter { staleIDs.contains($0.id) }
+        let matches = BlockMatcher.match(old: old.map { .init(rect: $0.rect, text: $0.source) },
+                                         new: fresh.map { .init(rect: $0.rect, text: $0.text) })
+        var made: [Block] = []
+        for (i, ocr) in fresh.enumerated() {
+            let prior = matches[i].map { old[$0] }
+            var b: Block
+            if let full, let e = erase(ocr, in: full) {
+                b = Block(id: prior?.id ?? UUID(), rect: e.rect.cgRect, lines: ocr.lines.map(\.rect), source: ocr.text, appearance: e.look,
+                          fontSize: e.fontSize, spareWidth: e.spare)
+                b.erased = e.patch
+            } else {
+                let r = ocr.rect, pad = ocr.lines.map(\.rect.height).min() ?? r.height
+                let boxRect = r.insetBy(dx: -max(2, pad * 0.12), dy: -max(1, pad * 0.08))
+                    .intersection(CGRect(x: 0, y: 0, width: frame.image.width, height: frame.image.height))
+                b = Block(id: prior?.id ?? UUID(), rect: boxRect, lines: ocr.lines.map(\.rect), source: ocr.text,
+                          appearance: appearance(of: ocr.lines[0].rect, in: frame.image))
+            }
+            if let prior, prior.source == ocr.text { b.translation = prior.translation }
+            made.append(b)
+        }
+        guard let shift = finishPass(start, frame: frame) else { return }
+        let bounds = CGRect(x: 0, y: 0, width: frame.image.width, height: frame.image.height)
+        // Translations that arrived meanwhile are on the current copies of the old blocks.
+        let current = Dictionary(blocks.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+        made = made.compactMap { b in
+            var b = b
+            b.rect = b.rect.offsetBy(dx: shift.dx, dy: shift.dy)
+            b.lines = b.lines.map { $0.offsetBy(dx: shift.dx, dy: shift.dy) }
+            if b.translation == nil, let c = current[b.id], c.source == b.source { b.translation = c.translation }
+            return b.rect.intersects(bounds) ? b : nil
+        }
+        blocks = blocks.filter { !staleIDs.contains($0.id) } + made
+        Trace.mark("fast: \(made.count) new blocks (\(wantsErase ? "erased" : "boxed")), \(blocks.count - made.count) kept", since: t)
+        fillTranslations()
         renderMissing()
         emit(animated: false)
     }
 
     private func seamlessPass(_ frame: CapturedFrame) async {
         setActivity(.reading)
-        let epoch = scrollEpoch
+        let start = passStart
         var t = Trace.now
         var found: [OCRBlock]
         do {
-            found = try await TextRecognizer.blocks(in: frame.image, languages: ocrLanguages, customWords: options.glossaryTerms)
+            do {
+                found = try await TextRecognizer.blocks(in: frame.image, languages: ocrLanguages, customWords: options.glossaryTerms)
+            } catch is TextRecognizer.Timeout {
+                Trace.mark("seamless: document OCR timed out, reading lines", since: t)
+                found = []
+            }
             if found.isEmpty {
                 found = try await TextRecognizer.lines(in: frame.image, languages: ocrLanguages, fast: false)
                     .map { TextRecognizer.makeBlock([$0]) }
             }
         } catch {
             log.error("document OCR failed: \(error.localizedDescription)")
-            baseGray = frame.gray
+            Trace.mark("seamless: OCR failed \(error)", since: t)
+            _ = finishPass(start, frame: frame)
             return
         }
-        guard epoch == scrollEpoch else { return }
         Trace.mark("seamless: document OCR (\(found.count) blocks)", since: t); t = Trace.now
         found = found.filter { TextRecognizer.needsTranslation($0.text, target: options.targetLanguage) }
         guard let full = RGBAImage(cgImage: frame.image) else { return }
         Trace.mark("seamless: frame → RGBA", since: t); t = Trace.now
 
-        let matches = BlockMatcher.match(old: blocks.map { .init(rect: $0.rect, text: $0.source) },
+        // Matched in the frame's coordinates: undo any shift applied to the blocks since the pass started.
+        let back = CGVector(dx: start.shift.dx - contentShift.dx, dy: start.shift.dy - contentShift.dy)
+        let matches = BlockMatcher.match(old: blocks.map { .init(rect: $0.rect.offsetBy(dx: back.dx, dy: back.dy), text: $0.source) },
                                          new: found.map { .init(rect: $0.rect, text: $0.text) })
+        let prior = blocks
         var next: [Block] = []
         for (i, ocr) in found.enumerated() {
             guard let e = erase(ocr, in: full) else { continue }
-            let id = matches[i].map { blocks[$0].id } ?? UUID()
+            let id = matches[i].map { prior[$0].id } ?? UUID()
             var b = Block(id: id, rect: e.rect.cgRect, lines: ocr.lines.map(\.rect), source: ocr.text, appearance: e.look,
                           fontSize: e.fontSize, spareWidth: e.spare)
-            if let oi = matches[i], blocks[oi].source == ocr.text { b.translation = blocks[oi].translation }
+            if let oi = matches[i], prior[oi].source == ocr.text { b.translation = prior[oi].translation }
             b.erased = e.patch
             next.append(b)
         }
         Trace.mark("seamless: erase \(next.count) blocks", since: t); t = Trace.now
-        blocks = next
-        baseGray = frame.gray
-        forcedDirty = nil
-        await fillTranslations()
+        guard let shift = finishPass(start, frame: frame) else { return }
+        let bounds = CGRect(x: 0, y: 0, width: frame.image.width, height: frame.image.height)
+        blocks = next.compactMap { b in
+            var b = b
+            b.rect = b.rect.offsetBy(dx: shift.dx, dy: shift.dy)
+            b.lines = b.lines.map { $0.offsetBy(dx: shift.dx, dy: shift.dy) }
+            return b.rect.intersects(bounds) ? b : nil
+        }
+        fillTranslations()
         renderMissing()
         Trace.mark("seamless: render", since: t)
         emit(animated: true)
@@ -485,39 +626,58 @@ actor RegionPipeline {
 
     // MARK: - Translation
 
-    /// Fills translations from the cache right away, and requests the rest in the background.
-    private func fillTranslations() async {
-        var missing: [String] = []
-        // Reading order, so translations fill in top to bottom.
-        for i in blocks.indices.sorted(by: { blocks[$0].rect.minY < blocks[$1].rect.minY }) where blocks[i].translation == nil {
-            if let hit = await translator.cached(blocks[i].source) {
+    /// Fills translations from the cache right away and queues the rest.
+    private func fillTranslations() {
+        for i in blocks.indices where blocks[i].translation == nil {
+            if let hit = translator.cached(blocks[i].source) {
                 blocks[i].translation = hit
                 blocks[i].image = nil
             } else {
-                missing.append(blocks[i].source)
+                pending.insert(blocks[i].source)
             }
         }
-        request(missing)
-    }
-
-    private func request(_ texts: [String]) {
-        var seen = Set<String>()
-        let todo = texts.filter { !inFlight.contains($0) && seen.insert($0).inserted }
-        guard !todo.isEmpty else { return }
-        inFlight.formUnion(todo)
+        guard !translating, !pending.isEmpty else { return }
+        translating = true
         setActivity(.translating)
-        Task {
-            let t = Trace.now
-            let result = await translator.translate(todo) { source, translated in
-                Task { await self.receive([source: translated], requested: []) }
-            }
-            Trace.mark("translate ×\(todo.count)", since: t)
-            self.receive(result, requested: todo)
-        }
+        Task { await translateQueue() }
     }
 
-    private func receive(_ result: [String: String], requested: [String]) {
-        requested.forEach { inFlight.remove($0) }
+    /// Translates a few lines at a time, always picking again what the lens shows first: the queue keeps up with a
+    /// moving lens instead of finishing text that has already scrolled out of view.
+    private func translateQueue() async {
+        while let batch = nextBatch() {
+            let t = Trace.now
+            let result = await translator.translate(batch) { source, translated in
+                Task { await self.receive([source: translated]) }
+            }
+            Trace.mark("translate ×\(batch.count)", since: t)
+            batch.forEach { pending.remove($0) }
+            receive(result)
+        }
+        translating = false
+        if !working { setActivity(.idle) }
+    }
+
+    private func nextBatch() -> [String]? {
+        // Forget text that is gone or already translated.
+        pending.formIntersection(blocks.filter { $0.translation == nil }.map(\.source))
+        guard !pending.isEmpty else { return nil }
+        var seen = Set<String>()
+        let ordered = blocks.sorted { priority($0.rect) < priority($1.rect) }.map(\.source)
+            .filter { pending.contains($0) && seen.insert($0).inserted }
+        return Array(ordered.prefix(3))
+    }
+
+    /// What the lens shows comes first, in reading order; then the overscan, nearest first.
+    private func priority(_ r: CGRect) -> (Int, CGFloat) {
+        let lens = CGRect(x: (visible.minX - origin.x) * scale, y: (visible.minY - origin.y) * scale,
+                          width: visible.width * scale, height: visible.height * scale)
+        if r.intersects(lens) { return (0, r.minY) }
+        let dx = max(lens.minX - r.maxX, r.minX - lens.maxX, 0), dy = max(lens.minY - r.maxY, r.minY - lens.maxY, 0)
+        return (1, hypot(dx, dy))
+    }
+
+    private func receive(_ result: [String: String]) {
         var changed = false
         for i in blocks.indices {
             guard let t = result[blocks[i].source], blocks[i].translation != t else { continue }
@@ -529,7 +689,6 @@ actor RegionPipeline {
             renderMissing()
             emit(animated: true)
         }
-        if inFlight.isEmpty, !working { setActivity(.idle) }
     }
 
     // MARK: - Output

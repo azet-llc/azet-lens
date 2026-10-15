@@ -78,7 +78,21 @@ func texture(width: Int, height: Int, seed: Int = 1) -> GrayImage {
         #expect(Array(s.pixels[0..<5]) == [0, 0, 0, 0, 0])
         #expect(Array(s.pixels[5..<10]) == [3, 4, 5, 0, 0])
         #expect(Array(s.pixels[15..<20]) == [23, 24, 25, 0, 0])
-        #expect(Set(a.vacatedStrips(dx: -2, dy: 1)) == [PixelRect(x: 0, y: 0, width: 5, height: 1), PixelRect(x: 3, y: 0, width: 2, height: 4)])
+        #expect(Set(a.vacatedStrips(dx: -2, dy: 1)) == [PixelRect(x: 0, y: 0, width: 5, height: 1), PixelRect(x: 3, y: 1, width: 2, height: 3)])
+    }
+
+    @Test func reframesIntoLargerCanvas() {
+        var a = GrayImage(width: 3, height: 2)
+        for y in 0..<2 { for x in 0..<3 { a[x, y] = UInt8(10 * y + x + 1) } }
+        // Capture grew by 1 px on every side: old content sits at (1, 1) of a 5×4 canvas.
+        let r = a.reframed(dx: 1, dy: 1, width: 5, height: 4)
+        #expect(Array(r.pixels[5..<10]) == [0, 1, 2, 3, 0])
+        #expect(Array(r.pixels[10..<15]) == [0, 11, 12, 13, 0])
+        let ring = a.uncovered(dx: 1, dy: 1, width: 5, height: 4)
+        #expect(ring.reduce(0) { $0 + $1.width * $1.height } == 5 * 4 - 3 * 2)
+        #expect(a.uncovered(dx: 9, dy: 0, width: 5, height: 4) == [PixelRect(x: 0, y: 0, width: 5, height: 4)])
+        // Shrinking leaves nothing uncovered.
+        #expect(a.uncovered(dx: -1, dy: 0, width: 2, height: 2).isEmpty)
     }
 
     @Test func unrelatedChangeIsNotAScroll() {
@@ -256,5 +270,34 @@ func texture(width: Int, height: Int, seed: Int = 1) -> GrayImage {
         #expect(TranslationCleanup.stripEchoedNumbering("3) 장비", index: 3, source: "装備") == "장비")
         #expect(TranslationCleanup.stripEchoedNumbering("3. 장비", index: 3, source: "3. 装備") == "3. 장비")
         #expect(TranslationCleanup.stripEchoedNumbering("30개", index: 3, source: "30個") == "30개")
+    }
+}
+
+@Suite struct OverscanTests {
+    let display = CGRect(x: 0, y: 0, width: 1512, height: 982)
+
+    @Test func capturesAroundTheLensAndStaysOnScreen() {
+        let lens = CGRect(x: 400, y: 300, width: 400, height: 200)
+        let r = Overscan.rect(around: lens, wide: false, display: display)
+        #expect(r == lens.insetBy(dx: -120, dy: -80))
+        // Near the left edge the capture slides right instead of being cut.
+        let edge = CGRect(x: 10, y: 300, width: 400, height: 200)
+        let e = Overscan.rect(around: edge, wide: true, display: display)
+        #expect(e.minX == 0 && e.width == 400 + 2 * 240)
+    }
+
+    @Test func lensMovesInsideTheCaptureUntilNearItsEdge() {
+        let lens = CGRect(x: 500, y: 300, width: 400, height: 200)
+        let capture = Overscan.rect(around: lens, wide: true, display: display)  // 240 × 200 pt margins
+        func plan(dx: CGFloat) -> Overscan.Plan {
+            Overscan.plan(lens: lens.offsetBy(dx: dx, dy: 0), capture: capture, wide: true, allowResize: false, display: display)
+        }
+        #expect(plan(dx: 140) == .keep)
+        guard case .move(let r) = plan(dx: 150) else { Issue.record("expected a re-centre"); return }
+        #expect(r.size == capture.size && r.midX == lens.midX + 150)
+        // Calming down shrinks the margins, but only when resizing is allowed.
+        #expect(Overscan.plan(lens: lens, capture: capture, wide: false, allowResize: false, display: display) == .keep)
+        guard case .resize = Overscan.plan(lens: lens, capture: capture, wide: false, allowResize: true, display: display)
+        else { Issue.record("expected a resize"); return }
     }
 }
