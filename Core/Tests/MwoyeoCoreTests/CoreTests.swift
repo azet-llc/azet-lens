@@ -359,6 +359,14 @@ func texture(width: Int, height: Int, seed: Int = 1) -> GrayImage {
     #expect(StyleRuns.runs([tok("Ollie", 0, 50, red), tok("•", 55, 10, red)], lineHeight: 30) == [0..<1])
     #expect(StyleRuns.runs([tok("#", 0, 12, grey), tok("general", 16, 70, grey)], lineHeight: 30) == [0..<2])
     #expect(StyleRuns.runs([tok("why", 0, 40, white), tok("?!", 42, 12, white)], lineHeight: 30) == [0..<2])
+    // A mention or link inside a sentence stays in it; one ending the line is its own run.
+    let blue = RGBA(88, 166, 255)
+    #expect(StyleRuns.runs([tok("hey", 0, 40, white), tok("@junpark", 45, 100, blue), tok("are", 150, 35, white),
+                            tok("you", 190, 35, white)], lineHeight: 30) == [0..<4])
+    #expect(StyleRuns.runs([tok("thanks", 0, 60, white), tok("@junpark", 65, 100, blue)], lineHeight: 30) == [0..<1, 1..<2])
+    // A header with the same colour on both sides of a badge is not merged across the badge's pill (solid).
+    #expect(StyleRuns.runs([tok("Maya", 0, 60, red), tok("MOD", 70, 50, white, solid: true), tok("Today", 130, 60, grey)],
+                           lineHeight: 30) == [0..<1, 2..<3])
     // Separate buttons on one OCR line split at the wide gap.
     #expect(StyleRuns.runs([tok("Reply", 0, 50, grey), tok("Share", 150, 50, grey)], lineHeight: 30) == [0..<1, 1..<2])
 }

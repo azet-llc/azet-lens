@@ -47,22 +47,31 @@ public enum StyleRuns {
 
     /// Token index ranges of the line's runs, in order, with icons and decoration trimmed off their ends. Runs
     /// break where the colour changes, around solid shapes, and at gaps wider than 1.5 line heights (separate
-    /// buttons read as one line). Runs left with nothing are dropped.
+    /// buttons read as one line). Runs left with nothing are dropped. A coloured stretch with the same colour on
+    /// both sides ("hey @junpark are you coming", a link mid-sentence) is inline and stays in its sentence.
     public static func runs(_ tokens: [Token], lineHeight: CGFloat) -> [Range<Int>] {
         guard !tokens.isEmpty else { return [] }
-        var bounds = [0]
-        var color = tokens[0].color
+        // Each segment: its start, colour, and whether it began only because the colour changed.
+        var segs: [(start: Int, color: RGBA?, byColor: Bool)] = [(0, tokens[0].color, false)]
         for i in 1..<tokens.count {
             let a = tokens[i - 1], b = tokens[i]
-            let colorChange = color.flatMap { c in b.color.map { c.distance(to: $0) > 60 } } ?? false
-            if colorChange || a.solid || b.solid || b.minX - a.maxX > 1.5 * lineHeight {
-                bounds.append(i)
-                color = b.color
-            } else if color == nil {
-                color = b.color
+            let colorChange = segs[segs.count - 1].color.flatMap { c in b.color.map { c.distance(to: $0) > 60 } } ?? false
+            let hard = a.solid || b.solid || b.minX - a.maxX > 1.5 * lineHeight
+            if hard || colorChange {
+                segs.append((i, b.color, !hard))
+            } else if segs[segs.count - 1].color == nil {
+                segs[segs.count - 1].color = b.color
             }
         }
-        bounds.append(tokens.count)
+        var i = 1
+        while i + 1 < segs.count {
+            if segs[i].byColor, segs[i + 1].byColor, let a = segs[i - 1].color, let c = segs[i + 1].color, a.distance(to: c) <= 60 {
+                segs.removeSubrange(i...(i + 1))
+            } else {
+                i += 1
+            }
+        }
+        let bounds = segs.map(\.start) + [tokens.count]
         return zip(bounds, bounds.dropFirst()).compactMap { trimmed(tokens, $0..<$1) }
     }
 
