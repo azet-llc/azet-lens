@@ -1,6 +1,7 @@
 import AppKit
 
-/// Full-screen chooser: drag to select an area, or click a window to take all of it. Esc cancels.
+/// Full-screen chooser: drag to select an area, or click to drop a lens of the default size there (it follows the
+/// window it lands in). A lens never defaults to a whole window: the bigger the area, the slower every read. Esc cancels.
 @MainActor
 final class RegionPicker {
     struct Result {
@@ -70,6 +71,7 @@ private final class PickerView: NSView {
     private var dragStart: NSPoint?
     private var dragCurrent: NSPoint?
     private var hovered: WindowInfo?
+    private var pointer: NSPoint?
     private var tracking: NSTrackingArea?
 
     init(screen: NSScreen, windows: [WindowInfo], done: @escaping (RegionPicker.Result?) -> Void) {
@@ -112,16 +114,32 @@ private final class PickerView: NSView {
         return windows.first { $0.bounds.contains(q) }
     }
 
+    /// The lens a click at `p` would drop: a typical chat or comment column, kept inside the window's content and the screen.
+    private func clickLens(at p: NSPoint) -> NSRect {
+        var area = bounds
+        if let w = hovered {
+            let titleBar: CGFloat = w.bounds.height > 120 ? 28 : 0
+            area = local(w.bounds).intersection(bounds)
+            area.size.height -= titleBar // AppKit y is up: the title bar is the top strip
+        }
+        let size = NSSize(width: min(560, area.width), height: min(320, area.height))
+        let x = min(max(p.x - size.width / 2, area.minX), area.maxX - size.width)
+        let y = min(max(p.y - size.height / 2, area.minY), area.maxY - size.height)
+        return NSRect(origin: NSPoint(x: x, y: y), size: size)
+    }
+
     // MARK: - Events
 
     override func mouseMoved(with event: NSEvent) {
         let p = convert(event.locationInWindow, from: nil)
-        let w = window(at: p)
-        if w?.id != hovered?.id { hovered = w; needsDisplay = true }
+        hovered = window(at: p)
+        pointer = p
+        needsDisplay = true
     }
 
     override func mouseExited(with event: NSEvent) {
         hovered = nil
+        pointer = nil
         needsDisplay = true
     }
 
@@ -142,14 +160,10 @@ private final class PickerView: NSView {
             let rect = quartz(sel)
             let container = windows.first { $0.bounds.contains(rect) }
             done(.init(rect: rect, window: container))
-        } else if let w = hovered {
-            // Click on a window: take the window's content (skip the title bar strip).
-            let titleBar: CGFloat = w.bounds.height > 120 ? 28 : 0
-            let r = CGRect(x: w.bounds.minX, y: w.bounds.minY + titleBar, width: w.bounds.width, height: w.bounds.height - titleBar)
-            let visible = r.intersection(quartz(bounds))
-            done(.init(rect: visible.isNull ? r : visible, window: w))
         } else {
-            needsDisplay = true
+            let p = convert(event.locationInWindow, from: nil)
+            hovered = window(at: p)
+            done(.init(rect: quartz(clickLens(at: p)), window: hovered))
         }
     }
 
@@ -165,13 +179,12 @@ private final class PickerView: NSView {
             punch(sel, radius: 4)
             stroke(sel, color: .white, width: 1.5, radius: 4)
             label("\(Int(sel.width)) × \(Int(sel.height))", near: sel)
-        } else if let w = hovered {
-            let r = local(w.bounds)
+        } else if let p = pointer {
+            let r = clickLens(at: p)
+            if let w = hovered { stroke(local(w.bounds), color: .controlAccentColor.withAlphaComponent(0.5), width: 1.5, radius: 10) }
             punch(r, radius: 10)
-            NSColor.controlAccentColor.withAlphaComponent(0.12).setFill()
-            NSBezierPath(roundedRect: r, xRadius: 10, yRadius: 10).fill()
             stroke(r, color: .controlAccentColor, width: 3, radius: 10)
-            label(w.appName.isEmpty ? String(localized: "Translate this window") : String(localized: "\(w.appName) — click to follow this window"), near: r, inside: true)
+            if let w = hovered, !w.appName.isEmpty { label(String(localized: "\(w.appName) — click to follow this window"), near: r, inside: true) }
         }
         hint()
     }

@@ -79,7 +79,7 @@ notarized.
 
 | | |
 |---|---|
-| ⌃⌥T | Add a lens (drag an area, or click a window to follow it) |
+| ⌃⌥T | Add a lens (drag an area, or click to drop one; it follows the window it lands in) |
 | ⌃⌥O | Show the original / the translation |
 | ⌃⌥P | Pause all lenses |
 | ⌃⌥R | Translate again |
