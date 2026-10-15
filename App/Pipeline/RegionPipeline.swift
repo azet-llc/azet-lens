@@ -268,7 +268,7 @@ actor RegionPipeline {
             break
         }
         working = false
-        setActivity(translating ? .translating : .idle)
+        setActivity(translating && lensPending ? .translating : .idle)
         if options.renderMode == .adaptive, !seamlessDone, latest != nil {
             let wait = max(0.05, options.settleDelay - (ProcessInfo.processInfo.systemUptime - max(lastChange, lensMoved)))
             settleTask?.cancel()
@@ -810,7 +810,7 @@ actor RegionPipeline {
         }
         guard !translating, !pending.isEmpty else { return }
         translating = true
-        setActivity(.translating)
+        if lensPending { setActivity(.translating) }
         Task { await translateQueue() }
     }
 
@@ -825,9 +825,15 @@ actor RegionPipeline {
             Trace.mark("translate ×\(batch.count)", since: t)
             batch.forEach { pending.remove($0) }
             receive(result)
+            // The overscan keeps translating quietly; "translating" is only what the lens is waiting for.
+            if !working { setActivity(lensPending ? .translating : .idle) }
         }
         translating = false
         if !working { setActivity(.idle) }
+    }
+
+    private var lensPending: Bool {
+        blocks.contains { $0.translation == nil && pending.contains($0.source) && priority($0.rect).0 == 0 }
     }
 
     private func nextBatch() -> [String]? {

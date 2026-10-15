@@ -345,18 +345,18 @@ func texture(width: Int, height: Int, seed: Int = 1) -> GrayImage {
         // Near the left edge the capture slides right instead of being cut.
         let edge = CGRect(x: 10, y: 300, width: 400, height: 200)
         let e = Overscan.rect(around: edge, wide: true, display: display)
-        #expect(e.minX == 0 && e.width == 400 + 2 * 240)
+        #expect(e.minX == 0 && e.width == 400 + 2 * 160)
     }
 
     @Test func lensMovesInsideTheCaptureUntilNearItsEdge() {
         let lens = CGRect(x: 500, y: 300, width: 400, height: 200)
-        let capture = Overscan.rect(around: lens, wide: true, display: display)  // 240 × 200 pt margins
+        let capture = Overscan.rect(around: lens, wide: true, display: display)  // 160 × 160 pt margins
         func plan(dx: CGFloat) -> Overscan.Plan {
             Overscan.plan(lens: lens.offsetBy(dx: dx, dy: 0), capture: capture, wide: true, allowResize: false, display: display)
         }
-        #expect(plan(dx: 140) == .keep)
-        guard case .move(let r) = plan(dx: 150) else { Issue.record("expected a re-centre"); return }
-        #expect(r.size == capture.size && r.midX == lens.midX + 150)
+        #expect(plan(dx: 90) == .keep)
+        guard case .move(let r) = plan(dx: 100) else { Issue.record("expected a re-centre"); return }
+        #expect(r.size == capture.size && r.midX == lens.midX + 100)
         // Calming down shrinks the margins, but only when resizing is allowed.
         #expect(Overscan.plan(lens: lens, capture: capture, wide: false, allowResize: false, display: display) == .keep)
         guard case .resize = Overscan.plan(lens: lens, capture: capture, wide: false, allowResize: true, display: display)

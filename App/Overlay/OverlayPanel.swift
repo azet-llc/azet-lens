@@ -5,8 +5,7 @@ import QuartzCore
 ///
 /// The panel covers the whole display and never moves while the lens does: a window move and a layer move reach the
 /// screen in different frames, so a panel sliding along with a dragged lens dragged its blocks along for a frame at a
-/// time. Only which blocks show changes: a block is drawn whole when it is mostly inside the lens, the rest are hidden
-/// and the original shows.
+/// time. Only the clip changes: translations show inside the lens and nowhere else.
 ///
 /// While the page scrolls, blocks in the scrolling area are moved ahead of the captured frames by `prediction`, and
 /// the frames' correction is eased in with a critically damped spring instead of a jump.
@@ -128,8 +127,16 @@ private final class OverlayHostView: NSView {
     private var layersByID: [UUID: CALayer] = [:]
     /// Each block's frame as the last snapshot placed it (host coordinates), before any predicted scroll.
     private var placed: [UUID: CGRect] = [:]
-    /// The lens, host coordinates.
-    var lens = CGRect.zero
+    /// The lens, host coordinates. Translations are clipped to it.
+    var lens = CGRect.zero {
+        didSet {
+            CATransaction.begin()
+            CATransaction.setDisableActions(true)
+            clip.frame = lens
+            CATransaction.commit()
+        }
+    }
+    private let clip = CALayer()
     /// Capture time of the frame the blocks were placed from.
     private(set) var time: TimeInterval = 0
     private var prediction: (area: CGRect, dy: CGFloat)?
@@ -140,6 +147,10 @@ private final class OverlayHostView: NSView {
         layer = CALayer()
         layer?.isGeometryFlipped = true // block frames are top-left based
         layerContentsRedrawPolicy = .never
+        clip.backgroundColor = .black
+        clip.cornerRadius = 12 // the lens frame's
+        clip.cornerCurve = .continuous
+        layer?.mask = clip
     }
 
     required init?(coder: NSCoder) { fatalError("not used") }
@@ -245,16 +256,13 @@ private final class OverlayHostView: NSView {
         updateVisibility(animated: false)
     }
 
-    /// Shows a block when at least half of it, or half of the lens, is covered by it; hides the rest.
+    /// Shows the blocks the lens touches (the clip cuts them at its edge); hides the rest.
     func updateVisibility(animated: Bool) {
         CATransaction.begin()
         CATransaction.setAnimationDuration(animated ? 0.15 : 0)
         CATransaction.setDisableActions(!animated)
         for l in layersByID.values {
-            let inter = l.frame.intersection(lens)
-            let area = inter.isNull ? 0 : inter.width * inter.height
-            let show = area >= 0.5 * l.frame.width * l.frame.height || area >= 0.5 * lens.width * lens.height
-            let opacity: Float = show ? 1 : 0
+            let opacity: Float = l.frame.intersects(lens) ? 1 : 0
             if l.opacity != opacity { l.opacity = opacity }
         }
         CATransaction.commit()

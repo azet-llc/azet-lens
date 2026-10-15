@@ -16,7 +16,7 @@ public enum Overscan {
     /// Margin per side: generous at rest (static content costs nothing — no frames arrive — and is translated ahead
     /// once), wider while content or the lens moves.
     public static func margins(for size: CGSize, wide: Bool) -> CGSize {
-        func m(_ v: CGFloat) -> CGFloat { wide ? min(max(v * 0.6, 200), 480) : min(max(v * 0.3, 80), 240) }
+        func m(_ v: CGFloat) -> CGFloat { wide ? min(max(v * 0.4, 160), 320) : min(max(v * 0.3, 80), 240) }
         return CGSize(width: m(size.width), height: m(size.height))
     }
 
