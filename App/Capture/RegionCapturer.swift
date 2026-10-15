@@ -22,8 +22,9 @@ final class RegionCapturer: NSObject, SCStreamOutput, SCStreamDelegate, @uncheck
     private var stream: SCStream?
     private var filter: SCContentFilter?
     private var scale: CGFloat = 2
-    /// The rect the stream is known to deliver; nil while a reconfiguration is in flight (frames are ambiguous then).
-    private let configured = OSAllocatedUnfairLock<CGRect?>(initialState: nil)
+    /// The rect the stream is known to deliver and since when (capture clock); nil while a reconfiguration is in flight
+    /// (frames are ambiguous then). Frames captured before `since` show the previous rect even if they arrive later.
+    private let configured = OSAllocatedUnfairLock<(rect: CGRect, since: TimeInterval)?>(initialState: nil)
 
     /// `rect` is in global Quartz points and must lie on one display.
     func start(rect: CGRect, fps: Double) async throws {
@@ -63,10 +64,11 @@ final class RegionCapturer: NSObject, SCStreamOutput, SCStreamDelegate, @uncheck
     /// Marks `rect` as what the stream now shows and delivers one fresh frame of it. ScreenCaptureKit only sends
     /// frames when pixels change, so without this a lens moved over static content would never see what it uncovered.
     private func settle(rect: CGRect, config: SCStreamConfiguration) async {
-        configured.withLock { $0 = rect }
+        let since = ProcessInfo.processInfo.systemUptime
+        configured.withLock { $0 = (rect, since) }
         guard let filter, let buffer = try? await SCScreenshotManager.captureSampleBuffer(contentFilter: filter, configuration: config),
-              let pb = buffer.imageBuffer, configured.withLock({ $0 }) == rect,
-              let frame = Self.makeFrame(pb, rect: rect, scale: scale) else { return }
+              let pb = buffer.imageBuffer, configured.withLock({ $0?.rect == rect && $0?.since == since }),
+              let frame = Self.makeFrame(pb, rect: rect, scale: scale, time: ProcessInfo.processInfo.systemUptime) else { return }
         onFrame?(frame)
     }
 
@@ -106,12 +108,26 @@ final class RegionCapturer: NSObject, SCStreamOutput, SCStreamDelegate, @uncheck
               SCFrameStatus(rawValue: statusRaw) == .complete,
               let pixelBuffer = sampleBuffer.imageBuffer
         else { return }
-        guard let rect = configured.withLock({ $0 }), let frame = Self.makeFrame(pixelBuffer, rect: rect, scale: scale) else { return }
+        // When the frame was captured: it dates the frame against reconfigurations and against scroll events.
+        let time = (attachments.first?[.displayTime] as? UInt64).map(Self.seconds) ?? ProcessInfo.processInfo.systemUptime
+        guard let c = configured.withLock({ $0 }), time >= c.since,
+              let frame = Self.makeFrame(pixelBuffer, rect: c.rect, scale: scale, time: time) else { return }
         onFrame?(frame)
     }
 
+    private static let timebase: mach_timebase_info_data_t = {
+        var t = mach_timebase_info_data_t()
+        mach_timebase_info(&t)
+        return t
+    }()
+
+    /// Host time (mach ticks) on the `systemUptime` clock.
+    private static func seconds(_ ticks: UInt64) -> TimeInterval {
+        Double(ticks) * Double(timebase.numer) / Double(timebase.denom) / 1_000_000_000
+    }
+
     /// Copies the (pooled, soon reused) pixel buffer into an owned CGImage and a downsampled gray image.
-    static func makeFrame(_ pb: CVPixelBuffer, rect: CGRect, scale: CGFloat) -> CapturedFrame? {
+    static func makeFrame(_ pb: CVPixelBuffer, rect: CGRect, scale: CGFloat, time: TimeInterval) -> CapturedFrame? {
         CVPixelBufferLockBaseAddress(pb, .readOnly)
         defer { CVPixelBufferUnlockBaseAddress(pb, .readOnly) }
         guard let base = CVPixelBufferGetBaseAddress(pb) else { return nil }
@@ -125,7 +141,7 @@ final class RegionCapturer: NSObject, SCStreamOutput, SCStreamDelegate, @uncheck
                                   bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedFirst.rawValue | CGBitmapInfo.byteOrder32Little.rawValue),
                                   provider: provider, decode: nil, shouldInterpolate: false, intent: .defaultIntent)
         else { return nil }
-        return CapturedFrame(image: image, gray: gray, grayStep: step, scale: scale, rect: rect, time: ProcessInfo.processInfo.systemUptime)
+        return CapturedFrame(image: image, gray: gray, grayStep: step, scale: scale, rect: rect, time: time)
     }
 
     // MARK: - SCStreamDelegate

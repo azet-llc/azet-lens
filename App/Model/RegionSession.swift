@@ -6,8 +6,12 @@ import os
 /// glued to its window when anchored.
 ///
 /// The capture is larger than the lens (overscan): the text around it is read and translated ahead, so dragging the
-/// lens or scrolling reveals translations that are already there. The margin widens while things move and the lens
-/// moves freely inside it; the capture only re-centres when the lens nears its edge.
+/// lens or scrolling reveals translations that are already there. The margin widens while things move, and more of it
+/// lies where things are heading; the lens moves freely inside it and the capture only re-centres when the lens nears
+/// its edge.
+///
+/// Scroll events over the capture predict where the content is going before the frames show it, so the translations
+/// move with the page like the page moves with the finger.
 @MainActor
 final class RegionSession {
     private(set) var config: RegionConfig
@@ -35,7 +39,15 @@ final class RegionSession {
     private var wideMargins = false
     private var lastMotion: TimeInterval = 0
     private var calmTimer: Timer?
-    private let log = Logger(subsystem: "dev.midagedev.mwoyeo", category: "session")
+    /// Where things are heading (-1…1 per axis): the lens while dragged, new content while the page scrolls.
+    private var lead = CGVector.zero
+    private var lastLens: (rect: CGRect, time: TimeInterval)?
+    private var predictor = ScrollPredictor()
+    /// The area under the pointer that scrolled last (global Quartz points), and the window it belongs to.
+    private var scrollArea: CGRect?
+    private var scrollWindow: CGWindowID?
+    private var lastWheel: TimeInterval = 0
+    private let log = Logger(subsystem: "dev.midagedev.mwoyea", category: "session")
 
     init(config: RegionConfig, settings: AppSettings, translator: TranslationService, inpainter: Inpainter?) {
         self.config = config
@@ -57,6 +69,8 @@ final class RegionSession {
     func start() async {
         await pipeline.setActivityHandler { [weak self] a in Task { @MainActor in self?.setActivity(a) } }
         await pipeline.setMotionHandler { [weak self] in Task { @MainActor in self?.noteMotion() } }
+        await pipeline.setScrollHandler { [weak self] r in Task { @MainActor in self?.scrolled(r) } }
+        panel.prediction = { [weak self] since, now in self?.predictedScroll(since: since, now: now) }
         await pipeline.setVisible(config.rect)
         panel.orderFrontRegardless()
         chrome.orderFrontRegardless()
@@ -139,9 +153,20 @@ final class RegionSession {
     }
 
     private func lensMoved(_ appKitFrame: NSRect) {
+        let rect = ScreenGeometry.quartzRect(fromAppKit: appKitFrame), now = ProcessInfo.processInfo.systemUptime
+        // Heading: the direction of the last ~100 ms of the drag.
+        if let last = lastLens {
+            if now - last.time > 0.1 {
+                let d = CGVector(dx: rect.midX - last.rect.midX, dy: rect.midY - last.rect.midY), len = hypot(d.dx, d.dy)
+                if len > 4 { setLead(CGVector(dx: d.dx / len, dy: d.dy / len)) }
+                lastLens = (rect, now)
+            }
+        } else {
+            lastLens = (rect, now)
+        }
         if !dragging { dragging = true; noteMotion() }
-        config.rect = ScreenGeometry.quartzRect(fromAppKit: appKitFrame)
-        // The content stays put: the panel slides over the blocks, which the capture already holds around the lens.
+        config.rect = rect
+        // The content stays put, and so do the blocks: only which of them show changes.
         panel.slide(to: appKitFrame)
         fitCapture(allowResize: false)
     }
@@ -163,12 +188,14 @@ final class RegionSession {
     private func lensResized(_ appKitFrame: NSRect) {
         dragging = true
         config.rect = ScreenGeometry.quartzRect(fromAppKit: appKitFrame)
-        panel.move(to: appKitFrame)   // top-left stays, so the blocks do too
+        panel.slide(to: appKitFrame)
         fitCapture(allowResize: false)
     }
 
     private func lensDropped() {
         dragging = false
+        lastLens = nil
+        setLead(.zero)
         fitCapture(allowResize: true)
         // Re-evaluate which window (if any) the lens now sits in.
         if config.anchor != nil {
@@ -197,7 +224,7 @@ final class RegionSession {
 
     private func fitCapture(allowResize: Bool) {
         let lens = config.rect
-        switch Overscan.plan(lens: lens, capture: capture, wide: wideMargins, allowResize: allowResize, display: Self.display(of: lens)) {
+        switch Overscan.plan(lens: lens, capture: capture, wide: wideMargins, allowResize: allowResize, display: Self.display(of: lens), lead: lead) {
         case .keep: break
         case .move(let r):
             capture = r
@@ -228,7 +255,45 @@ final class RegionSession {
         calmTimer?.invalidate()
         calmTimer = nil
         wideMargins = false
+        setLead(.zero)
         fitCapture(allowResize: true)
+    }
+
+    private func setLead(_ v: CGVector) {
+        guard v != lead else { return }
+        lead = v
+        Task { [pipeline] in await pipeline.setLead(v) }
+    }
+
+    // MARK: - Scrolling
+
+    /// A scroll event anywhere: if it scrolls content this lens reads, it predicts the next frames.
+    private func wheel(_ e: NSEvent) {
+        let p = ScreenGeometry.quartzRect(fromAppKit: NSRect(origin: NSEvent.mouseLocation, size: .zero)).origin
+        guard capture.contains(p), e.scrollingDeltaY != 0 || e.phase == .began else { return }
+        if e.phase == .began || e.phase == .mayBegin || (e.phase.isEmpty && e.momentumPhase.isEmpty && e.timestamp - lastWheel > 0.5) {
+            // A new gesture: pixels per wheel unit belong to the app (and page) under the pointer.
+            let window = WindowInfo.onScreen().first { $0.bounds.contains(p) }?.id
+            if window != scrollWindow { predictor.reset(); scrollArea = nil; scrollWindow = window }
+        }
+        predictor.wheel(delta: Double(e.scrollingDeltaY), time: e.timestamp, precise: e.hasPreciseScrollingDeltas)
+        lastWheel = e.timestamp
+        panel.predict()
+    }
+
+    /// The frames showed content scrolled: learn how far scroll events move it, and read ahead where it comes from.
+    private func scrolled(_ r: ScrollReport) {
+        setLead(CGVector(dx: 0, dy: r.shift < 0 ? 1 : -1))
+        let p = ScreenGeometry.quartzRect(fromAppKit: NSRect(origin: NSEvent.mouseLocation, size: .zero)).origin
+        guard r.area.contains(p) else { return }
+        scrollArea = r.area
+        predictor.confirm(shift: Double(r.shift), from: r.from, to: r.to)
+    }
+
+    /// The scroll the overlay should show on top of the frame captured at `since`, as of `now`.
+    private func predictedScroll(since: TimeInterval, now: TimeInterval) -> (area: CGRect, dy: CGFloat)? {
+        guard let area = scrollArea, now - lastWheel < 1 else { return nil }
+        return (area, CGFloat(predictor.offset(from: since, to: now)))
     }
 
     /// Coalesces capture reconfiguration: at most one in flight, always ending on the latest rect.
@@ -251,6 +316,8 @@ final class RegionSession {
         guard mouseMonitors.isEmpty else { return }
         let handler: (NSEvent) -> Void = { [weak self] _ in self?.updateEmphasis(NSEvent.mouseLocation) }
         if let g = NSEvent.addGlobalMonitorForEvents(matching: [.mouseMoved, .leftMouseDragged], handler: handler) { mouseMonitors.append(g) }
+        // Scroll events of other apps need no accessibility permission (only key events do).
+        if let s = NSEvent.addGlobalMonitorForEvents(matching: .scrollWheel, handler: { [weak self] e in self?.wheel(e) }) { mouseMonitors.append(s) }
         if let l = NSEvent.addLocalMonitorForEvents(matching: [.mouseMoved, .leftMouseDragged], handler: { handler($0); return $0 }) {
             mouseMonitors.append(l)
         }

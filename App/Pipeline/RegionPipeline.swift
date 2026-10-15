@@ -35,8 +35,6 @@ struct OverlaySnapshot: @unchecked Sendable {
     let origin: CGPoint
     /// Capture time of the newest frame the block positions follow; scrolling after it is the overlay's to predict.
     var time: TimeInterval = 0
-    /// Where content scrolled last (points, relative to `origin`): blocks there move with the next scroll.
-    var scrolling: [CGRect] = []
 }
 
 /// Content scrolled by `shift` points (positive = down) in `area` (global Quartz points) between frames captured at
@@ -134,8 +132,6 @@ actor RegionPipeline {
     private var moves: [Move] = []
     /// Gray-pixel areas that changed since the running pass started in ways no move explains.
     private var unexplained: [PixelRect] = []
-    /// Where content scrolled last (image pixels).
-    private var scrollAreas: [CGRect] = []
     /// Capture time of the newest frame read for changes.
     private var frameTime: TimeInterval = 0
     private var onScroll: (@Sendable (ScrollReport) -> Void)?
@@ -330,7 +326,6 @@ actor RegionPipeline {
         // Where the references agreed with the previous frame, the new frame is exactly what they now describe; that
         // also absorbs the part of a pixel a smooth scroll moved by, which would otherwise read as changed text.
         let inSync = baseGray.flatMap { base in prevGray.map { FrameDiff.changeMap(from: base, to: $0) } }
-        var areas: [CGRect] = []
         for r in regions {
             let g = PixelRect(x: r.rect.x + (offset?.x ?? 0), y: r.rect.y + (offset?.y ?? 0), width: r.rect.width, height: r.rect.height)
             let area = CGRect(x: CGFloat(g.x) * step, y: CGFloat(g.y) * step, width: CGFloat(g.width) * step, height: CGFloat(g.height) * step)
@@ -342,12 +337,10 @@ actor RegionPipeline {
                     + [strip].compactMap { $0 }
             }
             apply(Move(area: area, dx: 0, dy: CGFloat(r.dy) * step, gx: 0, gy: gy, grayArea: g, strip: strip))
-            areas.append(area)
             onScroll?(ScrollReport(area: CGRect(x: origin.x + area.minX / scale, y: origin.y + area.minY / scale,
                                                 width: area.width / scale, height: area.height / scale),
                                    shift: CGFloat(r.dy) * step / scale, from: t0, to: frame.time))
         }
-        scrollAreas = areas
     }
 
     /// The visible lens (global Quartz points), for translating what the user sees first.
@@ -420,7 +413,6 @@ actor RegionPipeline {
             forcedDirty = forcedDirty.map { PixelRect(x: $0.x + gx, y: $0.y + gy, width: $0.width, height: $0.height) }
                 + base.vacatedStrips(dx: gx, dy: gy)
         }
-        scrollAreas = scrollAreas.map { $0.offsetBy(dx: px, dy: py) }
         apply(Move(area: nil, dx: px, dy: py, gx: gx, gy: gy, grayArea: nil, strip: nil))
         kick()
     }
@@ -438,7 +430,6 @@ actor RegionPipeline {
         seamlessDone = false
         latest = nil
         grayShiftX.reset(); grayShiftY.reset()
-        scrollAreas = scrollAreas.map { $0.offsetBy(dx: px, dy: py) }
         let bounds = CGRect(origin: .zero, size: size)
         blocks = blocks.compactMap { b in
             var b = b
@@ -901,8 +892,7 @@ actor RegionPipeline {
             return OverlayBlock(id: b.id, frame: CGRect(x: b.rect.minX / s, y: b.rect.minY / s, width: b.rect.width / s, height: b.rect.height / s),
                                 image: img, seamless: b.erased != nil)
         }
-        onSnapshot(OverlaySnapshot(version: version, blocks: out, animated: animated, origin: origin, time: frameTime,
-                                   scrolling: scrollAreas.map { CGRect(x: $0.minX / s, y: $0.minY / s, width: $0.width / s, height: $0.height / s) }))
+        onSnapshot(OverlaySnapshot(version: version, blocks: out, animated: animated, origin: origin, time: frameTime))
         dump(out)
     }
 

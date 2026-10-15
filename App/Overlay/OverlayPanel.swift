@@ -1,18 +1,30 @@
 import AppKit
 import QuartzCore
 
-/// Transparent, click-through panel floating over a region. Shows one layer per translated block.
+/// Transparent, click-through panel floating over a region's display. Shows one layer per translated block.
 ///
-/// The panel is larger than the lens by `spill` on every side, so a block that is mostly inside the lens is drawn
-/// whole instead of being cut at the lens edge; blocks mostly outside it are hidden and the original shows.
+/// The panel covers the whole display and never moves while the lens does: a window move and a layer move reach the
+/// screen in different frames, so a panel sliding along with a dragged lens dragged its blocks along for a frame at a
+/// time. Only which blocks show changes: a block is drawn whole when it is mostly inside the lens, the rest are hidden
+/// and the original shows.
+///
+/// While the page scrolls, blocks in the scrolling area are moved ahead of the captured frames by `prediction`, and
+/// the frames' correction is eased in with a critically damped spring instead of a jump.
 final class OverlayPanel: NSPanel {
-    static let spill: CGFloat = 160
     private let host = OverlayHostView()
     private var lastVersion = 0
+    /// The lens, AppKit coordinates.
+    private var lens: NSRect
+    private var displayLink: CADisplayLink?
+
+    /// Predicted scrolling between a frame's capture time and a display time: the area that scrolls (global Quartz
+    /// points) and by how much (points, positive = down). nil when nothing is being scrolled.
+    var prediction: ((_ since: TimeInterval, _ now: TimeInterval) -> (area: CGRect, dy: CGFloat)?)?
 
     /// `frame` is the lens, AppKit coordinates.
     init(frame: NSRect) {
-        super.init(contentRect: frame.insetBy(dx: -Self.spill, dy: -Self.spill), styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
+        lens = frame
+        super.init(contentRect: Self.display(of: frame), styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
         isOpaque = false
         backgroundColor = .clear
         hasShadow = false
@@ -25,34 +37,60 @@ final class OverlayPanel: NSPanel {
         collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
         animationBehavior = .none
         contentView = host
+        host.lens = hostRect(frame)
     }
 
     override var canBecomeKey: Bool { false }
     override var canBecomeMain: Bool { false }
 
+    private static func display(of lens: NSRect) -> NSRect {
+        NSScreen.screens.max { a, b in
+            let ia = a.frame.intersection(lens), ib = b.frame.intersection(lens)
+            return ia.width * ia.height < ib.width * ib.height
+        }?.frame ?? lens
+    }
+
+    /// An AppKit rect in the host view's (top-left based) coordinates.
+    private func hostRect(_ r: NSRect) -> CGRect {
+        CGRect(x: r.minX - frame.minX, y: frame.maxY - r.maxY, width: r.width, height: r.height)
+    }
+
     func apply(_ snapshot: OverlaySnapshot) {
         guard snapshot.version > lastVersion else { return }
         lastVersion = snapshot.version
         let here = ScreenGeometry.quartzRect(fromAppKit: frame).origin
-        host.apply(snapshot, offset: CGVector(dx: snapshot.origin.x - here.x, dy: snapshot.origin.y - here.y))
+        let offset = CGVector(dx: snapshot.origin.x - here.x, dy: snapshot.origin.y - here.y)
+        host.apply(snapshot, offset: offset)
+        predict(at: CACurrentMediaTime(), correcting: true)
     }
 
-    func move(to lens: NSRect) {
-        setFrame(lens.insetBy(dx: -Self.spill, dy: -Self.spill), display: false)
-        host.updateVisibility(animated: false)
+    /// The lens moved with its content (the window under it moved): the blocks move along.
+    func move(to newLens: NSRect) {
+        place(newLens, contentDelta: CGVector(dx: newLens.minX - lens.minX, dy: lens.maxY - newLens.maxY))
     }
 
-    /// Moves the panel while keeping its blocks fixed on screen, so translations stay glued to the content
-    /// under a dragged lens until the pipeline catches up.
-    func slide(to lens: NSRect) {
-        let newFrame = lens.insetBy(dx: -Self.spill, dy: -Self.spill)
-        let dx = newFrame.minX - frame.minX, dyDown = -(newFrame.maxY - frame.maxY)
+    /// The lens moved over still content (dragged or resized): the blocks stay where they are on screen.
+    func slide(to newLens: NSRect) {
+        place(newLens, contentDelta: .zero)
+    }
+
+    /// `contentDelta` in points, y down.
+    private func place(_ newLens: NSRect, contentDelta: CGVector) {
+        lens = newLens
+        let display = Self.display(of: newLens)
         CATransaction.begin()
         CATransaction.setDisableActions(true)
-        host.offsetBlocks(dx: -dx, dy: -dyDown)
-        setFrame(newFrame, display: false)
+        var d = contentDelta
+        if display != frame {
+            // Another display: the panel follows (once, not per drag step); the blocks keep their place on screen.
+            d.dx += frame.minX - display.minX
+            d.dy += display.maxY - frame.maxY
+            setFrame(display, display: false)
+        }
+        if d.dx != 0 || d.dy != 0 { host.offsetBlocks(by: d) }
+        host.lens = hostRect(newLens)
         CATransaction.commit()
-        host.updateVisibility(animated: true)
+        host.updateVisibility(animated: contentDelta == .zero)
     }
 
     /// Fades the translations out (show original) or back in.
@@ -62,10 +100,39 @@ final class OverlayPanel: NSPanel {
             animator().alphaValue = visible ? 1 : 0
         }
     }
+
+    // MARK: - Scroll prediction
+
+    /// Places the predicted scroll for display time `now`, and keeps doing so every display frame while a scroll is
+    /// under way. `correcting`: the frames just moved the blocks, so any difference to where they were is an error
+    /// of the prediction, eased out.
+    func predict(at now: TimeInterval = CACurrentMediaTime(), correcting: Bool = false) {
+        let here = ScreenGeometry.quartzRect(fromAppKit: frame).origin
+        let p = prediction?(host.time, now)
+        // Ending a prediction is a correction too: whatever the frames have not confirmed eases away.
+        host.setPrediction(p.map { (area: $0.area.offsetBy(dx: -here.x, dy: -here.y), dy: $0.dy) }, correcting: correcting || p == nil)
+        if p != nil, displayLink == nil {
+            let link = host.displayLink(target: self, selector: #selector(tick))
+            link.add(to: .main, forMode: .common)
+            displayLink = link
+        } else if p == nil {
+            displayLink?.invalidate()
+            displayLink = nil
+        }
+    }
+
+    @objc private func tick(_ link: CADisplayLink) { predict(at: link.targetTimestamp) }
 }
 
 private final class OverlayHostView: NSView {
     private var layersByID: [UUID: CALayer] = [:]
+    /// Each block's frame as the last snapshot placed it (host coordinates), before any predicted scroll.
+    private var placed: [UUID: CGRect] = [:]
+    /// The lens, host coordinates.
+    var lens = CGRect.zero
+    /// Capture time of the frame the blocks were placed from.
+    private(set) var time: TimeInterval = 0
+    private var prediction: (area: CGRect, dy: CGFloat)?
 
     override init(frame: NSRect) {
         super.init(frame: frame)
@@ -88,12 +155,14 @@ private final class OverlayHostView: NSView {
 
     func apply(_ snapshot: OverlaySnapshot, offset: CGVector) {
         let scale = window?.backingScaleFactor ?? 2
+        time = snapshot.time
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         var seen = Set<UUID>()
         for var block in snapshot.blocks {
             block.frame = block.frame.offsetBy(dx: offset.dx, dy: offset.dy)
             seen.insert(block.id)
+            placed[block.id] = block.frame
             if let l = layersByID[block.id] {
                 if snapshot.animated, (l.contents as AnyObject?) !== block.image {
                     let fade = CATransition()
@@ -101,7 +170,7 @@ private final class OverlayHostView: NSView {
                     fade.duration = 0.22
                     l.add(fade, forKey: "contents")
                 }
-                l.frame = block.frame
+                l.bounds.size = block.frame.size
                 l.contents = block.image
             } else {
                 let l = CALayer()
@@ -123,6 +192,7 @@ private final class OverlayHostView: NSView {
         }
         for (id, l) in layersByID where !seen.contains(id) {
             layersByID[id] = nil
+            placed[id] = nil
             if snapshot.animated {
                 CATransaction.begin()
                 CATransaction.setCompletionBlock { l.removeFromSuperlayer() }
@@ -138,12 +208,43 @@ private final class OverlayHostView: NSView {
             }
         }
         CATransaction.commit()
+        // Positions (with any prediction) are set by `setPrediction`, which the panel calls right after.
         updateVisibility(animated: snapshot.animated)
+    }
+
+    /// Moves the blocks in the scrolling area (host coordinates) by the predicted scroll. With `correcting`, a block
+    /// that is not where it was shown (the frames corrected the prediction) eases there instead of jumping.
+    func setPrediction(_ p: (area: CGRect, dy: CGFloat)?, correcting: Bool) {
+        let was = prediction
+        prediction = p
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        for (id, l) in layersByID {
+            guard let f = placed[id] else { continue }
+            let dy = p.map { $0.area.contains(CGPoint(x: f.midX, y: f.midY)) ? $0.dy : 0 } ?? 0
+            let target = CGPoint(x: f.midX, y: f.midY + dy)
+            let error = CGVector(dx: l.position.x - target.x, dy: l.position.y - target.y)
+            l.position = target
+            // Only a correction of a prediction eases; a block placed or moved by the frames alone goes straight there.
+            if correcting, was != nil || p != nil, error.dx != 0 || error.dy != 0, hypot(error.dx, error.dy) < 80,
+               l.animation(forKey: "appear") == nil {
+                let spring = CASpringAnimation(keyPath: "position")
+                spring.mass = 1
+                spring.stiffness = 900
+                spring.damping = 2 * (spring.stiffness * spring.mass).squareRoot()   // critically damped: no overshoot
+                spring.isAdditive = true
+                spring.fromValue = NSValue(point: NSPoint(x: error.dx, y: error.dy))
+                spring.toValue = NSValue(point: .zero)
+                spring.duration = spring.settlingDuration
+                l.add(spring, forKey: "correction")
+            }
+        }
+        CATransaction.commit()
+        updateVisibility(animated: false)
     }
 
     /// Shows a block when at least half of it, or half of the lens, is covered by it; hides the rest.
     func updateVisibility(animated: Bool) {
-        let lens = bounds.insetBy(dx: OverlayPanel.spill, dy: OverlayPanel.spill)
         CATransaction.begin()
         CATransaction.setAnimationDuration(animated ? 0.15 : 0)
         CATransaction.setDisableActions(!animated)
@@ -157,7 +258,11 @@ private final class OverlayHostView: NSView {
         CATransaction.commit()
     }
 
-    func offsetBlocks(dx: CGFloat, dy: CGFloat) {
-        for l in layersByID.values { l.position = CGPoint(x: l.position.x + dx, y: l.position.y + dy) }
+    /// Content moved by `d` (points, y down): the blocks go along.
+    func offsetBlocks(by d: CGVector) {
+        for (id, l) in layersByID {
+            l.position = CGPoint(x: l.position.x + d.dx, y: l.position.y + d.dy)
+            placed[id] = placed[id]?.offsetBy(dx: d.dx, dy: d.dy)
+        }
     }
 }

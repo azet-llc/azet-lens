@@ -12,6 +12,8 @@ import UniformTypeIdentifiers
 ///   Mwoyea --render screen.png outdir --pan --lens x,y,w,h --to x,y [--steps 40] [--step-ms 100] [--hold-ms 3000]
 /// With `--scroll`, the lens stays and the content scrolls by `--to` instead (screen.png is the whole page); `--scroll-rect x,y,w,h`
 /// scrolls only that part (a message log between a fixed sidebar, header and footer), `--ease` decelerates like inertial scrolling.
+/// `--wheel N` also sends N trackpad scroll events per captured frame and shows the translations where the scroll
+/// predictor puts them between frames (`--no-predict`: where the last frame left them).
 /// Each step prints how far the shown translations are from the text they translate ("drift", points).
 enum SelfTest {
     static func run(_ args: [String]) -> Never {
@@ -34,8 +36,11 @@ enum SelfTest {
     private final class Collector: @unchecked Sendable {
         private let lock = NSLock()
         private var snapshot: OverlaySnapshot?
+        private var reports: [ScrollReport] = []
         var latest: OverlaySnapshot? { lock.withLock { snapshot } }
         func put(_ s: OverlaySnapshot) { lock.withLock { snapshot = s } }
+        func report(_ r: ScrollReport) { lock.withLock { reports.append(r) } }
+        func drainReports() -> [ScrollReport] { lock.withLock { defer { reports = [] }; return reports } }
     }
 
     private static func render(_ args: [String]) async throws {
@@ -124,6 +129,10 @@ enum SelfTest {
         let sr = numbers("--scroll-rect")
         let scrollRect = sr.count == 4 ? CGRect(x: sr[0], y: sr[1], width: sr[2], height: sr[3]) : CGRect.infinite
         let ease = CommandLine.arguments.contains("--ease")
+        let wheelsPerFrame = Int(option("--wheel") ?? "0") ?? 0, predicting = !CommandLine.arguments.contains("--no-predict")
+        var predictor = ScrollPredictor()
+        predictor.latency = 0   // the "app" here shows a scroll at once
+        var scrollArea: CGRect?
         // Content offset (points): the screen shows the page from here. Only `--scroll` changes it.
         var scroll = CGVector.zero
         let steps = Int(option("--steps") ?? "40") ?? 40
@@ -142,6 +151,7 @@ enum SelfTest {
         await pipeline.setVisible(lens)
         let motion = Collector()   // reused as a flag: any snapshot stored = motion seen
         await pipeline.setMotionHandler { motion.put(OverlaySnapshot(version: 0, blocks: [], animated: false, origin: .zero)) }
+        await pipeline.setScrollHandler { collector.report($0) }
 
         /// What the display shows in `r` (points): the page, scrolled by `scroll` inside `scrollRect`.
         func compose(_ r: CGRect) -> CGImage? {
@@ -187,13 +197,15 @@ enum SelfTest {
             ctx.draw(under, in: CGRect(x: 0, y: 0, width: w, height: h))
             var shown = 0, drift: CGFloat = 0
             if let snap = collector.latest {
+                let predicted = predicting ? CGFloat(predictor.offset(from: snap.time, to: ProcessInfo.processInfo.systemUptime)) : 0
                 for b in snap.blocks {
                     // Snapshot frames are relative to the capture origin; the lens is the overlay panel.
-                    let g = b.frame.offsetBy(dx: snap.origin.x - lens.minX, dy: snap.origin.y - lens.minY)
+                    var onScreen = b.frame.offsetBy(dx: snap.origin.x, dy: snap.origin.y)
+                    if scrollArea?.contains(CGPoint(x: onScreen.midX, y: onScreen.midY)) == true { onScreen.origin.y += predicted }
+                    let g = onScreen.offsetBy(dx: -lens.minX, dy: -lens.minY)
                     guard g.intersects(CGRect(origin: .zero, size: lens.size)) else { continue }
                     shown += 1
                     ctx.draw(b.image, in: CGRect(x: g.minX * scale, y: CGFloat(h) - g.maxY * scale, width: g.width * scale, height: g.height * scale))
-                    let onScreen = b.frame.offsetBy(dx: snap.origin.x, dy: snap.origin.y)
                     var a = anchors[b.id]
                     // A re-read may re-lay a block out; measure from there.
                     if a == nil || a!.size != b.frame.size {
@@ -230,15 +242,26 @@ enum SelfTest {
 
         if scrolling {
             // Scroll: frames change under a still capture; the pipeline notices the motion and asks for wide margins.
-            for i in 1...steps {
-                let t = CGFloat(i) / CGFloat(steps), f = ease ? 1 - pow(1 - t, 3) : t
-                scroll = CGVector(dx: (to[0] * f).rounded(), dy: (to[1] * f).rounded())
-                if !wide, motion.latest != nil {
-                    wide = true
-                    await apply(Overscan.plan(lens: lens, capture: capture, wide: wide, allowResize: true, display: display))
+            let sub = max(1, wheelsPerFrame)
+            for i in 1...(steps * sub) {
+                let t = CGFloat(i) / CGFloat(steps * sub), f = ease ? 1 - pow(1 - t, 3) : t
+                let next = CGVector(dx: (to[0] * f).rounded(), dy: (to[1] * f).rounded())
+                // Scrolling the page down moves its content up.
+                if wheelsPerFrame > 0 { predictor.wheel(delta: Double(scroll.dy - next.dy), time: ProcessInfo.processInfo.systemUptime, precise: true) }
+                scroll = next
+                if i % sub == 0 {
+                    if !wide, motion.latest != nil {
+                        wide = true
+                        await apply(Overscan.plan(lens: lens, capture: capture, wide: wide, allowResize: true, display: display))
+                    }
+                    await feed()
+                    // The pointer (as RegionSession sees it) rests in the middle of the lens.
+                    for r in collector.drainReports() where r.area.contains(CGPoint(x: lens.midX, y: lens.midY)) {
+                        scrollArea = r.area
+                        predictor.confirm(shift: Double(r.shift), from: r.from, to: r.to)
+                    }
                 }
-                await feed()
-                try await Task.sleep(for: .milliseconds(stepMs))
+                try await Task.sleep(for: .milliseconds(stepMs / sub))
                 try shoot()
             }
         } else {
