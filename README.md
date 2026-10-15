@@ -10,7 +10,6 @@
 <p align="center">
   <a href="https://github.com/midagedev/mwoyeo/releases/latest"><img alt="Release" src="https://img.shields.io/github/v/release/midagedev/mwoyeo?style=flat-square&label=release&color=ff9f0a"></a>
   <a href="https://github.com/midagedev/mwoyeo/releases"><img alt="Downloads" src="https://img.shields.io/endpoint?style=flat-square&url=https%3A%2F%2Fraw.githubusercontent.com%2Fmidagedev%2Fmwoyeo%2Fstats%2Fdownloads.json"></a>
-  <a href="https://github.com/midagedev/mwoyeo/releases"><img alt="Installs" src="https://img.shields.io/endpoint?style=flat-square&url=https%3A%2F%2Fraw.githubusercontent.com%2Fmidagedev%2Fmwoyeo%2Fstats%2Finstalls.json"></a>
   <img alt="macOS 27+" src="https://img.shields.io/badge/macOS-27%2B-bf5af2?style=flat-square&logo=apple&logoColor=white">
   <img alt="Apple silicon" src="https://img.shields.io/badge/Apple_silicon-native-5e5ce6?style=flat-square">
   <img alt="Privacy: on-device" src="https://img.shields.io/badge/privacy-on--device-64d2ff?style=flat-square">
@@ -127,7 +126,7 @@ Apple Intelligence는 macOS 27이 설치되는 Mac이면 어디서나 돌아가�
 - **개인정보는요?** Mwoyeo는 렌즈 아래만 읽고 그 내용을 저장하지도 보내지도 않아요. 화면을 캡처할 때 자기
   오버레이는 빼고 찍어요. 인터넷에 묻는 건 하루 한 번 GitHub의 최신 버전 번호뿐이고 설정 › 정보에서 끌 수 있어요.
   이 확인은 릴리즈에 붙은 작은 파일을 받는 방식이라 GitHub의 다운로드 수가 곧 사용 통계가 돼요. 설치는 한 번, 사용은
-  한 달에 한 번만 세고 기기를 알아볼 수 있는 값은 아무것도 보내지 않아요. 위의 설치 수 배지가 이렇게 모은 숫자예요.
+  한 달에 한 번만 세고 기기를 알아볼 수 있는 값은 아무것도 보내지 않아요.
 
 ## 내부 구조
 

@@ -10,7 +10,6 @@ Put a lens over a chat, a feed or a game. The original text disappears and the t
 <p align="center">
   <a href="https://github.com/midagedev/mwoyeo/releases/latest"><img alt="Release" src="https://img.shields.io/github/v/release/midagedev/mwoyeo?style=flat-square&label=release&color=ff9f0a"></a>
   <a href="https://github.com/midagedev/mwoyeo/releases"><img alt="Downloads" src="https://img.shields.io/endpoint?style=flat-square&url=https%3A%2F%2Fraw.githubusercontent.com%2Fmidagedev%2Fmwoyeo%2Fstats%2Fdownloads.json"></a>
-  <a href="https://github.com/midagedev/mwoyeo/releases"><img alt="Installs" src="https://img.shields.io/endpoint?style=flat-square&url=https%3A%2F%2Fraw.githubusercontent.com%2Fmidagedev%2Fmwoyeo%2Fstats%2Finstalls.json"></a>
   <img alt="macOS 27+" src="https://img.shields.io/badge/macOS-27%2B-bf5af2?style=flat-square&logo=apple&logoColor=white">
   <img alt="Apple silicon" src="https://img.shields.io/badge/Apple_silicon-native-5e5ce6?style=flat-square">
   <img alt="Privacy: on-device" src="https://img.shields.io/badge/privacy-on--device-64d2ff?style=flat-square">
@@ -132,7 +131,7 @@ elsewhere, record a different one. The defaults stay clear of window managers su
   what it captures. The only thing it ever asks the internet is GitHub's latest version number, once a day, and
   you can turn that off in Settings › About. The check downloads a small file attached to the release, so GitHub's
   download counts are the usage numbers: an install is counted once, use once a month, and nothing that could identify
-  your Mac is sent. That is where the badges at the top come from.
+  your Mac is sent.
 
 ## Under the hood
 
