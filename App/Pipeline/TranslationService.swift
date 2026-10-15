@@ -40,6 +40,7 @@ actor TranslationService {
 
     init(settings: AppSettings) {
         self.settings = settings
+        cache.use(Self.namespace(settings))
     }
 
     func update(settings new: AppSettings) {
@@ -47,9 +48,15 @@ actor TranslationService {
             || new.glossary != settings.glossary || new.engine != settings.engine
         settings = new
         if changed {
-            cache.removeAll()
+            // Translations for the previous settings stay cached: switching back costs nothing.
+            cache.use(Self.namespace(new))
             sessions.removeAll()
         }
+    }
+
+    /// What a cached translation depends on besides the text.
+    private static func namespace(_ s: AppSettings) -> String {
+        "\(s.sourceLanguage)>\(s.targetLanguage)|\(s.engine.rawValue)|\(s.glossary.hashValue)"
     }
 
     func setIssueHandler(_ h: @escaping @Sendable (TranslationIssue?) -> Void) { issueHandler = h }
@@ -91,6 +98,8 @@ actor TranslationService {
             }
         }
         guard !todo.isEmpty else { return result }
+        // Results are stored for the settings they were asked under, even if those change meanwhile.
+        let space = cache.namespace
 
         // Group by source language (keeping order) so each session handles one pair.
         var order: [String] = []
@@ -108,7 +117,7 @@ actor TranslationService {
                 let translated = try await translateGroup(items, source: source, onResult: deliver)
                 for (s, t) in translated {
                     result[s] = t
-                    cache[s] = t
+                    cache.store(t, for: s, in: space)
                 }
                 issueHandler?(nil)
             } catch let issue as TranslationIssue {
@@ -220,16 +229,23 @@ actor TranslationService {
     }
 }
 
-/// Source → translation for the current engine and target (cleared when they change), lock-guarded so regions can
-/// read it from outside the actor.
+/// Source → translation, per language pair, engine and glossary (so switching settings and back reuses them),
+/// lock-guarded so regions can read it from outside the actor. Memory only: screen text never goes to disk.
 private final class Memory: @unchecked Sendable {
     private let lock = NSLock()
     private let lru = LRUCache<String, String>(capacity: 5000)
-    subscript(text: String) -> String? {
-        get { lock.withLock { lru[text] } }
-        set { lock.withLock { lru[text] = newValue } }
+    private var space = ""
+    var namespace: String { lock.withLock { space } }
+    func use(_ namespace: String) { lock.withLock { space = namespace } }
+    /// For the current settings.
+    subscript(text: String) -> String? { lock.withLock { lru[Self.key(text, space)] } }
+    func store(_ translation: String, for text: String, in namespace: String) {
+        lock.withLock { lru[Self.key(text, namespace)] = translation }
     }
-    func removeAll() { lock.withLock { lru.removeAll() } }
+    /// OCR spacing varies between reads of the same text: runs of whitespace count as one space, ends trimmed.
+    private static func key(_ text: String, _ namespace: String) -> String {
+        namespace + "\u{0}" + text.split(whereSeparator: \.isWhitespace).joined(separator: " ")
+    }
 }
 
 /// On-device Apple Intelligence (Foundation Models) translator: natural phrasing, glossary-aware.
