@@ -178,6 +178,24 @@ public enum TextFitter {
 }
 
 public enum TranslationCleanup {
+    /// Lone leading consonants (U+1100…) that are not followed by a vowel, as in "ᄏᄏ" for "lol", are meant to
+    /// be the compatibility letters ("ㅋㅋ"); fonts often draw the former as broken half-syllables.
+    public static func standaloneJamo(_ s: String) -> String {
+        let compat: [UInt32] = [0x3131, 0x3132, 0x3134, 0x3137, 0x3138, 0x3139, 0x3141, 0x3142, 0x3143, 0x3145,
+                                0x3146, 0x3147, 0x3148, 0x3149, 0x314A, 0x314B, 0x314C, 0x314D, 0x314E]
+        let scalars = Array(s.unicodeScalars)
+        var out = String.UnicodeScalarView()
+        for (i, c) in scalars.enumerated() {
+            let isVowelNext = i + 1 < scalars.count && (0x1161...0x1175).contains(scalars[i + 1].value)
+            if (0x1100...0x1112).contains(c.value), !isVowelNext, let m = Unicode.Scalar(compat[Int(c.value - 0x1100)]) {
+                out.append(m)
+            } else {
+                out.append(c)
+            }
+        }
+        return String(out)
+    }
+
     /// Models asked to translate a numbered list often echo the numbering ("3. 게임 종료"). Strip it,
     /// but only when the source line did not itself start with that number.
     public static func stripEchoedNumbering(_ translated: String, index: Int, source: String) -> String {

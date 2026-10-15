@@ -70,17 +70,26 @@ enum TextRecognizer {
     }
 
     struct Timeout: Error {}
+    private static let warm = OSAllocatedUnfairLock(initialState: false)
 
     /// Vision requests occasionally never return (seen with the document recognizer after many runs). A stuck
     /// request must not stall the region forever: give up after `seconds` and let the caller fall back or retry.
     /// The abandoned request keeps running in the background; it cannot be cancelled.
-    static func deadline<T: Sendable>(_ seconds: Double = 6, _ work: @escaping @Sendable () async throws -> T) async throws -> T {
-        try await withCheckedThrowingContinuation { (cont: CheckedContinuation<T, Error>) in
+    static func deadline<T: Sendable>(_ work: @escaping @Sendable () async throws -> T) async throws -> T {
+        // Until one request has finished, the models are still loading (tens of seconds on a fresh install).
+        let seconds: Double = warm.withLock { $0 } ? 8 : 90
+        return try await withCheckedThrowingContinuation { (cont: CheckedContinuation<T, Error>) in
             let done = OSAllocatedUnfairLock(initialState: false)
             let finish: @Sendable (Result<T, Error>) -> Void = { r in
                 if done.withLock({ was in defer { was = true }; return !was }) { cont.resume(with: r) }
             }
-            Task { do { finish(.success(try await work())) } catch { finish(.failure(error)) } }
+            Task {
+                do {
+                    let r = try await work()
+                    warm.withLock { $0 = true }
+                    finish(.success(r))
+                } catch { finish(.failure(error)) }
+            }
             Task { try? await Task.sleep(for: .seconds(seconds)); finish(.failure(Timeout())) }
         }
     }

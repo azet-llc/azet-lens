@@ -233,8 +233,8 @@ actor RegionPipeline {
             let settled = now - max(lastChange, lensMoved) >= options.settleDelay
             let wantsSeamless = options.renderMode != .fast && !seamlessDone && (settled || options.renderMode == .seamless)
             if wantsSeamless {
-                await seamlessPass(frame)
-                seamlessDone = lastChange <= frame.time
+                // A timed-out read is tried again rather than counted as done.
+                if await seamlessPass(frame) { seamlessDone = lastChange <= frame.time }
                 continue
             }
             let stale = staleness(for: frame)
@@ -438,12 +438,13 @@ actor RegionPipeline {
                                                        customWords: options.glossaryTerms).map { TextRecognizer.makeBlock([$0]) }
             }
         } catch {
-            log.error("fast OCR failed: \(error.localizedDescription)")
+            log.error("fast OCR failed: \(String(describing: error), privacy: .public)")
             Trace.mark("fast: OCR failed \(error)", since: t)
             // A stuck request is retried; any other failure would just fail again on the same pixels.
             if !(error is TextRecognizer.Timeout) { _ = finishPass(start, frame: frame) }
             return
         }
+        found = splitByStyle(found, in: frame.image)
         Trace.mark("fast: OCR \(Int(dirty.width))×\(Int(dirty.height))px → \(found.count) blocks", since: t)
         let fresh = found.filter { ocr in
             TextRecognizer.needsTranslation(ocr.text, target: options.targetLanguage)
@@ -489,7 +490,8 @@ actor RegionPipeline {
         emit(animated: false)
     }
 
-    private func seamlessPass(_ frame: CapturedFrame) async {
+    @discardableResult
+    private func seamlessPass(_ frame: CapturedFrame) async -> Bool {
         setActivity(.reading)
         let start = passStart
         var t = Trace.now
@@ -506,14 +508,16 @@ actor RegionPipeline {
                     .map { TextRecognizer.makeBlock([$0]) }
             }
         } catch {
-            log.error("document OCR failed: \(error.localizedDescription)")
+            log.error("document OCR failed: \(String(describing: error), privacy: .public)")
             Trace.mark("seamless: OCR failed \(error)", since: t)
+            if error is TextRecognizer.Timeout { return false }
             _ = finishPass(start, frame: frame)
-            return
+            return true
         }
         Trace.mark("seamless: document OCR (\(found.count) blocks)", since: t); t = Trace.now
-        found = found.filter { TextRecognizer.needsTranslation($0.text, target: options.targetLanguage) }
-        guard let full = RGBAImage(cgImage: frame.image) else { return }
+        found = splitByStyle(found, in: frame.image)
+            .filter { TextRecognizer.needsTranslation($0.text, target: options.targetLanguage) }
+        guard let full = RGBAImage(cgImage: frame.image) else { return true }
         Trace.mark("seamless: frame → RGBA", since: t); t = Trace.now
 
         // Matched in the frame's coordinates: undo any shift applied to the blocks since the pass started.
@@ -532,7 +536,7 @@ actor RegionPipeline {
             next.append(b)
         }
         Trace.mark("seamless: erase \(next.count) blocks", since: t); t = Trace.now
-        guard let shift = finishPass(start, frame: frame) else { return }
+        guard let shift = finishPass(start, frame: frame) else { return true }
         let bounds = CGRect(x: 0, y: 0, width: frame.image.width, height: frame.image.height)
         blocks = next.compactMap { b in
             var b = b
@@ -544,6 +548,24 @@ actor RegionPipeline {
         renderMissing()
         Trace.mark("seamless: render", since: t)
         emit(animated: true)
+        return true
+    }
+
+    /// The document reader groups lines by layout alone, so a chat message and the next sender's name, or a post
+    /// title and its body, can land in one paragraph. Split wherever the text colour or size changes.
+    private func splitByStyle(_ blocks: [OCRBlock], in image: CGImage) -> [OCRBlock] {
+        blocks.flatMap { block -> [OCRBlock] in
+            guard block.lines.count > 1 else { return [block] }
+            let styles = block.lines.map { (color: appearance(of: $0.rect, in: image).textColor, height: $0.rect.height) }
+            var groups: [[OCRLine]] = [[block.lines[0]]]
+            for i in 1..<block.lines.count {
+                let a = styles[i - 1], b = styles[i]
+                let sizeJump = max(a.height, b.height) / max(1, min(a.height, b.height)) > 1.3
+                if a.color.distance(to: b.color) > 60 || sizeJump { groups.append([]) }
+                groups[groups.count - 1].append(block.lines[i])
+            }
+            return groups.count == 1 ? [block] : groups.map(TextRecognizer.makeBlock)
+        }
     }
 
     // MARK: - Erasing
@@ -755,7 +777,7 @@ actor RegionPipeline {
         let s = scale, lens = CGRect(x: (visible.minX - origin.x) * s, y: (visible.minY - origin.y) * s,
                                      width: visible.width * s, height: visible.height * s)
         let v = version
-        Task.detached(priority: .background) {
+        Task.detached(priority: .utility) {
             let w = frame.image.width, h = frame.image.height
             guard let ctx = CGContext(data: nil, width: w, height: h, bitsPerComponent: 8, bytesPerRow: 0,
                                       space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)

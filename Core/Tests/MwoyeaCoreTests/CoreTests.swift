@@ -308,3 +308,9 @@ func texture(width: Int, height: Int, seed: Int = 1) -> GrayImage {
     let c = a.cropped(to: PixelRect(x: 1, y: 1, width: 2, height: 2))
     #expect(c.pixels == [11, 12, 21, 22])
 }
+
+@Test func loneJamoBecomeCompatibilityLetters() {
+    #expect(TranslationCleanup.standaloneJamo("\u{110F}\u{110F} RIP") == "ㅋㅋ RIP")
+    // A leading consonant followed by a vowel is part of a syllable and stays.
+    #expect(TranslationCleanup.standaloneJamo("\u{1100}\u{1161}") == "\u{1100}\u{1161}")
+}

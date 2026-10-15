@@ -166,7 +166,7 @@ actor TranslationService {
         var out: [String: String] = [:]
         for try await r in session.translate(batch: requests) {
             guard let id = r.clientIdentifier, let i = Int(id), i < items.count else { continue }
-            let t = applyGlossary(r.targetText, source: items[i])
+            let t = applyGlossary(TranslationCleanup.standaloneJamo(r.targetText), source: items[i])
             out[items[i]] = t
             onResult(items[i], t)
         }
@@ -185,18 +185,25 @@ actor TranslationService {
     // MARK: - Helpers
 
 
-    /// The configured source language, or the dominant language of `text` when set to auto ("und" if unsure).
+    /// Languages seen in confidently detected text, so short or ambiguous snippets ("# fan-art", a user name)
+    /// follow the page instead of being guessed as Catalan.
+    private var seenLanguages: [String: Int] = [:]
+
+    /// The configured source language, or the language of `text` when set to auto ("und" if unsure).
     func sourceLanguage(for text: String) -> String {
         if settings.sourceLanguage != "auto" { return settings.sourceLanguage }
         let r = NLLanguageRecognizer()
+        r.languageConstraints = Languages.sources.filter { $0 != "auto" }.map { NLLanguage($0) }
         r.processString(text)
-        guard let lang = r.dominantLanguage else { return "und" }
-        switch lang {
-        case .simplifiedChinese: return "zh-Hans"
-        case .traditionalChinese: return "zh-Hant"
-        case .undetermined: return "und"
-        default: return lang.rawValue
+        let page = seenLanguages.max { $0.value < $1.value }?.key
+        guard let (lang, p) = r.languageHypotheses(withMaximum: 1).first else { return page ?? "und" }
+        let code: String = switch lang {
+        case .simplifiedChinese: "zh-Hans"
+        case .traditionalChinese: "zh-Hant"
+        default: lang.rawValue
         }
+        if p > 0.9, text.count >= 20 { seenLanguages[code, default: 0] += 1 }
+        return p < 0.75 || text.count < 12 ? page ?? code : code
     }
 }
 

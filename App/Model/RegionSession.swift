@@ -44,6 +44,7 @@ final class RegionSession {
         let panel = OverlayPanel(frame: frame)
         self.panel = panel
         chrome = RegionFrameWindow(region: frame, name: config.name)
+        chrome.setDetail(Self.languagePair(settings))
         let capture = Self.overscan(config.rect, wide: false)
         self.capture = capture
         pipeline = RegionPipeline(options: PipelineOptions(settings), capture: capture, translator: translator,
@@ -63,7 +64,7 @@ final class RegionSession {
         do {
             try await capturer.start(rect: capture, fps: fps)
             errorMessage = nil
-            panel.flashOutline()
+            chrome.sweep()
         } catch {
             errorMessage = "캡처를 시작할 수 없습니다: \(error.localizedDescription)"
             log.error("capture start failed: \(error.localizedDescription)")
@@ -85,7 +86,12 @@ final class RegionSession {
         chrome.orderOut(nil)
     }
 
+    private static func languagePair(_ s: AppSettings) -> String {
+        "\(s.sourceLanguage == "auto" ? "자동" : Languages.name(s.sourceLanguage)) → \(Languages.name(s.targetLanguage))"
+    }
+
     func update(settings: AppSettings) async {
+        chrome.setDetail(Self.languagePair(settings))
         await pipeline.update(options: PipelineOptions(settings))
         if settings.framesPerSecond != fps {
             fps = settings.framesPerSecond

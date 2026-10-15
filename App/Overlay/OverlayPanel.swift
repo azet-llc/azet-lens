@@ -54,16 +54,10 @@ final class OverlayPanel: NSPanel {
             animator().alphaValue = visible ? 1 : 0
         }
     }
-
-    /// A brief outline so the user sees where a new region landed.
-    func flashOutline() {
-        host.flashOutline()
-    }
 }
 
 private final class OverlayHostView: NSView {
     private var layersByID: [UUID: CALayer] = [:]
-    private let outline = CAShapeLayer()
 
     override init(frame: NSRect) {
         super.init(frame: frame)
@@ -71,11 +65,6 @@ private final class OverlayHostView: NSView {
         layer = CALayer()
         layer?.isGeometryFlipped = true // block frames are top-left based
         layerContentsRedrawPolicy = .never
-        outline.fillColor = nil
-        outline.strokeColor = NSColor.controlAccentColor.cgColor
-        outline.lineWidth = 2
-        outline.opacity = 0
-        layer?.addSublayer(outline)
     }
 
     required init?(coder: NSCoder) { fatalError("not used") }
@@ -113,7 +102,7 @@ private final class OverlayHostView: NSView {
                 l.magnificationFilter = .linear
                 l.frame = block.frame
                 l.contents = block.image
-                layer?.insertSublayer(l, below: outline)
+                layer?.addSublayer(l)
                 layersByID[block.id] = l
                 if snapshot.animated {
                     let fade = CABasicAnimation(keyPath: "opacity")
@@ -145,14 +134,5 @@ private final class OverlayHostView: NSView {
 
     func offsetBlocks(dx: CGFloat, dy: CGFloat) {
         for l in layersByID.values { l.position = CGPoint(x: l.position.x + dx, y: l.position.y + dy) }
-    }
-
-    func flashOutline() {
-        outline.path = CGPath(roundedRect: bounds.insetBy(dx: 1, dy: 1), cornerWidth: 6, cornerHeight: 6, transform: nil)
-        let a = CAKeyframeAnimation(keyPath: "opacity")
-        a.values = [0, 0.9, 0.9, 0]
-        a.keyTimes = [0, 0.15, 0.6, 1]
-        a.duration = 1.4
-        outline.add(a, forKey: "flash")
     }
 }
