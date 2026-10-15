@@ -55,7 +55,7 @@ jobs:
           security list-keychain -d user -s "$KEYCHAIN_PATH" $(security list-keychain -d user | tr -d '"')
           IDENTITY="$(security find-identity -v -p codesigning "$KEYCHAIN_PATH" | grep 'Developer ID Application' | head -1 | sed -E 's/.*"([^"]+)".*/\1/')"
           [[ -n "$IDENTITY" ]] || { echo "no Developer ID Application identity in the p12" >&2; exit 1; }
-          echo "MWOYEA_RELEASE_IDENTITY=$IDENTITY" >> "$GITHUB_ENV"
+          echo "MWOYEO_RELEASE_IDENTITY=$IDENTITY" >> "$GITHUB_ENV"
 
       - name: Notarization key
         env:
@@ -72,9 +72,9 @@ jobs:
           fi
           chmod 600 "$KEY_PATH"
           {
-            echo "MWOYEA_NOTARY_KEY=$KEY_PATH"
-            echo "MWOYEA_NOTARY_KEY_ID=$MACOS_NOTARY_KEY_ID"
-            echo "MWOYEA_NOTARY_ISSUER_ID=$MACOS_NOTARY_ISSUER_ID"
+            echo "MWOYEO_NOTARY_KEY=$KEY_PATH"
+            echo "MWOYEO_NOTARY_KEY_ID=$MACOS_NOTARY_KEY_ID"
+            echo "MWOYEO_NOTARY_ISSUER_ID=$MACOS_NOTARY_ISSUER_ID"
           } >> "$GITHUB_ENV"
 
       - name: Build, sign, notarize
@@ -83,7 +83,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: dmg
-          path: build/release/Mwoyea-*.dmg
+          path: build/release/Mwoyeo-*.dmg
           if-no-files-found: error
 
       - name: GitHub release
@@ -91,8 +91,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 || gh release create "$GITHUB_REF_NAME" --title "Mwoyea $VERSION" --generate-notes
-          gh release upload "$GITHUB_REF_NAME" build/release/Mwoyea-"$VERSION"-arm64.dmg --clobber
+          gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 || gh release create "$GITHUB_REF_NAME" --title "Mwoyeo $VERSION" --generate-notes
+          gh release upload "$GITHUB_REF_NAME" build/release/Mwoyeo-"$VERSION"-arm64.dmg --clobber
 
       - name: Homebrew cask
         if: startsWith(github.ref, 'refs/tags/')
@@ -103,11 +103,11 @@ jobs:
           mkdir -p ~/.ssh && printf '%s\n' "$TAP_DEPLOY_KEY" > ~/.ssh/tap && chmod 600 ~/.ssh/tap
           export GIT_SSH_COMMAND="ssh -i ~/.ssh/tap -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new"
           git clone --depth 1 git@github.com:midagedev/homebrew-tap.git "$RUNNER_TEMP/tap"
-          sha=$(shasum -a 256 build/release/Mwoyea-"$VERSION"-arm64.dmg | cut -d' ' -f1)
-          scripts/cask.sh "$VERSION" "$sha" > "$RUNNER_TEMP/tap/Casks/mwoyea.rb"
+          sha=$(shasum -a 256 build/release/Mwoyeo-"$VERSION"-arm64.dmg | cut -d' ' -f1)
+          scripts/cask.sh "$VERSION" "$sha" > "$RUNNER_TEMP/tap/Casks/mwoyeo.rb"
           cd "$RUNNER_TEMP/tap"
           git config user.name "midagedev"
           git config user.email "midagedev@users.noreply.github.com"
-          git add Casks/mwoyea.rb
-          git commit -m "mwoyea $VERSION"
+          git add Casks/mwoyeo.rb
+          git commit -m "mwoyeo $VERSION"
           git push

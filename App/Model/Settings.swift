@@ -129,7 +129,7 @@ enum Languages {
     static let sources = ["auto", "en", "ja", "ko", "zh-Hans", "zh-Hant", "fr", "de", "es", "it", "pt-BR", "ru", "uk", "vi", "th"]
     static let targets = ["en", "ko", "ja", "zh-Hans", "zh-Hant", "fr", "de", "es", "it", "pt-BR", "ru", "uk", "vi", "th"]
 
-    /// The first of the user's preferred languages that Mwoyea can translate into.
+    /// The first of the user's preferred languages that Mwoyeo can translate into.
     static var preferredTarget: String {
         for id in Locale.preferredLanguages {
             let l = Locale.Language(identifier: id)

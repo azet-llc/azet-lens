@@ -4,15 +4,15 @@ import SwiftUI
 @main
 enum Entry {
     static func main() {
-        // `Mwoyea --render in.png out.png` runs the pipeline on a still image (no permissions needed).
+        // `Mwoyeo --render in.png out.png` runs the pipeline on a still image (no permissions needed).
         if CommandLine.arguments.dropFirst().first == "--render" {
             SelfTest.run(Array(CommandLine.arguments.dropFirst(2)))
         }
-        MwoyeaApp.main()
+        MwoyeoApp.main()
     }
 }
 
-struct MwoyeaApp: App {
+struct MwoyeoApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
     @State private var model = AppModel.shared
 
@@ -22,7 +22,7 @@ struct MwoyeaApp: App {
                 .environment(model)
         } label: {
             Image(systemName: menuSymbol)
-                .accessibilityLabel("Mwoyea")
+                .accessibilityLabel("Mwoyeo")
         }
         .menuBarExtraStyle(.window)
 
@@ -42,8 +42,8 @@ struct MwoyeaApp: App {
 final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         Task { @MainActor in await AppModel.shared.bootstrap() }
-        // `MWOYEA_PREVIEW=menu|onboarding` shows that window on launch, for screenshots.
-        switch ProcessInfo.processInfo.environment["MWOYEA_PREVIEW"] {
+        // `MWOYEO_PREVIEW=menu|onboarding` shows that window on launch, for screenshots.
+        switch ProcessInfo.processInfo.environment["MWOYEO_PREVIEW"] {
         case "menu": Task { @MainActor in WindowPresenter.shared.showMenuPreview() }
         case "onboarding": Task { @MainActor in WindowPresenter.shared.showOnboarding() }
         default: break

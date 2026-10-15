@@ -1,6 +1,6 @@
 import Foundation
 import FoundationModels
-import MwoyeaCore
+import MwoyeoCore
 import NaturalLanguage
 import Translation
 

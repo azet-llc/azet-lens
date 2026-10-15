@@ -9,7 +9,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyea reads the text under your lenses so it can translate it in place."
+            "value": "Mwoyeo reads the text under your lenses so it can translate it in place."
           }
         },
         "ko": {
@@ -21,61 +21,61 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyeaは、レンズの下にあるテキストを読み取り、その場で翻訳するために画面を使用します。"
+            "value": "Mwoyeoは、レンズの下にあるテキストを読み取り、その場で翻訳するために画面を使用します。"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyea 会读取透镜下方的文字,并就地翻译。"
+            "value": "Mwoyeo 会读取透镜下方的文字,并就地翻译。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyea 會讀取透鏡下方的文字,並就地翻譯。"
+            "value": "Mwoyeo 會讀取透鏡下方的文字,並就地翻譯。"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyea liest den Text unter einer Linse und übersetzt ihn direkt an Ort und Stelle."
+            "value": "Mwoyeo liest den Text unter einer Linse und übersetzt ihn direkt an Ort und Stelle."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyea lit le texte sous une loupe pour le traduire sur place."
+            "value": "Mwoyeo lit le texte sous une loupe pour le traduire sur place."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyea lee el texto que hay bajo una lupa para traducirlo en el mismo lugar."
+            "value": "Mwoyeo lee el texto que hay bajo una lupa para traducirlo en el mismo lugar."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyea читает текст под линзой, чтобы перевести его прямо на месте."
+            "value": "Mwoyeo читает текст под линзой, чтобы перевести его прямо на месте."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O Mwoyea lê o texto sob uma lente para traduzi-lo no próprio lugar."
+            "value": "O Mwoyeo lê o texto sob uma lente para traduzi-lo no próprio lugar."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyea legge il testo sotto una lente per tradurlo sul posto."
+            "value": "Mwoyeo legge il testo sotto una lente per tradurlo sul posto."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyea читає текст під лінзою, щоб перекласти його прямо на місці."
+            "value": "Mwoyeo читає текст під лінзою, щоб перекласти його прямо на місці."
           }
         }
       }

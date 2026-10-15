@@ -237,7 +237,7 @@ private struct AboutView: View {
     var body: some View {
         VStack(spacing: 12) {
             AppGlyph(size: 88)
-            Text("Mwoyea").font(.largeTitle.weight(.semibold))
+            Text("Mwoyeo").font(.largeTitle.weight(.semibold))
             Text("Translates the screen in place, wherever you put a lens.")
                 .foregroundStyle(.secondary)
             Text("Version \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0")")

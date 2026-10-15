@@ -1,10 +1,10 @@
 // Signing: ad-hoc by default. Ad-hoc signatures change on every build, so macOS re-asks for
 // Screen Recording permission after each rebuild. Put a stable identity in Config/Local.xcconfig
 // (git-ignored), e.g.
-//   MWOYEA_SIGN_IDENTITY = <SHA-1 from `security find-identity -v -p codesigning`>
-//   MWOYEA_TEAM = ABCDE12345
-MWOYEA_SIGN_IDENTITY = -
-MWOYEA_TEAM =
+//   MWOYEO_SIGN_IDENTITY = <SHA-1 from `security find-identity -v -p codesigning`>
+//   MWOYEO_TEAM = ABCDE12345
+MWOYEO_SIGN_IDENTITY = -
+MWOYEO_TEAM =
 #include? "Local.xcconfig"
 
 // Extract localizable strings for the string catalog (xcstringstool sync).

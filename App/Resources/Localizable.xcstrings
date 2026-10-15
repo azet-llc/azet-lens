@@ -971,7 +971,7 @@
         }
       }
     },
-    "Allowed. Mwoyea reads only what is under a lens, and never stores or sends it.": {
+    "Allowed. Mwoyeo reads only what is under a lens, and never stores or sends it.": {
       "localizations": {
         "ko": {
           "stringUnit": {
@@ -982,61 +982,61 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "許可されています。Mwoyeaはレンズの下の内容だけを読み取り、保存も送信もしません。"
+            "value": "許可されています。Mwoyeoはレンズの下の内容だけを読み取り、保存も送信もしません。"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "已允许。Mwoyea 只会读取透镜下方的内容，绝不存储或发送。"
+            "value": "已允许。Mwoyeo 只会读取透镜下方的内容，绝不存储或发送。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "已允許。Mwoyea 只會讀取透鏡下方的內容，絕不儲存或傳送。"
+            "value": "已允許。Mwoyeo 只會讀取透鏡下方的內容，絕不儲存或傳送。"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Erlaubt. Mwoyea liest nur, was unter einer Linse liegt, und speichert oder sendet nichts."
+            "value": "Erlaubt. Mwoyeo liest nur, was unter einer Linse liegt, und speichert oder sendet nichts."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Autorisé. Mwoyea ne lit que ce qui se trouve sous une loupe, et ne l’enregistre ni ne l’envoie jamais."
+            "value": "Autorisé. Mwoyeo ne lit que ce qui se trouve sous une loupe, et ne l’enregistre ni ne l’envoie jamais."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Permitido. Mwoyea solo lee lo que hay bajo una lupa y nunca lo guarda ni lo envía."
+            "value": "Permitido. Mwoyeo solo lee lo que hay bajo una lupa y nunca lo guarda ni lo envía."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Разрешено. Mwoyea читает только то, что находится под линзой, и ничего не сохраняет и не отправляет."
+            "value": "Разрешено. Mwoyeo читает только то, что находится под линзой, и ничего не сохраняет и не отправляет."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Permitido. O Mwoyea lê apenas o que está sob uma lente e nunca armazena nem envia."
+            "value": "Permitido. O Mwoyeo lê apenas o que está sob uma lente e nunca armazena nem envia."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Consentito. Mwoyea legge solo ciò che si trova sotto una lente e non lo salva né lo invia mai."
+            "value": "Consentito. Mwoyeo legge solo ciò che si trova sotto una lente e non lo salva né lo invia mai."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Дозволено. Mwoyea читає лише те, що під лінзою, і нічого не зберігає й не надсилає."
+            "value": "Дозволено. Mwoyeo читає лише те, що під лінзою, і нічого не зберігає й не надсилає."
           }
         }
       }
@@ -4197,10 +4197,10 @@
     "MI-GAN · Core ML (GPU)": {
       "shouldTranslate": false
     },
-    "Mwoyea": {
+    "Mwoyeo": {
       "shouldTranslate": false
     },
-    "Mwoyea needs Screen Recording permission.": {
+    "Mwoyeo needs Screen Recording permission.": {
       "localizations": {
         "ko": {
           "stringUnit": {
@@ -4211,66 +4211,66 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyeaには画面収録の許可が必要です。"
+            "value": "Mwoyeoには画面収録の許可が必要です。"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyea 需要“屏幕录制”权限。"
+            "value": "Mwoyeo 需要“屏幕录制”权限。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyea 需要「螢幕錄製」權限。"
+            "value": "Mwoyeo 需要「螢幕錄製」權限。"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyea benötigt die Berechtigung „Bildschirmaufnahme“."
+            "value": "Mwoyeo benötigt die Berechtigung „Bildschirmaufnahme“."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyea a besoin de l’autorisation « Enregistrement de l’écran »."
+            "value": "Mwoyeo a besoin de l’autorisation « Enregistrement de l’écran »."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyea necesita el permiso de Grabación de pantalla."
+            "value": "Mwoyeo necesita el permiso de Grabación de pantalla."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyea требуется разрешение на запись экрана."
+            "value": "Mwoyeo требуется разрешение на запись экрана."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O Mwoyea precisa da permissão de Gravação de Tela."
+            "value": "O Mwoyeo precisa da permissão de Gravação de Tela."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyea ha bisogno dell’autorizzazione per la Registrazione schermo."
+            "value": "Mwoyeo ha bisogno dell’autorizzazione per la Registrazione schermo."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyea потрібен дозвіл на запис екрана."
+            "value": "Mwoyeo потрібен дозвіл на запис екрана."
           }
         }
       }
     },
-    "Mwoyea uses Apple Translation. Get a language pack in Settings › Translation.": {
+    "Mwoyeo uses Apple Translation. Get a language pack in Settings › Translation.": {
       "localizations": {
         "ko": {
           "stringUnit": {
@@ -4281,66 +4281,66 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "MwoyeaはApple翻訳を使用します。設定 › 翻訳で言語パックを入手してください。"
+            "value": "MwoyeoはApple翻訳を使用します。設定 › 翻訳で言語パックを入手してください。"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyea 使用 Apple 翻译。请在“设置 › 翻译”中获取语言包。"
+            "value": "Mwoyeo 使用 Apple 翻译。请在“设置 › 翻译”中获取语言包。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyea 使用 Apple 翻譯。請在「設定 › 翻譯」中取得語言包。"
+            "value": "Mwoyeo 使用 Apple 翻譯。請在「設定 › 翻譯」中取得語言包。"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyea verwendet Apple Übersetzung. Laden Sie unter Einstellungen › Übersetzung ein Sprachpaket."
+            "value": "Mwoyeo verwendet Apple Übersetzung. Laden Sie unter Einstellungen › Übersetzung ein Sprachpaket."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyea utilise Traduction Apple. Téléchargez un pack de langue dans Réglages › Traduction."
+            "value": "Mwoyeo utilise Traduction Apple. Téléchargez un pack de langue dans Réglages › Traduction."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyea usa Traducción de Apple. Descarga un paquete de idioma en Ajustes › Traducción."
+            "value": "Mwoyeo usa Traducción de Apple. Descarga un paquete de idioma en Ajustes › Traducción."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyea использует Перевод Apple. Загрузите языковой пакет в Настройки › Перевод."
+            "value": "Mwoyeo использует Перевод Apple. Загрузите языковой пакет в Настройки › Перевод."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O Mwoyea usa a Tradução da Apple. Baixe um pacote de idioma em Ajustes › Tradução."
+            "value": "O Mwoyeo usa a Tradução da Apple. Baixe um pacote de idioma em Ajustes › Tradução."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyea usa Traduzione Apple. Scarica un pacchetto lingua in Impostazioni › Traduzione."
+            "value": "Mwoyeo usa Traduzione Apple. Scarica un pacchetto lingua in Impostazioni › Traduzione."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyea використовує Переклад Apple. Завантажте мовний пакет у Налаштування › Переклад."
+            "value": "Mwoyeo використовує Переклад Apple. Завантажте мовний пакет у Налаштування › Переклад."
           }
         }
       }
     },
-    "Needed to read the text under a lens. You may have to reopen Mwoyea after allowing it.": {
+    "Needed to read the text under a lens. You may have to reopen Mwoyeo after allowing it.": {
       "localizations": {
         "ko": {
           "stringUnit": {
@@ -4351,61 +4351,61 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "レンズの下のテキストを読み取るために必要です。許可したあと、Mwoyeaを開き直す必要がある場合があります。"
+            "value": "レンズの下のテキストを読み取るために必要です。許可したあと、Mwoyeoを開き直す必要がある場合があります。"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "用于读取透镜下方的文字。允许后可能需要重新打开 Mwoyea。"
+            "value": "用于读取透镜下方的文字。允许后可能需要重新打开 Mwoyeo。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "用於讀取透鏡下方的文字。允許後可能需要重新打開 Mwoyea。"
+            "value": "用於讀取透鏡下方的文字。允許後可能需要重新打開 Mwoyeo。"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Erforderlich, um den Text unter einer Linse zu lesen. Nach dem Erlauben müssen Sie Mwoyea eventuell erneut öffnen."
+            "value": "Erforderlich, um den Text unter einer Linse zu lesen. Nach dem Erlauben müssen Sie Mwoyeo eventuell erneut öffnen."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nécessaire pour lire le texte sous une loupe. Vous devrez peut-être rouvrir Mwoyea après l’autorisation."
+            "value": "Nécessaire pour lire le texte sous une loupe. Vous devrez peut-être rouvrir Mwoyeo après l’autorisation."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Necesario para leer el texto bajo una lupa. Puede que tengas que volver a abrir Mwoyea tras permitirlo."
+            "value": "Necesario para leer el texto bajo una lupa. Puede que tengas que volver a abrir Mwoyeo tras permitirlo."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Нужно, чтобы читать текст под линзой. После разрешения Mwoyea, возможно, придётся открыть заново."
+            "value": "Нужно, чтобы читать текст под линзой. После разрешения Mwoyeo, возможно, придётся открыть заново."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Necessário para ler o texto sob uma lente. Talvez seja preciso reabrir o Mwoyea depois de permitir."
+            "value": "Necessário para ler o texto sob uma lente. Talvez seja preciso reabrir o Mwoyeo depois de permitir."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Necessario per leggere il testo sotto una lente. Dopo aver consentito, potrebbe essere necessario riaprire Mwoyea."
+            "value": "Necessario per leggere il testo sotto una lente. Dopo aver consentito, potrebbe essere necessario riaprire Mwoyeo."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Потрібен, щоб читати текст під лінзою. Після дозволу Mwoyea, можливо, доведеться відкрити знову."
+            "value": "Потрібен, щоб читати текст під лінзою. Після дозволу Mwoyeo, можливо, доведеться відкрити знову."
           }
         }
       }
@@ -5950,72 +5950,72 @@
         }
       }
     },
-    "Quit Mwoyea": {
+    "Quit Mwoyeo": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyea 종료"
+            "value": "Mwoyeo 종료"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyeaを終了"
+            "value": "Mwoyeoを終了"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "退出 Mwoyea"
+            "value": "退出 Mwoyeo"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "結束 Mwoyea"
+            "value": "結束 Mwoyeo"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyea beenden"
+            "value": "Mwoyeo beenden"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quitter Mwoyea"
+            "value": "Quitter Mwoyeo"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Salir de Mwoyea"
+            "value": "Salir de Mwoyeo"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Выйти из Mwoyea"
+            "value": "Выйти из Mwoyeo"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Encerrar Mwoyea"
+            "value": "Encerrar Mwoyeo"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Esci da Mwoyea"
+            "value": "Esci da Mwoyeo"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Вийти з Mwoyea"
+            "value": "Вийти з Mwoyeo"
           }
         }
       }

@@ -2,11 +2,11 @@
 import PackageDescription
 
 let package = Package(
-    name: "MwoyeaCore",
+    name: "MwoyeoCore",
     platforms: [.macOS("27.0")],
-    products: [.library(name: "MwoyeaCore", targets: ["MwoyeaCore"])],
+    products: [.library(name: "MwoyeoCore", targets: ["MwoyeoCore"])],
     targets: [
-        .target(name: "MwoyeaCore"),
-        .testTarget(name: "MwoyeaCoreTests", dependencies: ["MwoyeaCore"]),
+        .target(name: "MwoyeoCore"),
+        .testTarget(name: "MwoyeoCoreTests", dependencies: ["MwoyeoCore"]),
     ]
 )

@@ -1,4 +1,4 @@
-name: Mwoyea
+name: Mwoyeo
 options:
   bundleIdPrefix: dev.midagedev
   developmentLanguage: en
@@ -9,10 +9,10 @@ configFiles:
   Debug: Config/Base.xcconfig
   Release: Config/Base.xcconfig
 packages:
-  MwoyeaCore:
+  MwoyeoCore:
     path: Core
 targets:
-  Mwoyea:
+  Mwoyeo:
     type: application
     platform: macOS
     sources:
@@ -21,34 +21,34 @@ targets:
       - path: tools/inpaint/models/MIGAN_512.mlpackage
         optional: true
     dependencies:
-      - package: MwoyeaCore
+      - package: MwoyeoCore
     info:
       path: App/Info.plist
       properties:
-        CFBundleDisplayName: Mwoyea
-        CFBundleName: Mwoyea
+        CFBundleDisplayName: Mwoyeo
+        CFBundleName: Mwoyeo
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         LSApplicationCategoryType: public.app-category.productivity
         LSMinimumSystemVersion: "27.0"
         LSUIElement: true
         NSHumanReadableCopyright: "© 2026 midagedev"
-        NSScreenCaptureUsageDescription: "Mwoyea reads the text under your lenses so it can translate it in place."
+        NSScreenCaptureUsageDescription: "Mwoyeo reads the text under your lenses so it can translate it in place."
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: dev.midagedev.mwoyea
-        PRODUCT_NAME: Mwoyea
+        PRODUCT_BUNDLE_IDENTIFIER: dev.midagedev.mwoyeo
+        PRODUCT_NAME: Mwoyeo
         SWIFT_VERSION: "5.0"
         MARKETING_VERSION: "1.0.0"
         CURRENT_PROJECT_VERSION: "1"
         ENABLE_HARDENED_RUNTIME: YES
         CODE_SIGN_STYLE: Manual
-        CODE_SIGN_IDENTITY: $(MWOYEA_SIGN_IDENTITY)
-        DEVELOPMENT_TEAM: $(MWOYEA_TEAM)
+        CODE_SIGN_IDENTITY: $(MWOYEO_SIGN_IDENTITY)
+        DEVELOPMENT_TEAM: $(MWOYEO_TEAM)
         PROVISIONING_PROFILE_SPECIFIER: ""
         # Local builds skip the timestamp server; scripts/release.sh signs with --timestamp for notarization.
         OTHER_CODE_SIGN_FLAGS: --timestamp=none
-        CODE_SIGN_ENTITLEMENTS: App/Mwoyea.entitlements
+        CODE_SIGN_ENTITLEMENTS: App/Mwoyeo.entitlements
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         GENERATE_INFOPLIST_FILE: NO
         DEAD_CODE_STRIPPING: YES

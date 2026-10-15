@@ -1,6 +1,6 @@
 import AppKit
 import CoreText
-import MwoyeaCore
+import MwoyeoCore
 
 /// Draws a translated block into an image the size of the block (device pixels).
 enum BlockRenderer {
@@ -89,7 +89,7 @@ enum BlockRenderer {
             // Busy background: a soft halo in the background colour keeps text readable.
             ctx.setShadow(offset: .zero, blur: size * 0.25, color: input.appearance.backgroundColor.cgColor)
         }
-        if ProcessInfo.processInfo.environment["MWOYEA_ERASE_ONLY"] != nil { return ctx.makeImage() } // debug: background only
+        if ProcessInfo.processInfo.environment["MWOYEO_ERASE_ONLY"] != nil { return ctx.makeImage() } // debug: background only
         let setter = CTFramesetterCreateWithAttributedString(string)
         let path = CGPath(rect: CGRect(x: textRect.minX, y: textRect.minY - 2, width: max(textRect.width, measured.width + 1), height: textRect.height + 4), transform: nil)
         let frame = CTFramesetterCreateFrame(setter, CFRange(location: 0, length: 0), path, nil)

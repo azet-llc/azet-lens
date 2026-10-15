@@ -1,6 +1,6 @@
 import CoreML
 import Foundation
-import MwoyeaCore
+import MwoyeoCore
 
 /// MI-GAN (Core ML) inpainting for text on textured backgrounds.
 ///
@@ -18,7 +18,7 @@ final class Inpainter: @unchecked Sendable {
         var candidates: [URL] = []
         if let u = Bundle.main.url(forResource: name, withExtension: "mlmodelc") { candidates.append(u) }
         if let support = try? FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: false) {
-            candidates.append(support.appendingPathComponent("Mwoyea/Models/\(name).mlmodelc"))
+            candidates.append(support.appendingPathComponent("Mwoyeo/Models/\(name).mlmodelc"))
         }
         for url in candidates where FileManager.default.fileExists(atPath: url.path) {
             let config = MLModelConfiguration()

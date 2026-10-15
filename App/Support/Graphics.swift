@@ -1,6 +1,6 @@
 import AppKit
 import CoreGraphics
-import MwoyeaCore
+import MwoyeoCore
 
 extension RGBAImage {
     /// Renders (part of) a CGImage into straight RGBA8.

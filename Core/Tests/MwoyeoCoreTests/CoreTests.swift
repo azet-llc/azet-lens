@@ -2,7 +2,7 @@ import CoreGraphics
 import CoreText
 import Foundation
 import Testing
-@testable import MwoyeaCore
+@testable import MwoyeoCore
 
 /// Deterministic texture so scroll matching has something to lock onto.
 func texture(width: Int, height: Int, seed: Int = 1) -> GrayImage {

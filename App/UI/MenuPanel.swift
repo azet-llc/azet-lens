@@ -12,7 +12,7 @@ struct MenuPanel: View {
                 IssueBanner(message: issue.message) { open() }
             }
             if !model.hasScreenPermission {
-                IssueBanner(message: String(localized: "Mwoyea needs Screen Recording permission."), action: String(localized: "Allow…")) {
+                IssueBanner(message: String(localized: "Mwoyeo needs Screen Recording permission."), action: String(localized: "Allow…")) {
                     WindowPresenter.shared.showOnboarding()
                 }
             }
@@ -33,7 +33,7 @@ struct MenuPanel: View {
         HStack(spacing: 10) {
             AppGlyph(size: 32)
             VStack(alignment: .leading, spacing: 1) {
-                Text("Mwoyea").font(.system(.headline, design: .rounded))
+                Text("Mwoyeo").font(.system(.headline, design: .rounded))
                 Text(statusLine).font(.caption).foregroundStyle(.secondary).contentTransition(.opacity)
             }
             Spacer()
@@ -110,7 +110,7 @@ struct MenuPanel: View {
             Button { open() } label: { Image(systemName: "gearshape") }
                 .help("Settings")
             Button { NSApp.terminate(nil) } label: { Image(systemName: "power") }
-                .help("Quit Mwoyea")
+                .help("Quit Mwoyeo")
         }
         .buttonStyle(.borderless)
         .labelStyle(.titleAndIcon)

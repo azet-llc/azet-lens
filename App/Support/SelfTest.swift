@@ -1,15 +1,15 @@
 import AppKit
 import ImageIO
-import MwoyeaCore
+import MwoyeoCore
 import UniformTypeIdentifiers
 
 /// Headless end-to-end run on a still image:
-///   Mwoyea --render in.png out.png [--src ja] [--tgt ko] [--mode fast|seamless] [--engine auto|translation|intelligence]
+///   Mwoyeo --render in.png out.png [--src ja] [--tgt ko] [--mode fast|seamless] [--engine auto|translation|intelligence]
 ///                                  [--no-inpaint] [--scale 2]
 /// Prints what was read and translated, and writes the composited result. Exits when done.
 ///
 /// Simulated lens drag over a still "screen" (points; writes the lens view per step as outdir/frame_NNN.png):
-///   Mwoyea --render screen.png outdir --pan --lens x,y,w,h --to x,y [--steps 40] [--step-ms 100] [--hold-ms 3000]
+///   Mwoyeo --render screen.png outdir --pan --lens x,y,w,h --to x,y [--steps 40] [--step-ms 100] [--hold-ms 3000]
 /// With `--scroll`, the lens stays and the content scrolls by `--to` instead (screen.png is the whole page).
 enum SelfTest {
     static func run(_ args: [String]) -> Never {

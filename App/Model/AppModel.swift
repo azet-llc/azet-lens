@@ -37,7 +37,7 @@ final class AppModel {
     @ObservationIgnored private let picker = RegionPicker()
     @ObservationIgnored private var picking = false
     @ObservationIgnored private let defaults = UserDefaults.standard
-    @ObservationIgnored private let log = Logger(subsystem: "dev.midagedev.mwoyea", category: "app")
+    @ObservationIgnored private let log = Logger(subsystem: "dev.midagedev.mwoyeo", category: "app")
 
     private init() {
         let s = (defaults.data(forKey: "settings")).flatMap { try? JSONDecoder().decode(AppSettings.self, from: $0) } ?? AppSettings()

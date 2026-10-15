@@ -1,5 +1,5 @@
 import AppKit
-import MwoyeaCore
+import MwoyeoCore
 import os
 
 /// Runs one region: capture → pipeline → overlay, plus the draggable lens chrome around it, and keeps it
@@ -35,7 +35,7 @@ final class RegionSession {
     private var wideMargins = false
     private var lastMotion: TimeInterval = 0
     private var calmTimer: Timer?
-    private let log = Logger(subsystem: "dev.midagedev.mwoyea", category: "session")
+    private let log = Logger(subsystem: "dev.midagedev.mwoyeo", category: "session")
 
     init(config: RegionConfig, settings: AppSettings, translator: TranslationService, inpainter: Inpainter?) {
         self.config = config

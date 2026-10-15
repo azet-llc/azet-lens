@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Mwoyea</string>
+	<string>Mwoyeo</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -13,7 +13,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>Mwoyea</string>
+	<string>Mwoyeo</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -29,6 +29,6 @@
 	<key>NSHumanReadableCopyright</key>
 	<string>© 2026 midagedev</string>
 	<key>NSScreenCaptureUsageDescription</key>
-	<string>Mwoyea reads the text under your lenses so it can translate it in place.</string>
+	<string>Mwoyeo reads the text under your lenses so it can translate it in place.</string>
 </dict>
 </plist>

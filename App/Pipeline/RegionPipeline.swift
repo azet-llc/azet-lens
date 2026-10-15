@@ -1,7 +1,7 @@
 import CoreGraphics
 import Foundation
 import ImageIO
-import MwoyeaCore
+import MwoyeoCore
 import os
 
 /// One captured frame of a region.
@@ -90,7 +90,7 @@ actor RegionPipeline {
     private let inpainter: Inpainter?
     private let onSnapshot: @Sendable (OverlaySnapshot) -> Void
     private var onActivity: (@Sendable (RegionActivity) -> Void)?
-    private let log = Logger(subsystem: "dev.midagedev.mwoyea", category: "pipeline")
+    private let log = Logger(subsystem: "dev.midagedev.mwoyeo", category: "pipeline")
 
     private var options: PipelineOptions
     private var latest: CapturedFrame?
@@ -615,7 +615,7 @@ actor RegionPipeline {
 
         TextEraser.fillEnclosedHoles(&mask, width: rect.width, height: rect.height)
         let flat = masks.allSatisfy(\.1.appearance.isFlatBackground)
-        if ProcessInfo.processInfo.environment["MWOYEA_ERASE_ONLY"] == "mask" {
+        if ProcessInfo.processInfo.environment["MWOYEO_ERASE_ONLY"] == "mask" {
             for i in mask.indices where mask[i] != 0 { patch.set(x: i % rect.width, y: i / rect.width, RGBA(255, 0, 0)) }
         } else if !flat, options.useInpainting, let inpainter {
             do {
@@ -768,7 +768,7 @@ actor RegionPipeline {
 
     private var lastDump: TimeInterval = 0
 
-    /// MWOYEA_DUMP=dir: writes what the capture saw with the overlay on top (lens outlined), at most twice a second —
+    /// MWOYEO_DUMP=dir: writes what the capture saw with the overlay on top (lens outlined), at most twice a second —
     /// to check the live app without screen recording rights of one's own.
     private func dump(_ out: [OverlayBlock]) {
         guard let dir = Trace.dumpDirectory, let frame = latest else { return }
@@ -807,16 +807,16 @@ actor RegionPipeline {
     }
 }
 
-/// Stage timings on stderr when MWOYEA_TRACE is set.
+/// Stage timings on stderr when MWOYEO_TRACE is set.
 enum Trace {
-    static let enabled = ProcessInfo.processInfo.environment["MWOYEA_TRACE"] != nil
+    static let enabled = ProcessInfo.processInfo.environment["MWOYEO_TRACE"] != nil
     static func mark(_ label: @autoclosure () -> String, since t: TimeInterval) {
         guard enabled else { return }
         let ms = Int((ProcessInfo.processInfo.systemUptime - t) * 1000)
         FileHandle.standardError.write("[trace] \(label()) \(ms) ms\n".data(using: .utf8)!)
     }
     static var now: TimeInterval { ProcessInfo.processInfo.systemUptime }
-    static let dumpDirectory: URL? = ProcessInfo.processInfo.environment["MWOYEA_DUMP"].map { URL(fileURLWithPath: $0) }
+    static let dumpDirectory: URL? = ProcessInfo.processInfo.environment["MWOYEO_DUMP"].map { URL(fileURLWithPath: $0) }
 }
 
 extension Array {
