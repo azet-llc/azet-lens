@@ -166,8 +166,17 @@ actor RegionPipeline {
 
     func update(options new: PipelineOptions) {
         guard new != options else { return }
+        var restyled = options
+        restyled.fontStyle = new.fontStyle
+        restyled.boxOpacity = new.boxOpacity
+        restyled.settleDelay = new.settleDelay
+        let reread = restyled != new
         options = new
-        reset()
+        if reread { reset(); return }
+        // Only the look changed: redraw what is already read, erased and translated.
+        for i in blocks.indices { blocks[i].image = nil }
+        renderMissing()
+        emit(animated: false)
     }
 
     /// Forget everything (region moved/resized, settings changed). The next frame is read from scratch.
