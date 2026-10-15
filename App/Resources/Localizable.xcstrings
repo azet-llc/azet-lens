@@ -1878,6 +1878,146 @@
         }
       }
     },
+    "Check automatically once a day": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "하루에 한 번 자동으로 확인"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1日1回自動で確認"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每天自动检查一次"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每天自動檢查一次"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vérifier automatiquement une fois par jour"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einmal täglich automatisch suchen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buscar automáticamente una vez al día"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verifica automaticamente una volta al giorno"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verificar automaticamente uma vez por dia"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проверять автоматически раз в день"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Перевіряти автоматично раз на день"
+          }
+        }
+      }
+    },
+    "Check for Updates": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "업데이트 확인"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アップデートを確認"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "检查更新"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "檢查更新項目"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rechercher les mises à jour"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nach Updates suchen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buscar actualizaciones"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verifica aggiornamenti"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verificar atualizações"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проверить обновления"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Перевірити оновлення"
+          }
+        }
+      }
+    },
     "Clear": {
       "localizations": {
         "ko": {
@@ -2154,6 +2294,76 @@
           "stringUnit": {
             "state": "translated",
             "value": "Не вдалося визначити мову"
+          }
+        }
+      }
+    },
+    "Couldn’t reach GitHub": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub에 연결하지 못했습니다"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHubに接続できませんでした"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法连接 GitHub"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無法連線至 GitHub"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible de joindre GitHub"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub nicht erreichbar"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo conectar con GitHub"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossibile raggiungere GitHub"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foi possível acessar o GitHub"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось связаться с GitHub"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не вдалося з’єднатися з GitHub"
           }
         }
       }
@@ -3558,6 +3768,76 @@
         }
       }
     },
+    "GitHub": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub"
+          }
+        }
+      }
+    },
     "Glossary": {
       "localizations": {
         "ko": {
@@ -3838,72 +4118,72 @@
         }
       }
     },
-    "Hide translations and show the original (⌃⌥O)": {
+    "Hide translations and show the original": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "번역을 잠시 숨기고 원문을 봅니다 (⌃⌥O)"
+            "value": "번역을 숨기고 원문 보기"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "翻訳を隠して元のテキストを表示 (⌃⌥O)"
+            "value": "翻訳を隠して原文を表示"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "隐藏译文并显示原文 (⌃⌥O)"
+            "value": "隐藏译文并显示原文"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "隱藏譯文並顯示原文 (⌃⌥O)"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Übersetzungen ausblenden und Original anzeigen (⌃⌥O)"
+            "value": "隱藏譯文並顯示原文"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Masquer les traductions et afficher l’original (⌃⌥O)"
+            "value": "Masquer les traductions et afficher l’original"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Übersetzungen ausblenden und Original zeigen"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ocultar las traducciones y mostrar el original (⌃⌥O)"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Скрыть перевод и показать оригинал (⌃⌥O)"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ocultar as traduções e mostrar o original (⌃⌥O)"
+            "value": "Ocultar las traducciones y mostrar el original"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nascondi le traduzioni e mostra l’originale (⌃⌥O)"
+            "value": "Nascondi le traduzioni e mostra l’originale"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ocultar as traduções e mostrar o original"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скрыть переводы и показать оригинал"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Приховати переклад і показати оригінал (⌃⌥O)"
+            "value": "Сховати переклади й показати оригінал"
           }
         }
       }
@@ -4613,6 +4893,146 @@
     },
     "Mwoyeo": {
       "shouldTranslate": false
+    },
+    "Mwoyeo %@ is available": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mwoyeo %@ 버전이 나왔습니다"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mwoyeo %@が利用可能です"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mwoyeo %@ 已推出"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mwoyeo %@ 已推出"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mwoyeo %@ est disponible"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mwoyeo %@ ist verfügbar"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mwoyeo %@ está disponible"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mwoyeo %@ è disponibile"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mwoyeo %@ está disponível"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Доступен Mwoyeo %@"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Доступний Mwoyeo %@"
+          }
+        }
+      }
+    },
+    "Mwoyeo is up to date": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "최신 버전입니다"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最新バージョンです"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mwoyeo 已是最新版本"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mwoyeo 已是最新版本"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mwoyeo est à jour"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mwoyeo ist aktuell"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mwoyeo está actualizado"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mwoyeo è aggiornato"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O Mwoyeo está atualizado"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mwoyeo обновлён"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mwoyeo оновлено"
+          }
+        }
+      }
     },
     "Mwoyeo needs Screen Recording permission.": {
       "localizations": {
@@ -5594,72 +6014,72 @@
         }
       }
     },
-    "Pause all (⌃⌥P)": {
+    "Pause all": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "모두 일시정지 (⌃⌥P)"
+            "value": "모두 일시 정지"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "すべて一時停止 (⌃⌥P)"
+            "value": "すべて一時停止"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "全部暂停 (⌃⌥P)"
+            "value": "全部暂停"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "全部暫停 (⌃⌥P)"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Alle pausieren (⌃⌥P)"
+            "value": "全部暫停"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tout mettre en pause (⌃⌥P)"
+            "value": "Tout mettre en pause"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle pausieren"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pausar todo (⌃⌥P)"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Приостановить все (⌃⌥P)"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pausar tudo (⌃⌥P)"
+            "value": "Pausar todo"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Metti tutto in pausa (⌃⌥P)"
+            "value": "Metti tutto in pausa"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausar tudo"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Приостановить все"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Призупинити все (⌃⌥P)"
+            "value": "Призупинити все"
           }
         }
       }
@@ -6574,72 +6994,142 @@
         }
       }
     },
-    "Recognition and translation happen entirely on this Mac": {
+    "Record Shortcut": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "모든 인식과 번역은 이 Mac 안에서 처리됩니다"
+            "value": "단축키 기록"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "認識と翻訳はすべてこのMac上で行われます"
+            "value": "ショートカットを記録"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "识别和翻译完全在这台 Mac 上进行"
+            "value": "录制快捷键"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "辨識和翻譯完全在這部 Mac 上進行"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Erkennung und Übersetzung finden vollständig auf diesem Mac statt"
+            "value": "錄製快速鍵"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "La reconnaissance et la traduction se font entièrement sur ce Mac"
+            "value": "Enregistrer un raccourci"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kurzbefehl aufnehmen"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "El reconocimiento y la traducción se hacen por completo en este Mac"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Распознавание и перевод выполняются полностью на этом Mac"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "O reconhecimento e a tradução acontecem inteiramente neste Mac"
+            "value": "Grabar atajo"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Riconoscimento e traduzione avvengono interamente su questo Mac"
+            "value": "Registra abbreviazione"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gravar atalho"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Записать сочетание"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Розпізнавання й переклад повністю виконуються на цьому Mac"
+            "value": "Записати комбінацію"
+          }
+        }
+      }
+    },
+    "Release Notes": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "릴리스 노트"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リリースノート"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "发布说明"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "版本說明"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notes de version"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Versionshinweise"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notas de la versión"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Note di rilascio"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notas da versão"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Примечания к выпуску"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Примітки до випуску"
           }
         }
       }
@@ -6714,6 +7204,76 @@
         }
       }
     },
+    "Remove Shortcut": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "단축키 지우기"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ショートカットを削除"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移除快捷键"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移除快速鍵"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimer le raccourci"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kurzbefehl entfernen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar atajo"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rimuovi abbreviazione"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remover atalho"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Удалить сочетание"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Видалити комбінацію"
+          }
+        }
+      }
+    },
     "Rendering": {
       "localizations": {
         "ko": {
@@ -6784,72 +7344,212 @@
         }
       }
     },
-    "Resume (⌃⌥P)": {
+    "Report a Problem": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "번역 다시 시작 (⌃⌥P)"
+            "value": "문제 신고"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "翻訳を再開 (⌃⌥P)"
+            "value": "問題を報告"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "继续翻译 (⌃⌥P)"
+            "value": "报告问题"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "繼續翻譯 (⌃⌥P)"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Übersetzung fortsetzen (⌃⌥P)"
+            "value": "回報問題"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reprendre la traduction (⌃⌥P)"
+            "value": "Signaler un problème"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Problem melden"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reanudar traducción (⌃⌥P)"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Возобновить перевод (⌃⌥P)"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Retomar tradução (⌃⌥P)"
+            "value": "Informar de un problema"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Riprendi traduzione (⌃⌥P)"
+            "value": "Segnala un problema"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Relatar um problema"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сообщить о проблеме"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Відновити переклад (⌃⌥P)"
+            "value": "Повідомити про проблему"
+          }
+        }
+      }
+    },
+    "Restore Defaults": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "기본값으로 되돌리기"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "デフォルトに戻す"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "恢复默认设置"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "回復預設值"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rétablir les valeurs par défaut"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Standard wiederherstellen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restaurar valores predeterminados"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ripristina predefiniti"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restaurar padrões"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Восстановить по умолчанию"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Відновити типові"
+          }
+        }
+      }
+    },
+    "Resume": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "재개"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "再開"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "继续"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "繼續"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reprendre"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fortsetzen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reanudar"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Riprendi"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retomar"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Продолжить"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Продовжити"
           }
         }
       }
@@ -7270,6 +7970,76 @@
           "stringUnit": {
             "state": "translated",
             "value": "Перевірки екрана"
+          }
+        }
+      }
+    },
+    "Screen text is read, erased and translated on this Mac and never leaves it": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "화면의 글자는 이 Mac 안에서 읽고 지우고 번역하며, 밖으로 나가지 않습니다"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "画面の文字はこのMacの中で読み取り・消去・翻訳され、外に送られることはありません"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "屏幕文字在这台 Mac 上读取、擦除和翻译，绝不离开这台 Mac"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "螢幕文字在這部 Mac 上讀取、擦除和翻譯，絕不離開這部 Mac"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le texte de l’écran est lu, effacé et traduit sur ce Mac et ne le quitte jamais"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bildschirmtext wird auf diesem Mac gelesen, entfernt und übersetzt und verlässt ihn nie"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El texto de la pantalla se lee, borra y traduce en este Mac y nunca sale de él"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il testo sullo schermo viene letto, cancellato e tradotto su questo Mac e non lo lascia mai"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O texto da tela é lido, apagado e traduzido neste Mac e nunca sai dele"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Текст с экрана распознаётся, стирается и переводится на этом Mac и никогда его не покидает"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Текст з екрана розпізнається, стирається й перекладається на цьому Mac і ніколи його не залишає"
           }
         }
       }
@@ -8330,72 +9100,72 @@
         }
       }
     },
-    "These work in any app.": {
+    "These work in any app. If a shortcut also does something in another app, record a different one: macOS can’t tell Mwoyeo when two apps want the same keys.": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "어느 앱에 있든 동작합니다."
+            "value": "어느 앱에서든 동작합니다. 다른 앱에서도 같은 단축키가 다른 일을 한다면 다른 조합으로 바꿔 주세요. 두 앱이 같은 키를 쓰는지 macOS가 Mwoyeo에 알려 주지 않습니다."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "どのAppでも使えます。"
+            "value": "どのアプリでも使えます。ほかのアプリでも同じキーが別の操作をする場合は、別の組み合わせを記録してください。2つのアプリが同じキーを使っていても、macOSはMwoyeoに知らせません。"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "在任何 App 中都可使用。"
+            "value": "这些快捷键在任何 App 中都有效。如果某个快捷键在其他 App 中也有作用，请录制另一个：两个 App 想用同一组按键时，macOS 不会告知 Mwoyeo。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "在任何 App 中都可使用。"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Diese funktionieren in jeder App."
+            "value": "這些快速鍵在任何 App 中都有效。若某個快速鍵在其他 App 中也有作用，請錄製另一個：兩個 App 想用同一組按鍵時，macOS 不會告知 Mwoyeo。"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ils fonctionnent dans n’importe quelle app."
+            "value": "Ils fonctionnent dans toutes les apps. Si un raccourci fait aussi quelque chose dans une autre app, enregistrez-en un autre : macOS ne prévient pas Mwoyeo quand deux apps veulent les mêmes touches."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sie funktionieren in jeder App. Wenn ein Kurzbefehl auch in einer anderen App etwas auslöst, nimm einen anderen auf: macOS teilt Mwoyeo nicht mit, wenn zwei Apps dieselben Tasten wollen."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Funcionan en cualquier app."
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Работают в любом приложении."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Funcionam em qualquer app."
+            "value": "Funcionan en cualquier app. Si un atajo también hace algo en otra app, graba uno distinto: macOS no avisa a Mwoyeo cuando dos apps quieren las mismas teclas."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Funzionano in qualsiasi app."
+            "value": "Funzionano in qualsiasi app. Se un’abbreviazione fa qualcosa anche in un’altra app, registrane una diversa: macOS non avvisa Mwoyeo quando due app vogliono gli stessi tasti."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Funcionam em qualquer app. Se um atalho também faz algo em outro app, grave outro: o macOS não avisa o Mwoyeo quando dois apps querem as mesmas teclas."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Работают в любом приложении. Если сочетание делает что-то и в другом приложении, запишите другое: macOS не сообщает Mwoyeo, когда двум приложениям нужны одни и те же клавиши."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Працюють у будь-якому застосунку."
+            "value": "Працюють у будь-якій програмі. Якщо комбінація робить щось і в іншій програмі, запишіть іншу: macOS не повідомляє Mwoyeo, коли двом програмам потрібні ті самі клавіші."
           }
         }
       }
@@ -9380,6 +10150,76 @@
         }
       }
     },
+    "Type a shortcut…": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "단축키를 누르세요…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ショートカットを入力…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请按下快捷键…"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請按下快速鍵…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tapez un raccourci…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kurzbefehl drücken …"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pulsa un atajo…"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Premi un’abbreviazione…"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pressione um atalho…"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нажмите сочетание…"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Натисніть комбінацію…"
+          }
+        }
+      }
+    },
     "Unknown reason": {
       "localizations": {
         "ko": {
@@ -9450,78 +10290,288 @@
         }
       }
     },
-    "Version %@": {
+    "Update checks only ask GitHub for the latest version number": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "버전 %@"
+            "value": "업데이트 확인은 GitHub에 최신 버전 번호만 물어봅니다"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "バージョン %@"
+            "value": "アップデートの確認ではGitHubに最新のバージョン番号だけを問い合わせます"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "版本 %@"
+            "value": "检查更新只会向 GitHub 查询最新版本号"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "版本 %@"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Version %@"
+            "value": "檢查更新只會向 GitHub 查詢最新版本號碼"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Version %@"
+            "value": "La recherche de mises à jour ne demande à GitHub que le dernier numéro de version"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Update-Suche fragt GitHub nur nach der neuesten Versionsnummer"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Versión %@"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Версия %@"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Versão %@"
+            "value": "La búsqueda de actualizaciones solo pregunta a GitHub el número de la última versión"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Versione %@"
+            "value": "La verifica degli aggiornamenti chiede a GitHub solo il numero dell’ultima versione"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A verificação de atualizações só pergunta ao GitHub o número da versão mais recente"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проверка обновлений лишь запрашивает у GitHub номер последней версии"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Версія %@"
+            "value": "Перевірка оновлень лише запитує в GitHub номер останньої версії"
+          }
+        }
+      }
+    },
+    "Version %@ (%@)": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "버전 %@ (%@)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "バージョン %@ (%@)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "版本 %@ (%@)"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "版本 %@ (%@)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version %@ (%@)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version %@ (%@)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Versión %@ (%@)"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Versione %@ (%@)"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Versão %@ (%@)"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Версия %@ (%@)"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Версія %@ (%@)"
+          }
+        }
+      }
+    },
+    "Version %@ is available": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 버전이 나왔습니다"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "バージョン%@が利用可能です"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "版本 %@ 已推出"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "版本 %@ 已推出"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La version %@ est disponible"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version %@ ist verfügbar"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La versión %@ está disponible"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La versione %@ è disponibile"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A versão %@ está disponível"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Доступна версия %@"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Доступна версія %@"
           }
         }
       }
     },
     "Vision · Translation · Apple Intelligence · Core ML": {
       "shouldTranslate": false
+    },
+    "What’s New": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "새로운 기능"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新機能"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新功能"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新功能"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nouveautés"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neuerungen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Novedades"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Novità"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Novidades"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Что нового"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Що нового"
+          }
+        }
+      }
     },
     "Window": {
       "localizations": {

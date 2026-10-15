@@ -1,3 +1,4 @@
+import Carbon.HIToolbox
 import ServiceManagement
 import SwiftUI
 import Translation
@@ -295,38 +296,143 @@ private struct LensStyleCard: View {
 }
 
 private struct ShortcutSettings: View {
+    @Environment(AppModel.self) private var model
+
     var body: some View {
         Form {
             Section {
-                ForEach(HotKeys.all) { s in
-                    LabeledContent(s.title) { KeyCap(s.display).foregroundStyle(.primary) }
+                ForEach(HotKeyAction.allCases) { action in
+                    LabeledContent(action.title) { ShortcutRecorder(action: action) }
                 }
             } footer: {
-                Text("These work in any app.").font(.caption).foregroundStyle(.secondary)
+                Text("These work in any app. If a shortcut also does something in another app, record a different one: macOS can’t tell Mwoyeo when two apps want the same keys.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+            Section {
+                Button("Restore Defaults") { model.settings.shortcuts = HotKeyAction.defaults }
+                    .disabled(model.settings.shortcuts == HotKeyAction.defaults)
             }
         }
         .formStyle(.grouped)
     }
 }
 
-private struct AboutView: View {
+/// Click, then press the new shortcut. Esc cancels; ⌫ removes the shortcut.
+private struct ShortcutRecorder: View {
+    @Environment(AppModel.self) private var model
+    let action: HotKeyAction
+    @State private var monitor: Any?
+
+    private var combo: KeyCombo? { model.settings.shortcuts[action.rawValue] }
+
     var body: some View {
-        VStack(spacing: 12) {
-            AppGlyph(size: 88)
+        HStack(spacing: 6) {
+            Button {
+                monitor == nil ? start() : stop()
+            } label: {
+                Text(monitor != nil ? String(localized: "Type a shortcut…") : combo?.display ?? String(localized: "Record Shortcut"))
+                    .font(combo != nil && monitor == nil ? .body.weight(.medium) : .body)
+                    .frame(width: 130)
+            }
+            .buttonStyle(.bordered)
+            .tint(monitor != nil ? .accentColor : nil)
+            Button { model.settings.shortcuts[action.rawValue] = nil } label: { Image(systemName: "xmark.circle.fill") }
+                .buttonStyle(.borderless).foregroundStyle(.tertiary)
+                .help("Remove Shortcut")
+                .opacity(combo != nil && monitor == nil ? 1 : 0)
+                .disabled(combo == nil || monitor != nil)
+        }
+        .onDisappear { stop() }
+    }
+
+    private func start() {
+        // Unregistered while recording, so pressing a current shortcut records it instead of firing it.
+        HotKeys.shared.suspend()
+        monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { e in
+            switch Int(e.keyCode) {
+            case kVK_Escape: stop()
+            case kVK_Delete, kVK_ForwardDelete:
+                model.settings.shortcuts[action.rawValue] = nil
+                stop()
+            default:
+                guard let c = KeyCombo(event: e) else { NSSound.beep(); return nil }
+                var all = model.settings.shortcuts
+                for (k, v) in all where v.keyCode == c.keyCode && v.modifiers == c.modifiers { all[k] = nil } // one action per combo
+                all[action.rawValue] = c
+                model.settings.shortcuts = all
+                stop()
+            }
+            return nil
+        }
+    }
+
+    private func stop() {
+        if let m = monitor { NSEvent.removeMonitor(m) }
+        monitor = nil
+        HotKeys.shared.apply(model.settings.shortcuts)
+    }
+}
+
+private struct AboutView: View {
+    @Environment(AppModel.self) private var model
+    private let updates = Updates.shared
+
+    var body: some View {
+        @Bindable var model = model
+        VStack(spacing: 10) {
+            AppGlyph(size: 80)
             Text("Mwoyeo").font(.largeTitle.weight(.semibold))
             Text("Translates the screen in place, wherever you put a lens.")
                 .foregroundStyle(.secondary)
-            Text("Version \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0")")
-                .font(.caption).foregroundStyle(.tertiary)
-            Divider().frame(width: 260).padding(.vertical, 6)
+            Text("Version \(Updates.version) (\(Updates.build))")
+                .font(.caption).foregroundStyle(.tertiary).textSelection(.enabled)
+
+            VStack(spacing: 6) {
+                HStack(spacing: 10) {
+                    Button("Check for Updates") { Task { await updates.check() } }
+                        .disabled(updates.state == .checking)
+                    updateStatus.font(.callout)
+                }
+                Toggle("Check automatically once a day", isOn: $model.settings.checksForUpdates)
+                    .toggleStyle(.checkbox).font(.callout)
+            }
+            .padding(.top, 6)
+
+            HStack(spacing: 18) {
+                Link(destination: Updates.repository) { Label("GitHub", systemImage: "chevron.left.forwardslash.chevron.right") }
+                Link(destination: Updates.releases) { Label("Release Notes", systemImage: "doc.text") }
+                Link(destination: Updates.issues) { Label("Report a Problem", systemImage: "exclamationmark.bubble") }
+            }
+            .font(.callout)
+            .padding(.top, 4)
+
+            Divider().frame(width: 300).padding(.vertical, 6)
             VStack(alignment: .leading, spacing: 6) {
-                Label("Recognition and translation happen entirely on this Mac", systemImage: "lock.shield")
+                Label("Screen text is read, erased and translated on this Mac and never leaves it", systemImage: "lock.shield")
+                Label("Update checks only ask GitHub for the latest version number", systemImage: "arrow.down.circle")
                 Label("Vision · Translation · Apple Intelligence · Core ML", systemImage: "apple.intelligence")
                 Label("Inpainting: MI-GAN (Picsart AI Research, MIT)", systemImage: "paintbrush")
             }
             .font(.callout)
             .foregroundStyle(.secondary)
+            Text(verbatim: "© 2026 midagedev · MIT License").font(.caption2).foregroundStyle(.tertiary).padding(.top, 4)
         }
+        .padding(.vertical, 20)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    @ViewBuilder private var updateStatus: some View {
+        switch updates.state {
+        case .idle: EmptyView()
+        case .checking: ProgressView().controlSize(.small)
+        case .upToDate: Label("Mwoyeo is up to date", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
+        case .failed: Label("Couldn’t reach GitHub", systemImage: "wifi.exclamationmark").foregroundStyle(.secondary)
+        case .available(let version, let page):
+            HStack(spacing: 6) {
+                Text("Version \(version) is available").foregroundStyle(Color.accentColor)
+                Button(Updates.viaHomebrew ? String(localized: "What’s New") : String(localized: "Download")) { NSWorkspace.shared.open(page) }
+                    .controlSize(.small)
+            }
+        }
     }
 }

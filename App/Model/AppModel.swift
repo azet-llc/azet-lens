@@ -11,6 +11,8 @@ final class AppModel {
         didSet {
             guard settings != oldValue else { return }
             save()
+            if settings.shortcuts != oldValue.shortcuts { HotKeys.shared.apply(settings.shortcuts) }
+            if settings.checksForUpdates != oldValue.checksForUpdates { Updates.shared.schedule(enabled: settings.checksForUpdates) }
             let s = settings
             Task {
                 await translator.update(settings: s)
@@ -54,10 +56,12 @@ final class AppModel {
     // MARK: - Lifecycle
 
     func bootstrap() async {
-        HotKeys.shared.register(HotKeys.addRegion) { [weak self] in Task { await self?.addRegion() } }
-        HotKeys.shared.register(HotKeys.toggleOriginal) { [weak self] in self?.toggleTranslations() }
-        HotKeys.shared.register(HotKeys.pause) { [weak self] in Task { await self?.togglePause() } }
-        HotKeys.shared.register(HotKeys.refresh) { [weak self] in Task { await self?.refreshAll() } }
+        HotKeys.shared.setHandler(.addLens) { [weak self] in Task { await self?.addRegion() } }
+        HotKeys.shared.setHandler(.toggleOriginal) { [weak self] in self?.toggleTranslations() }
+        HotKeys.shared.setHandler(.pause) { [weak self] in Task { await self?.togglePause() } }
+        HotKeys.shared.setHandler(.refresh) { [weak self] in Task { await self?.refreshAll() } }
+        HotKeys.shared.apply(settings.shortcuts)
+        Updates.shared.schedule(enabled: settings.checksForUpdates)
 
         await translator.setIssueHandler { issue in Task { @MainActor in AppModel.shared.issue = issue } }
         await translator.prewarm()
@@ -150,6 +154,8 @@ final class AppModel {
         if enabled, !isPaused { await startSession(regions[i]) } else { await sessions.removeValue(forKey: id)?.stop() }
         sessionTick += 1
     }
+
+    func shortcut(_ action: HotKeyAction) -> String? { settings.shortcuts[action.rawValue]?.display }
 
     func activity(of id: UUID) -> RegionActivity { sessions[id]?.activity ?? .idle }
     func error(of id: UUID) -> String? { sessions[id]?.errorMessage }

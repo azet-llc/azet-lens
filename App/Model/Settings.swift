@@ -98,6 +98,10 @@ struct AppSettings: Codable, Equatable {
     var lensStyle = LensStyle.glow
     /// Translations kept in memory for reuse.
     var cacheSize = 5000
+    /// HotKeyAction raw value → combo; an action missing here has no shortcut.
+    var shortcuts = HotKeyAction.defaults
+    /// Ask GitHub once a day whether a newer version is out.
+    var checksForUpdates = true
     var hasCompletedOnboarding = false
 
     var glossaryPairs: [(String, String)] {
@@ -124,6 +128,8 @@ struct AppSettings: Codable, Equatable {
         fontStyle = (try? c.decodeIfPresent(FontStyleChoice.self, forKey: .fontStyle)) ?? d.fontStyle
         boxOpacity = try c.decodeIfPresent(Double.self, forKey: .boxOpacity) ?? d.boxOpacity
         lensStyle = (try? c.decodeIfPresent(LensStyle.self, forKey: .lensStyle)) ?? d.lensStyle
+        shortcuts = (try? c.decodeIfPresent([String: KeyCombo].self, forKey: .shortcuts)) ?? d.shortcuts
+        checksForUpdates = try c.decodeIfPresent(Bool.self, forKey: .checksForUpdates) ?? d.checksForUpdates
         cacheSize = max(100, try c.decodeIfPresent(Int.self, forKey: .cacheSize) ?? d.cacheSize)
         hasCompletedOnboarding = try c.decodeIfPresent(Bool.self, forKey: .hasCompletedOnboarding) ?? d.hasCompletedOnboarding
     }

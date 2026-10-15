@@ -16,6 +16,9 @@ struct MenuPanel: View {
                     WindowPresenter.shared.showOnboarding()
                 }
             }
+            if case .available(let version, let page) = Updates.shared.state {
+                UpdateBanner(version: version) { NSWorkspace.shared.open(page) }
+            }
             LanguageBar(source: $model.settings.sourceLanguage, target: $model.settings.targetLanguage)
             regionList
             addButton
@@ -44,7 +47,7 @@ struct MenuPanel: View {
                     .frame(width: 18, height: 18)
             }
             .buttonStyle(.glass)
-            .help(model.isPaused ? String(localized: "Resume (⌃⌥P)") : String(localized: "Pause all (⌃⌥P)"))
+            .help(withShortcut(model.isPaused ? String(localized: "Resume") : String(localized: "Pause all"), .pause))
             .disabled(model.regions.isEmpty)
         }
     }
@@ -88,7 +91,7 @@ struct MenuPanel: View {
                 Image(systemName: "plus.viewfinder")
                 Text("Add Lens")
                 Spacer()
-                KeyCap(HotKeys.addRegion.display)
+                if let k = model.shortcut(.addLens) { KeyCap(k) }
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 3)
@@ -105,7 +108,7 @@ struct MenuPanel: View {
                 Label(model.translationsVisible ? String(localized: "Show Original") : String(localized: "Show Translation"),
                       systemImage: model.translationsVisible ? "eye" : "eye.slash")
             }
-            .help("Hide translations and show the original (⌃⌥O)")
+            .help(withShortcut(String(localized: "Hide translations and show the original"), .toggleOriginal))
             Spacer()
             Button { open() } label: { Image(systemName: "gearshape") }
                 .help("Settings")
@@ -116,6 +119,10 @@ struct MenuPanel: View {
         .labelStyle(.titleAndIcon)
         .font(.callout)
         .foregroundStyle(.secondary)
+    }
+
+    private func withShortcut(_ help: String, _ action: HotKeyAction) -> String {
+        model.shortcut(action).map { "\(help) (\($0))" } ?? help
     }
 
     private func open() {
@@ -291,6 +298,27 @@ struct LanguageBar: View {
         .buttonStyle(.plain)
         .menuIndicator(.hidden)
         .frame(maxWidth: .infinity)
+    }
+}
+
+private struct UpdateBanner: View {
+    let version: String
+    let open: () -> Void
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "arrow.down.circle.fill").foregroundStyle(Color.accentColor)
+            VStack(alignment: .leading, spacing: 1) {
+                Text("Mwoyeo \(version) is available").font(.caption.weight(.semibold))
+                if Updates.viaHomebrew {
+                    Text(verbatim: "brew upgrade mwoyeo").font(.caption2.monospaced()).foregroundStyle(.secondary).textSelection(.enabled)
+                }
+            }
+            Spacer(minLength: 0)
+            Button("What’s New", action: open).controlSize(.small)
+        }
+        .padding(10)
+        .background(Color.accentColor.opacity(0.1), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 }
 

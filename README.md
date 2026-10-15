@@ -15,7 +15,7 @@ Put a lens over a chat, a feed or a game. The original text disappears and the t
 
 Mwoyeo reads the text under a lens, **erases it from the picture**, and paints the translation back in the same
 place, size and colour. It is not a popup or a subtitle bar: the screen simply reads in your language, and keeps
-reading as messages arrive and the page scrolls. Everything runs on your Mac; nothing is sent anywhere.
+reading as messages arrive and the page scrolls. Everything runs on your Mac; nothing on your screen is sent anywhere.
 
 ## Install
 
@@ -25,6 +25,10 @@ brew install midagedev/tap/mwoyeo
 
 Or download the disk image from [Releases](https://github.com/midagedev/mwoyeo/releases/latest) and drag Mwoyeo to
 Applications. The app is signed and notarized.
+
+Mwoyeo checks GitHub once a day for a new version and says so in its menu. Update with `brew upgrade mwoyeo`, or
+download the new disk image. Settings › About has the check, the switch to turn it off, and links to the release
+notes and issue tracker.
 
 You need macOS 27 on an Apple silicon Mac.
 
@@ -37,7 +41,7 @@ You need macOS 27 on an Apple silicon Mac.
 4. **Get the language pack** (recommended). In Mwoyeo's Settings › Translation, click **Download** next to your
    language pair. With a pack, translation is near-instant and works offline. Without one, Apple Intelligence
    translates instead, which needs no download but takes about half a second per line.
-5. **Press ⌃⌥T and drag a box** over the text you want to read, such as the message list of a Discord channel or a
+5. **Press ⌃⌥L and drag a box** over the text you want to read, such as the message list of a Discord channel or a
    Reddit thread. Or just click, and a lens is dropped where you clicked. Hold ⌥ while you do it to pin the lens to
    the screen instead of the window (see below).
 
@@ -61,14 +65,15 @@ The menu bar icon lists your lenses: switch each one on or off, remove it, or ad
 
 ### Shortcuts
 
-These work in any app (Settings › Shortcuts lists them too).
+These work in any app. Change or remove them in Settings › Shortcuts: click a shortcut and press the new keys.
+macOS can't tell an app when another one already uses the same keys, so if a shortcut also does something
+elsewhere, record a different one. The defaults stay clear of window managers such as Rectangle and Magnet.
 
 | | |
 |---|---|
-| ⌃⌥T | Add a lens (drag an area, or click to drop one; hold ⌥ to pin it to the screen) |
+| ⌃⌥L | Add a lens (drag an area, or click to drop one; hold ⌥ to pin it to the screen) |
 | ⌃⌥O | Show the original / the translation |
-| ⌃⌥P | Pause all lenses |
-| ⌃⌥R | Translate again |
+| none | Pause all lenses, Translate again (in the menu; give them keys in Settings if you like) |
 
 ## Settings
 
@@ -87,7 +92,8 @@ These work in any app (Settings › Shortcuts lists them too).
   then reopen Mwoyeo.
 - **Want to compare with the original?** Press ⌃⌥O to see the original, and again to go back.
 - **Privacy.** Mwoyeo reads only what is under a lens, never stores or sends it, and leaves its own overlays out of
-  what it captures.
+  what it captures. The only thing it ever asks the internet is GitHub's latest version number, once a day, and
+  you can turn that off in Settings › About.
 
 ## Under the hood
 
