@@ -1,5 +1,6 @@
 import CoreGraphics
 import Foundation
+import ImageIO
 import MwoyeaCore
 import os
 
@@ -180,7 +181,10 @@ actor RegionPipeline {
         if let l = latest, frame.time < l.time { return }
         // Frames of an older capture geometry would put text in the wrong place.
         guard abs(frame.rect.minX - origin.x) < 0.5, abs(frame.rect.minY - origin.y) < 0.5,
-              abs(frame.rect.width - captureSize.width) < 0.5, abs(frame.rect.height - captureSize.height) < 0.5 else {
+              abs(frame.rect.width - captureSize.width) < 0.5, abs(frame.rect.height - captureSize.height) < 0.5,
+              // The tag is what was asked for; the pixels may still be of the previous size right after a change.
+              abs(frame.image.width - Int((captureSize.width * frame.scale).rounded())) <= 1,
+              abs(frame.image.height - Int((captureSize.height * frame.scale).rounded())) <= 1 else {
             Trace.mark("frame dropped: \(frame.rect) vs \(origin) \(captureSize)", since: frame.time)
             return
         }
@@ -736,6 +740,41 @@ actor RegionPipeline {
                                 image: img, seamless: b.erased != nil)
         }
         onSnapshot(OverlaySnapshot(version: version, blocks: out, animated: animated, origin: origin))
+        dump(out)
+    }
+
+    private var lastDump: TimeInterval = 0
+
+    /// MWOYEA_DUMP=dir: writes what the capture saw with the overlay on top (lens outlined), at most twice a second —
+    /// to check the live app without screen recording rights of one's own.
+    private func dump(_ out: [OverlayBlock]) {
+        guard let dir = Trace.dumpDirectory, let frame = latest else { return }
+        let now = ProcessInfo.processInfo.systemUptime
+        guard now - lastDump > 0.5 else { return }
+        lastDump = now
+        let s = scale, lens = CGRect(x: (visible.minX - origin.x) * s, y: (visible.minY - origin.y) * s,
+                                     width: visible.width * s, height: visible.height * s)
+        let v = version
+        Task.detached(priority: .background) {
+            let w = frame.image.width, h = frame.image.height
+            guard let ctx = CGContext(data: nil, width: w, height: h, bitsPerComponent: 8, bytesPerRow: 0,
+                                      space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+            else { return }
+            let H = CGFloat(h)
+            ctx.draw(frame.image, in: CGRect(x: 0, y: 0, width: w, height: h))
+            for b in out {
+                ctx.draw(b.image, in: CGRect(x: b.frame.minX * s, y: H - b.frame.maxY * s, width: b.frame.width * s, height: b.frame.height * s))
+            }
+            ctx.setStrokeColor(CGColor(red: 1, green: 0.3, blue: 0.2, alpha: 1))
+            ctx.setLineWidth(4)
+            ctx.stroke(CGRect(x: lens.minX, y: H - lens.maxY, width: lens.width, height: lens.height))
+            guard let img = ctx.makeImage() else { return }
+            let url = dir.appendingPathComponent(String(format: "%06d.png", v))
+            if let d = CGImageDestinationCreateWithURL(url as CFURL, "public.png" as CFString, 1, nil) {
+                CGImageDestinationAddImage(d, img, nil)
+                CGImageDestinationFinalize(d)
+            }
+        }
     }
 
     private func setActivity(_ a: RegionActivity) {
@@ -754,6 +793,7 @@ enum Trace {
         FileHandle.standardError.write("[trace] \(label()) \(ms) ms\n".data(using: .utf8)!)
     }
     static var now: TimeInterval { ProcessInfo.processInfo.systemUptime }
+    static let dumpDirectory: URL? = ProcessInfo.processInfo.environment["MWOYEA_DUMP"].map { URL(fileURLWithPath: $0) }
 }
 
 extension Array {

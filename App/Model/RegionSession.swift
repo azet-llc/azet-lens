@@ -181,12 +181,11 @@ final class RegionSession {
         case .keep: break
         case .move(let r):
             capture = r
-            Task { [pipeline] in await pipeline.captureMoved(to: r.origin) }
-            scheduleCaptureUpdate()
+            // The pipeline must know the new geometry before the capturer delivers its first frame of it.
+            Task { await pipeline.captureMoved(to: r.origin); scheduleCaptureUpdate() }
         case .resize(let r):
             capture = r
-            Task { [pipeline] in await pipeline.captureResized(to: r) }
-            scheduleCaptureUpdate()
+            Task { await pipeline.captureResized(to: r); scheduleCaptureUpdate() }
         }
         Task { [pipeline] in await pipeline.setVisible(lens) }
     }
@@ -280,8 +279,7 @@ final class RegionSession {
         let moved = Self.overscan(target, wide: wideMargins)
         if moved.size == capture.size {
             capture = moved
-            Task { [pipeline] in await pipeline.captureMoved(to: moved.origin, contentDelta: delta) }
-            scheduleCaptureUpdate()
+            Task { await pipeline.captureMoved(to: moved.origin, contentDelta: delta); scheduleCaptureUpdate() }
         }
         fitCapture(allowResize: false)
         onConfigChange?(config)

@@ -73,6 +73,16 @@ final class AppModel {
         if hasScreenPermission {
             for r in regions where r.isEnabled { await startSession(r) }
         }
+        // `--add-region x,y,w,h` (global points, top-left origin): place a lens without picking, for scripted demos.
+        let args = CommandLine.arguments
+        if let i = args.firstIndex(of: "--add-region"), i + 1 < args.count, hasScreenPermission {
+            let v = args[i + 1].split(separator: ",").compactMap { Double($0) }
+            if v.count == 4 {
+                let config = RegionConfig(name: "영역 \(regions.count + 1)", rect: CGRect(x: v[0], y: v[1], width: v[2], height: v[3]))
+                regions.append(config)
+                await startSession(config)
+            }
+        }
     }
 
     /// The accurate text recognizer takes tens of seconds to load the first time; do it before the user needs it.
