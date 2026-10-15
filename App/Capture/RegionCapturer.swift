@@ -29,7 +29,9 @@ final class RegionCapturer: NSObject, SCStreamOutput, SCStreamDelegate, @uncheck
     /// `rect` is in global Quartz points and must lie on one display.
     func start(rect: CGRect, fps: Double) async throws {
         await stop()
-        let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
+        // Not on-screen-only: our overlay and lens frame were just ordered in and may not be listed yet, and an app with no
+        // listed windows can't be excluded — the capture would then read our own translations back.
+        let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: false)
         guard let display = content.displays.max(by: { overlap($0.frame, rect) < overlap($1.frame, rect) }),
               overlap(display.frame, rect) > 0 else { throw CaptureError.displayNotFound }
         let me = content.applications.filter { $0.processID == getpid() }
