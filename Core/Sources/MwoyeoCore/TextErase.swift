@@ -29,6 +29,23 @@ public struct TextMask: Sendable {
     public var count: Int { bits.reduce(0) { $0 + Int($1) } }
 }
 
+/// A column run of glyph pixels in a line: a letter or a few touching ones, or an icon.
+public struct InkCluster: Sendable, Equatable {
+    public var minX: Int
+    public var maxX: Int
+    public var color: RGBA
+    public var ink: Int
+    public var solid: Bool
+
+    public init(minX: Int, maxX: Int, color: RGBA, ink: Int, solid: Bool) {
+        self.minX = minX
+        self.maxX = maxX
+        self.color = color
+        self.ink = ink
+        self.solid = solid
+    }
+}
+
 public enum TextEraser {
     /// Builds a glyph mask for `patch`, where `textRect` (patch coordinates) bounds the text and the ring of
     /// pixels around it is background.
@@ -189,6 +206,36 @@ public enum TextEraser {
             px = next
         }
         img.pixels = px.map { UInt8(clamping: $0) }
+    }
+
+    /// Glyph pixels of `mask` (built without dilation) gathered into column runs — letters, or an icon or avatar
+    /// in the line — left to right, in patch coordinates. `solid` marks filled shapes at least half a line tall:
+    /// an avatar or an emoji, not a stroke of text.
+    public static func clusters(_ mask: TextMask, in patch: RGBAImage, lineHeight: Int) -> [InkCluster] {
+        let w = mask.width, h = mask.height, bg = mask.appearance.backgroundColor
+        guard mask.appearance.coverage < 1 else { return [] }
+        var out: [InkCluster] = []
+        var x = 0
+        while x < w {
+            guard (0..<h).contains(where: { mask.bits[$0 * w + x] != 0 }) else { x += 1; continue }
+            var end = x
+            while end + 1 < w, (0..<h).contains(where: { mask.bits[$0 * w + end + 1] != 0 }) { end += 1 }
+            var colors: [(RGBA, Int)] = []
+            var top = h, bottom = -1
+            for y in 0..<h {
+                for cx in x...end where mask.bits[y * w + cx] != 0 {
+                    let c = patch.color(x: cx, y: y)
+                    colors.append((c, abs(c.luma - bg.luma)))
+                    top = min(top, y); bottom = max(bottom, y)
+                }
+            }
+            let rows = bottom - top + 1, width = end - x + 1
+            let core = colors.sorted { $0.1 > $1.1 }.prefix(max(1, colors.count / 2)).map(\.0)
+            let solid = rows * 2 >= lineHeight && width * 2 >= rows && Double(colors.count) >= 0.7 * Double(rows * width)
+            out.append(InkCluster(minX: x, maxX: end + 1, color: meanColor(Array(core)), ink: colors.count, solid: solid))
+            x = end + 1
+        }
+        return out
     }
 
     /// Marks every unmasked pixel that cannot reach the image border without crossing the mask — the gaps

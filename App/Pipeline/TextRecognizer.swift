@@ -8,6 +8,14 @@ import os
 struct OCRLine: Sendable {
     var rect: CGRect
     var text: String
+    /// Its words (CJK: characters) with their boxes, where Vision could place them.
+    var words: [OCRWord] = []
+}
+
+struct OCRWord: Sendable {
+    var rect: CGRect
+    /// Range in the line's `text`.
+    var range: Range<String.Index>
 }
 
 /// A paragraph: lines that read as one unit and should be translated together.
@@ -37,8 +45,7 @@ enum TextRecognizer {
         let observations = try await deadline { try await req.perform(on: image) }
         return observations.compactMap { obs in
             guard let candidate = obs.topCandidates(1).first, candidate.confidence >= 0.3 else { return nil }
-            // Boxes come back normalized to the region of interest, not the whole image.
-            return OCRLine(rect: pixelRect(unclip(obs.boundingBox.cgRect, from: region), in: size), text: candidate.string)
+            return line(candidate, box: obs.boundingBox.cgRect, region: region, size: size)
         }
     }
 
@@ -59,14 +66,36 @@ enum TextRecognizer {
         for doc in docs {
             for paragraph in doc.document.paragraphs {
                 let lines = paragraph.lines.compactMap { obs -> OCRLine? in
-                    guard let s = obs.topCandidates(1).first?.string, !s.isEmpty else { return nil }
-                    return OCRLine(rect: pixelRect(unclip(obs.boundingBox.cgRect, from: region), in: size), text: s)
+                    guard let c = obs.topCandidates(1).first, !c.string.isEmpty else { return nil }
+                    return line(c, box: obs.boundingBox.cgRect, region: region, size: size)
                 }
                 guard !lines.isEmpty else { continue }
                 out.append(makeBlock(lines))
             }
         }
         return out
+    }
+
+    /// Boxes come back normalized to the region of interest, not the whole image.
+    private static func line(_ c: RecognizedText, box: CGRect, region: NormalizedRect, size: CGSize) -> OCRLine {
+        let s = c.string
+        // Words split at spaces; CJK has none, so its words are single characters.
+        var ranges: [Range<String.Index>] = []
+        var i = s.startIndex
+        while i < s.endIndex {
+            guard !s[i].isWhitespace else { i = s.index(after: i); continue }
+            let j = s[i...].firstIndex(where: \.isWhitespace) ?? s.endIndex
+            if s[i..<j].contains(where: isCJK) {
+                ranges += s[i..<j].indices.map { $0..<s.index(after: $0) }
+            } else {
+                ranges.append(i..<j)
+            }
+            i = j
+        }
+        let words = ranges.compactMap { r in
+            c.boundingBox(for: r).map { OCRWord(rect: pixelRect(unclip($0.boundingBox.cgRect, from: region), in: size), range: r) }
+        }
+        return OCRLine(rect: pixelRect(unclip(box, from: region), in: size), text: s, words: words)
     }
 
     struct Timeout: Error {}

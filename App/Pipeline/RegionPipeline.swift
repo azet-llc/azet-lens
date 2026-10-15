@@ -552,19 +552,62 @@ actor RegionPipeline {
     }
 
     /// The document reader groups lines by layout alone, so a chat message and the next sender's name, or a post
-    /// title and its body, can land in one paragraph. Split wherever the text colour or size changes.
+    /// title and its body, can land in one paragraph. Split wherever the text colour or size changes — first within
+    /// a line (a name, a badge and a timestamp read as one line each become their own block, icons in front of text
+    /// are cut off), then between lines. Names and badges are dropped, so they stay on screen as they are.
     private func splitByStyle(_ blocks: [OCRBlock], in image: CGImage) -> [OCRBlock] {
-        blocks.flatMap { block -> [OCRBlock] in
-            guard block.lines.count > 1 else { return [block] }
-            let styles = block.lines.map { (color: appearance(of: $0.rect, in: image).textColor, height: $0.rect.height) }
-            var groups: [[OCRLine]] = [[block.lines[0]]]
-            for i in 1..<block.lines.count {
-                let a = styles[i - 1], b = styles[i]
-                let sizeJump = max(a.height, b.height) / max(1, min(a.height, b.height)) > 1.3
-                if a.color.distance(to: b.color) > 60 || sizeJump { groups.append([]) }
-                groups[groups.count - 1].append(block.lines[i])
+        let split = blocks.flatMap { block -> [OCRBlock] in
+            var parts: [[OCRLine]] = [[]]
+            for line in block.lines {
+                let runs = styleRuns(line, in: image)
+                if runs.count == 1 {
+                    parts[parts.count - 1].append(runs[0])
+                } else if runs.count > 1 {
+                    parts += runs.map { [$0] } + [[]]
+                }
             }
-            return groups.count == 1 ? [block] : groups.map(TextRecognizer.makeBlock)
+            return parts.filter { !$0.isEmpty }.flatMap { lines -> [OCRBlock] in
+                guard lines.count > 1 else { return [TextRecognizer.makeBlock(lines)] }
+                let styles = lines.map { (color: appearance(of: $0.rect, in: image).textColor, height: $0.rect.height) }
+                var groups: [[OCRLine]] = [[lines[0]]]
+                for i in 1..<lines.count {
+                    let a = styles[i - 1], b = styles[i]
+                    let sizeJump = max(a.height, b.height) / max(1, min(a.height, b.height)) > 1.3
+                    if a.color.distance(to: b.color) > 60 || sizeJump { groups.append([]) }
+                    groups[groups.count - 1].append(lines[i])
+                }
+                return groups.map(TextRecognizer.makeBlock)
+            }
+        }
+        let items = split.map { LabelRule.Item(rect: $0.rect, text: $0.text, color: appearance(of: $0.lines[0].rect, in: image).textColor) }
+        let labels = LabelRule.labels(items)
+        return split.indices.filter { !labels.contains($0) }.map { split[$0] }
+    }
+
+    /// A line cut into runs of one text colour, with icons and stray marks trimmed off each run's ends.
+    private func styleRuns(_ line: OCRLine, in image: CGImage) -> [OCRLine] {
+        guard !line.words.isEmpty else { return [line] }
+        let h = line.rect.height
+        let ring = max(2, Int(h * 0.15))
+        let crop = PixelRect(line.rect.insetBy(dx: -CGFloat(ring), dy: -CGFloat(ring))).clamped(width: image.width, height: image.height)
+        let text = PixelRect(line.rect).clamped(width: image.width, height: image.height)
+        guard let patch = RGBAImage(cgImage: image, crop: crop) else { return [line] }
+        let mask = TextEraser.mask(for: patch, textRect: PixelRect(x: text.x - crop.x, y: text.y - crop.y, width: text.width, height: text.height),
+                                   dilation: 0)
+        let clusters = TextEraser.clusters(mask, in: patch, lineHeight: Int(h)).map {
+            InkCluster(minX: $0.minX + crop.x, maxX: $0.maxX + crop.x, color: $0.color, ink: $0.ink, solid: $0.solid)
+        }
+        let tokens = line.words.map {
+            StyleRuns.token(text: String(line.text[$0.range]), minX: $0.rect.minX, maxX: $0.rect.maxX, clusters: clusters, lineHeight: h)
+        }
+        if Trace.enabled {
+            Trace.mark("runs: " + tokens.map { "\($0.text)[\($0.color.map { "\($0.r),\($0.g),\($0.b)" } ?? "-")\($0.solid ? " solid" : "")]" }
+                .joined(separator: " "), since: Trace.now)
+        }
+        return StyleRuns.runs(tokens, lineHeight: h).map { r in
+            let words = Array(line.words[r]), minX = tokens[r].map(\.minX).min()!, maxX = tokens[r].map(\.maxX).max()!
+            return OCRLine(rect: CGRect(x: minX, y: line.rect.minY, width: maxX - minX, height: h),
+                           text: String(line.text[words[0].range.lowerBound..<words[words.count - 1].range.upperBound]), words: words)
         }
     }
 

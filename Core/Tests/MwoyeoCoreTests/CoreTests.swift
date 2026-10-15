@@ -337,3 +337,68 @@ func texture(width: Int, height: Int, seed: Int = 1) -> GrayImage {
     #expect(TranslationCleanup.restoreSourceTokens("U/mayafox · 5시간 전", source: "u/mayafox · 5時間前") == "u/mayafox · 5시간 전")
     #expect(TranslationCleanup.restoreSourceTokens("RTA 멤버들은", source: "RTA勢は") == "RTA 멤버들은")
 }
+
+@Test func lineSplitsIntoStyleRuns() {
+    func tok(_ text: String, _ x: CGFloat, _ w: CGFloat, _ c: RGBA?, solid: Bool = false) -> StyleRuns.Token {
+        .init(text: text, minX: x, maxX: x + w, color: c, solid: solid)
+    }
+    let red = RGBA(240, 110, 100), grey = RGBA(150, 152, 158), white = RGBA(230, 230, 230)
+    // "junpark Today at 8:13 PM": name and timestamp split; the inky-less "at" stays with its neighbours.
+    let header = [tok("junpark", 0, 127, red), tok("Today", 130, 70, grey), tok("at", 204, 23, nil),
+                  tok("8:13", 230, 50, grey), tok("PM", 284, 44, grey)]
+    #expect(StyleRuns.runs(header, lineHeight: 27) == [0..<1, 1..<5])
+    // An avatar read as "•" in front of "u/ollie_owl · 7時間前" is cut off, and so is the separator dot.
+    let reddit = [tok("•", 0, 55, RGBA(190, 120, 250), solid: true), tok("u/ollie_owl", 58, 140, white),
+                  tok("·", 205, 8, nil), tok("7", 220, 17, grey), tok("時", 237, 22, grey)]
+    #expect(StyleRuns.runs(reddit, lineHeight: 45) == [1..<2, 3..<5])
+    // An emoji read as "9" in front of "318件" is not part of the text (and so stays as drawn).
+    let count = [tok("9", 0, 30, white, solid: true), tok("3", 34, 22, white), tok("1", 56, 12, white), tok("件", 82, 30, white)]
+    #expect(StyleRuns.runs(count, lineHeight: 34) == [1..<4])
+    // Stray marks for icons at either end go; meaningful punctuation stays.
+    #expect(StyleRuns.runs([tok("，", 0, 17, white), tok("共", 20, 22, white), tok("有", 42, 22, white)], lineHeight: 30) == [1..<3])
+    #expect(StyleRuns.runs([tok("Ollie", 0, 50, red), tok("•", 55, 10, red)], lineHeight: 30) == [0..<1])
+    #expect(StyleRuns.runs([tok("#", 0, 12, grey), tok("general", 16, 70, grey)], lineHeight: 30) == [0..<2])
+    #expect(StyleRuns.runs([tok("why", 0, 40, white), tok("?!", 42, 12, white)], lineHeight: 30) == [0..<2])
+    // Separate buttons on one OCR line split at the wide gap.
+    #expect(StyleRuns.runs([tok("Reply", 0, 50, grey), tok("Share", 150, 50, grey)], lineHeight: 30) == [0..<1, 1..<2])
+}
+
+@Test func labelsAreWordsNextToOtherStyles() {
+    let red = RGBA(240, 110, 100), grey = RGBA(150, 152, 158), white = RGBA(255, 255, 255), body = RGBA(220, 222, 225)
+    func item(_ text: String, _ x: CGFloat, _ y: CGFloat, _ w: CGFloat, _ h: CGFloat, _ c: RGBA) -> LabelRule.Item {
+        .init(rect: CGRect(x: x, y: y, width: w, height: h), text: text, color: c)
+    }
+    let chat = [
+        item("Maya", 750, 210, 85, 32, red), item("MOD", 855, 214, 55, 22, white), item("Today at 8:12 PM", 930, 214, 190, 26, grey),
+        item("ok who stayed up for the patch notes last night", 750, 255, 680, 30, body),
+        item("Today", 1555, 145, 70, 24, grey),                               // a divider, alone on its row
+        item("急上昇", 655, 465, 80, 28, grey), item("新着", 795, 465, 55, 28, grey), // tabs: same style
+        // A name with an emoji between it and the timestamp; a timestamp ending its row is translated.
+        item("Ollie", 750, 570, 70, 32, RGBA(194, 124, 255)), item("Today at 8:14 PM", 875, 574, 190, 26, grey),
+        item("u/mayafox", 580, 570, 120, 26, white), item("5時間前", 720, 570, 80, 26, grey),
+    ]
+    #expect(LabelRule.labels(chat) == [0, 1, 7, 9])
+}
+
+@Test func inkClustersTellIconsFromLetters() {
+    // A filled purple disc (an avatar) and two thin grey strokes (letters) on a dark line 24 px tall.
+    var patch = RGBAImage(width: 80, height: 32, color: RGBA(15, 16, 18))
+    for y in 4..<28 { for x in 4..<28 where (x - 16) * (x - 16) + (y - 16) * (y - 16) <= 144 { patch.set(x: x, y: y, RGBA(190, 120, 250)) } }
+    for y in 8..<26 { for x in 40..<43 { patch.set(x: x, y: y, RGBA(150, 152, 158)); patch.set(x: x + 10, y: y, RGBA(150, 152, 158)) } }
+    let m = TextEraser.mask(for: patch, textRect: PixelRect(x: 3, y: 3, width: 74, height: 26), dilation: 0)
+    let c = TextEraser.clusters(m, in: patch, lineHeight: 26)
+    #expect(c.map(\.minX) == [4, 40, 50])
+    #expect(c.map(\.solid) == [true, false, false])
+    #expect(c[1].color == RGBA(150, 152, 158))
+}
+
+@Test func wordTokenLeavesOutAnIconItsBoxTookIn() {
+    let grey = RGBA(147, 154, 163), yellow = RGBA(249, 218, 86)
+    func cl(_ x: Int, _ w: Int, _ c: RGBA, solid: Bool = false) -> InkCluster { InkCluster(minX: x, maxX: x + w, color: c, ink: 60, solid: solid) }
+    // Vision's box for "Today" also covers the moon emoji in front of it.
+    let today = StyleRuns.token(text: "Today", minX: 100, maxX: 200, clusters: [cl(100, 22, yellow), cl(130, 12, grey), cl(145, 12, grey),
+                                                                              cl(160, 12, grey), cl(175, 12, grey), cl(188, 12, grey)], lineHeight: 30)
+    #expect(today.minX == 130 && today.maxX == 200 && today.color == grey && !today.solid)
+    let avatar = StyleRuns.token(text: "•", minX: 0, maxX: 40, clusters: [cl(2, 36, RGBA(190, 120, 250), solid: true)], lineHeight: 30)
+    #expect(avatar.solid)
+}
