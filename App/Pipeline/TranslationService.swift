@@ -101,12 +101,14 @@ actor TranslationService {
             groups[lang, default: []].append(t)
         }
 
+        let target = settings.targetLanguage
         for source in order {
             let items = groups[source]!
-            let deliver: @Sendable (String, String) -> Void = { s, t in onResult?(s, t) }
+            let deliver: @Sendable (String, String) -> Void = { s, t in onResult?(s, Self.matchRegister(t, source: s, target: target)) }
             do {
                 let translated = try await translateGroup(items, source: source, onResult: deliver)
                 for (s, t) in translated {
+                    let t = Self.matchRegister(t, source: s, target: target)
                     result[s] = t
                     cache[s] = t
                 }
@@ -118,6 +120,14 @@ actor TranslationService {
             }
         }
         return result
+    }
+
+    /// No engine controls tone, and Apple Translation answers casual chat in formal Korean ("guilty." → "유죄입니다.").
+    /// Casual source lines get casual Korean.
+    /// ponytail: Korean only; other targets with a formal/casual split (ja, de, fr) keep the engine's tone.
+    nonisolated static func matchRegister(_ translated: String, source: String, target: String) -> String {
+        guard Locale.Language(identifier: target).languageCode == "ko", Register.isCasual(source) else { return translated }
+        return KoreanRegister.casual(translated)
     }
 
     // MARK: - Engines
@@ -265,6 +275,8 @@ final class IntelligenceTranslator: @unchecked Sendable {
         var out: [String: String] = [:]
         var firstError: Error?
         var queue = items[...] // reading order
+        // Sent bare, a line of English chat reads as a message to answer, and the model echoes it back untranslated.
+        let ask = "Translate into \(Locale(identifier: "en").localizedString(forIdentifier: target) ?? target):\n"
 
         try await withThrowingTaskGroup(of: (String, String?, Error?).self) { group in
             func launch() {
@@ -272,7 +284,7 @@ final class IntelligenceTranslator: @unchecked Sendable {
                 group.addTask {
                     do {
                         let r = try await self.session(source: source, target: target, glossary: glossary)
-                            .respond(to: src, options: GenerationOptions(samplingMode: .greedy))
+                            .respond(to: ask + src, options: GenerationOptions(samplingMode: .greedy))
                         return (src, Self.clean(r.content, source: src), nil)
                     } catch {
                         return (src, nil, error)
