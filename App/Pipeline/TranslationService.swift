@@ -98,8 +98,6 @@ actor TranslationService {
             }
         }
         guard !todo.isEmpty else { return result }
-        // Results are stored for the settings they were asked under, even if those change meanwhile.
-        let space = cache.namespace
 
         // Group by source language (keeping order) so each session handles one pair.
         var order: [String] = []
@@ -114,10 +112,13 @@ actor TranslationService {
             let items = groups[source]!
             let deliver: @Sendable (String, String) -> Void = { s, t in onResult?(s, t) }
             do {
+                let space = cache.namespace
                 let translated = try await translateGroup(items, source: source, onResult: deliver)
+                // Settings changed while it ran: the engine may have used either, so it is not cached under any.
+                let current = cache.namespace == space
                 for (s, t) in translated {
                     result[s] = t
-                    cache.store(t, for: s, in: space)
+                    if current { cache.store(t, for: s, in: space) }
                 }
                 issueHandler?(nil)
             } catch let issue as TranslationIssue {

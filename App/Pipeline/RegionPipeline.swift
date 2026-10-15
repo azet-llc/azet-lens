@@ -170,9 +170,10 @@ actor RegionPipeline {
         restyled.fontStyle = new.fontStyle
         restyled.boxOpacity = new.boxOpacity
         restyled.settleDelay = new.settleDelay
-        let reread = restyled != new
+        let reread = restyled != new, redraw = new.fontStyle != options.fontStyle || new.boxOpacity != options.boxOpacity
         options = new
         if reread { reset(); return }
+        guard redraw else { return }
         // Only the look changed: redraw what is already read, erased and translated.
         for i in blocks.indices { blocks[i].image = nil }
         renderMissing()
