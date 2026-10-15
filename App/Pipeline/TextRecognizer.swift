@@ -30,6 +30,7 @@ enum TextRecognizer {
     /// `fast` only reads Latin scripts; callers pick it only for those.
     static func lines(in image: CGImage, roi: CGRect? = nil, languages: [Locale.Language], fast: Bool,
                       customWords: [String] = []) async throws -> [OCRLine] {
+        if fast { return try await fastLines(in: image, roi: roi, languages: languages) }
         var req = RecognizeTextRequest()
         req.recognitionLevel = fast ? .fast : .accurate
         req.usesLanguageCorrection = !fast
@@ -47,6 +48,52 @@ enum TextRecognizer {
             guard let candidate = obs.topCandidates(1).first, candidate.confidence >= 0.3 else { return nil }
             return line(candidate, box: obs.boundingBox.cgRect, region: region, size: size)
         }
+    }
+
+    /// The Swift `RecognizeTextRequest` at `.fast` returns no observations at all on macOS 27 (any image, any
+    /// language); the Objective-C request still reads. ponytail: back to `RecognizeTextRequest` once `.fast` reads.
+    private static func fastLines(in image: CGImage, roi: CGRect?, languages: [Locale.Language]) async throws -> [OCRLine] {
+        let size = CGSize(width: image.width, height: image.height)
+        let region = roi.map { normalized($0, in: size) } ?? NormalizedRect(x: 0, y: 0, width: 1, height: 1)
+        let roiRect = region.cgRect
+        let wanted = languages.compactMap(\.languageCode)
+        let results = try await deadline {
+            let req = VNRecognizeTextRequest()
+            req.recognitionLevel = .fast
+            req.usesLanguageCorrection = false
+            // Its identifiers look like "en-US"; match by language code.
+            let supported = (try? req.supportedRecognitionLanguages()) ?? []
+            let codes = wanted.compactMap { w in supported.first { Locale.Language(identifier: $0).languageCode == w } }
+            if codes.isEmpty { req.automaticallyDetectsLanguage = true } else { req.recognitionLanguages = codes }
+            req.regionOfInterest = roiRect
+            try VNImageRequestHandler(cgImage: image).perform([req])
+            return (req.results ?? []).compactMap { obs -> (String, CGRect, [(Range<String.Index>, CGRect)])? in
+                guard let c = obs.topCandidates(1).first, c.confidence >= 0.3 else { return nil }
+                let words = wordRanges(c.string).compactMap { r in (try? c.boundingBox(for: r)).flatMap { $0 }.map { (r, $0.boundingBox) } }
+                return (c.string, obs.boundingBox, words)
+            }
+        }
+        return results.map { s, box, words in
+            OCRLine(rect: pixelRect(unclip(box, from: region), in: size), text: s,
+                    words: words.map { OCRWord(rect: pixelRect(unclip($1, from: region), in: size), range: $0) })
+        }
+    }
+
+    /// Words split at spaces; CJK has none, so its words are single characters.
+    private static func wordRanges(_ s: String) -> [Range<String.Index>] {
+        var ranges: [Range<String.Index>] = []
+        var i = s.startIndex
+        while i < s.endIndex {
+            guard !s[i].isWhitespace else { i = s.index(after: i); continue }
+            let j = s[i...].firstIndex(where: \.isWhitespace) ?? s.endIndex
+            if s[i..<j].contains(where: isCJK) {
+                ranges += s[i..<j].indices.map { $0..<s.index(after: $0) }
+            } else {
+                ranges.append(i..<j)
+            }
+            i = j
+        }
+        return ranges
     }
 
     /// Paragraph-level recognition via the document recognizer, which groups lines into reading units.
@@ -79,20 +126,7 @@ enum TextRecognizer {
     /// Boxes come back normalized to the region of interest, not the whole image.
     private static func line(_ c: RecognizedText, box: CGRect, region: NormalizedRect, size: CGSize) -> OCRLine {
         let s = c.string
-        // Words split at spaces; CJK has none, so its words are single characters.
-        var ranges: [Range<String.Index>] = []
-        var i = s.startIndex
-        while i < s.endIndex {
-            guard !s[i].isWhitespace else { i = s.index(after: i); continue }
-            let j = s[i...].firstIndex(where: \.isWhitespace) ?? s.endIndex
-            if s[i..<j].contains(where: isCJK) {
-                ranges += s[i..<j].indices.map { $0..<s.index(after: $0) }
-            } else {
-                ranges.append(i..<j)
-            }
-            i = j
-        }
-        let words = ranges.compactMap { r in
+        let words = wordRanges(s).compactMap { r in
             c.boundingBox(for: r).map { OCRWord(rect: pixelRect(unclip($0.boundingBox.cgRect, from: region), in: size), range: r) }
         }
         return OCRLine(rect: pixelRect(unclip(box, from: region), in: size), text: s, words: words)
