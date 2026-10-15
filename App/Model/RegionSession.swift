@@ -30,6 +30,8 @@ final class RegionSession {
     private var trackTimer: Timer?
     private var mouseMonitors: [Any] = []
     private var hiddenByOcclusion = false
+    /// The followed window was seen alive in this session (so its ID is not just stale from a relaunch).
+    private var anchorSeen = false
     private var translationsVisible = true
     private var dragging = false
     private var captureUpdateRunning = false
@@ -361,11 +363,14 @@ final class RegionSession {
 
     private func trackWindow() {
         guard var anchor = config.anchor, !dragging else { return }
-        guard let w = WindowInfo.window(id: anchor.windowID) ?? refind(anchor) else {
+        let alive = WindowInfo.window(id: anchor.windowID)
+        if alive != nil { anchorSeen = true }
+        guard let w = alive ?? refind(anchor) else {
             setOccluded(true) // window closed or minimized
             return
         }
         if w.id != anchor.windowID {
+            anchorSeen = true
             anchor.windowID = w.id
             config.anchor = anchor
         }
@@ -390,10 +395,13 @@ final class RegionSession {
         onConfigChange?(config)
     }
 
-    /// Window IDs do not survive the app relaunching (or Mwoyeo's): find the window again by app and title.
+    /// Window IDs do not survive the app relaunching (or Mwoyeo's): find the window again by app and title. Any
+    /// window of the app will do only for an ID that went stale before this session; a window closed while
+    /// followed must not hand the lens to its sibling.
     private func refind(_ a: WindowAnchor) -> WindowInfo? {
         let windows = WindowInfo.onScreen()
-        return windows.first { $0.appName == a.appName && $0.title == a.title } ?? windows.first { $0.appName == a.appName }
+        return windows.first { $0.appName == a.appName && $0.title == a.title }
+            ?? (anchorSeen ? nil : windows.first { $0.appName == a.appName })
     }
 
     private func setOccluded(_ occluded: Bool) {
