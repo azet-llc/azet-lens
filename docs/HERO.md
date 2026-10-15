@@ -5,12 +5,16 @@ and the page scrolls by script, so a take can be repeated exactly.
 
 ## Shot list
 
-| t | What happens | What it shows |
+1:1 (1000×1000 pt content, exported at 1080×1080), Japanese chat → Korean, about 23 s after cutting:
+
+| Clip | What happens | What it shows |
 |---|---|---|
-| 0–4 s | A Discord-style chat in English (`demo/chat.html`) with a lens over the messages. New messages arrive and are rewritten in Korean in place. | The everyday use: reading a chat in another language |
-| 4–8 s | The lens glides up over older messages. They are already Korean as they enter it. | The lens, and reading ahead |
-| 8–12 s | The chat scrolls back down. Translations ride the scroll instead of flickering. | Scrolling |
-| 12–14 s | ⌃⌥O: original, then translation. | Before / after in one beat |
+| 1 | A Discord-style chat in Japanese (`demo/chat.html?lang=ja&every=4`); a new message arrives under the lens and turns Korean in place. | Reading a live chat in another language |
+| 2 | The cursor takes the lens by its name pill and drags it up over older messages, then back. | A lens you can drag; reading ahead |
+| 3 | The resize corner: smaller, then back. | |
+| 4 | Trackpad scroll up through the history, then down. | Translations ride the scroll |
+| 5 | ⌃⌥O: the original, then the translation. | Before / after in one beat |
+| End | `docs/media/endcard.html` rendered at 1080×1080, cross-faded in. | |
 
 ## Setting up
 

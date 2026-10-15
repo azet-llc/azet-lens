@@ -8,10 +8,10 @@ Put a lens over a chat, a feed or a game. The original text disappears and the t
 
 <p align="center">
   <code>brew install midagedev/tap/mwoyeo</code><br>
-  <sub>macOS 27 · Apple silicon · everything on-device</sub>
+  <sub>macOS 27 · Apple silicon · everything on-device · <a href="https://github.com/midagedev/mwoyeo/releases/latest">v1.0.0</a></sub>
 </p>
 
-<p align="center"><img src="docs/media/hero.gif" width="640" alt="A lens over a Japanese chat: messages are rewritten in Korean in place as they arrive, while the lens is dragged and resized and the chat scrolls."></p>
+<p align="center"><img src="docs/media/hero.gif" width="640" alt="A lens over a Japanese chat: new messages are rewritten in Korean in place; the lens is dragged and resized, the chat scrolls under it, and ⌃⌥O flips back to the original."></p>
 
 ## What it does
 
@@ -61,6 +61,9 @@ translation queue always serves what is visible first.
 
 Three render modes, in Settings: **Adaptive** (the default) draws quick translations while content moves and
 rewrites them seamlessly once it is still; **Quick** never does the slower pass; **Seamless** always does.
+
+The clip above is the real app on a made-up chat page (`demo/chat.html?lang=ja`), recorded with a real mouse and
+trackpad scrolls; `docs/HERO.md` has the shot list.
 
 The name is Korean: *mwoyeo* (뭐여) is a dialect way of saying "what's that?"
 
