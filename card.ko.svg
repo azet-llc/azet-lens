@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="660" height="96" viewBox="0 0 660 96">
+<defs>
+<linearGradient id="ring" x1="0" y1="0" x2="1" y2="1">
+<stop offset="0" stop-color="#ff9f0a"/><stop offset=".3" stop-color="#ff375f"/><stop offset=".55" stop-color="#bf5af2"/>
+<stop offset=".8" stop-color="#5e5ce6"/><stop offset="1" stop-color="#64d2ff"/></linearGradient>
+<style>
+text { font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Hiragino Sans", "PingFang SC", "Segoe UI", Helvetica, Arial, sans-serif; }
+.n { font-size: 20px; font-weight: 700; fill: #fff; }
+.s { font-size: 13px; fill: #9a9ca5; }
+.v { font-size: 26px; font-weight: 700; fill: #fff; }
+.l { font-size: 11px; font-weight: 600; fill: #9a9ca5; letter-spacing: .04em; }
+</style>
+</defs>
+<rect x="1.5" y="1.5" width="657" height="93" rx="22" fill="#141519" stroke="url(#ring)" stroke-width="2"/>
+<circle cx="40" cy="48" r="9" fill="url(#ring)"/>
+<text x="60" y="47" class="n">Mwoyeo</text>
+<text x="60" y="68" class="s">v1.0.2</text>
+<line x1="204" y1="24" x2="204" y2="72" stroke="#2a2c33"/>
+<text x="228" y="47" class="v">0</text><text x="228" y="68" class="l">설치</text><text x="368" y="47" class="v">0</text><text x="368" y="68" class="l">이번 달 사용</text><text x="528" y="47" class="v">5</text><text x="528" y="68" class="l">다운로드</text>
+</svg>
