@@ -19,33 +19,41 @@ and the page scrolls by script, so a take can be repeated exactly.
 ## Setting up
 
 ```bash
-# The chat, 1200×800 at the top-left of the main display; scripted scrolls at 9 s (up) and 11 s (down)
-open -na "Google Chrome" --args --user-data-dir=/tmp/mwoyeo-demo \
-  --app="file://$PWD/demo/chat.html?every=3&history=16&scroll=9:-500,11:500" \
-  --window-position=0,40 --window-size=1200,800
+# The chat: content area 1000×1000 at (140, 96) — the --app title bar sits above it; no translate bubble
+open -na "Google Chrome" --args --user-data-dir=/tmp/mwoyeo-demo --no-first-run \
+  --app="file://$PWD/demo/chat.html?lang=ja&every=4&history=14" \
+  --window-position=140,68 --window-size=1000,1028
 
-# A lens over the message column (global points, top-left origin), gliding up 260 pt after 5 s
-open -n build/dd/Build/Products/Release/Mwoyeo.app --args \
-  --add-region 340,330,820,380 --glide 0,-260,2.5,5
+# The source language must match the page (Settings › Translate from: Japanese).
+# A lens over the newest messages (global points, top-left origin). Launch the binary from a terminal that has
+# Screen Recording permission, so a rebuilt ad-hoc app needs no new grant.
+build/dd/Build/Products/Release/Mwoyeo.app/Contents/MacOS/Mwoyeo --add-region 470,596,620,420 &
 ```
 
-`--add-region` stores the lens like any other; remove it from the menu afterwards.
+`--add-region` stores the lens like any other; remove it from the menu afterwards. Drag, resize and scroll with the
+real mouse and trackpad: the lens's name pill moves it, its bottom-right corner resizes it.
 
 ## Before recording
 
-1. **Warm up once.** The first text recognition after launch takes tens of seconds, and translations are cached for
-   the rest of the session. Run the sequence once, reload the page, then record.
-2. **Language pack.** For Japanese scenes install Japanese → Korean (System Settings › General › Language & Region ›
-   Translation Languages); English → Korean is fast without one.
-3. **Clean screen.** Nothing but the demo window in the recorded rect.
+1. **Warm up.** Wait about 20 s after launch: the first recognition loads models and translations are cached.
+2. **Scroll once over the chat.** The first gesture over a window teaches the lens which area scrolls; until then a
+   scroll is followed frame by frame instead of predicted.
+3. **Language pack.** Japanese → Korean installed (System Settings › General › Language & Region › Translation
+   Languages) for sub-second translation.
+4. **Clean screen.** Nothing but the demo window in the recorded rect; park the cursor outside it between moves.
 
-## Recording
+## Recording and cutting
 
 Screen recording captures Mwoyeo's overlays (only Mwoyeo's own capture leaves them out):
 
 ```bash
-screencapture -v -V 14 -R 0,40,1200,800 hero.mov
-ffmpeg -i hero.mov -vf "fps=15,scale=960:-1:flags=lanczos,split[a][b];[a]palettegen[p];[b][p]paletteuse" docs/hero.gif
+screencapture -v -V 30 -R 140,96,1000,1000 take.mov
+# keep the five clips, drop the waits between them
+ffmpeg -i take.mov -filter_complex "[0:v]trim=1:5.6,setpts=PTS-STARTPTS[a];[0:v]trim=6.2:11.8,setpts=PTS-STARTPTS[b];\
+[0:v]trim=12.6:16.4,setpts=PTS-STARTPTS[c];[0:v]trim=18.2:24.6,setpts=PTS-STARTPTS[d];[0:v]trim=25.7:28.2,setpts=PTS-STARTPTS[e];\
+[a][b][c][d][e]concat=n=5,scale=1080:1080:flags=lanczos,fps=30,format=yuv420p" -c:v libx264 -crf 16 cut.mp4
+ffmpeg -i cut.mp4 -vf "fps=12,scale=640:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=128[p];[b][p]paletteuse" \
+  docs/media/hero.gif
 ```
 
-Keep the GIF under 10 MB; the full-quality video goes on the release page.
+Keep the GIF under 10 MB; the 1080×1080 video with the end card goes on the release page.
