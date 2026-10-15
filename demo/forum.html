@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>s/starfallvalley — threadly</title>
+<!--
+  A made-up forum for demos and recordings. Parameters:
+    lang=en|ja            post language (default en)
+    scroll=t:px,t:px      at t seconds, scroll the feed smoothly by px (negative = up)
+-->
+<style>
+  :root { color-scheme: dark; --bg: #0e1113; --card: #0e1113; --line: #2a3236; --text: #d7dadc; --muted: #8ba2ad; --chip: #1a2023; --accent: #ff6b3d; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); overflow: hidden;
+    font-family: "Helvetica Neue", "Hiragino Sans", "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
+  .top { height: 56px; display: flex; align-items: center; gap: 16px; padding: 0 20px; border-bottom: 1px solid var(--line); background: #0e1113; }
+  .logo { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 20px; color: #fff; letter-spacing: -.02em; }
+  .logo i { width: 32px; height: 32px; border-radius: 50%; background: conic-gradient(from 200deg, #ff6b3d, #ffb13d, #ff6b3d); display: inline-block; }
+  .search { flex: 1; max-width: 560px; margin: 0 auto; height: 40px; border-radius: 20px; background: #2a3236; display: flex; align-items: center; gap: 8px; padding: 0 16px; color: var(--muted); font-size: 14px; }
+  .search b { background: #0e1113; color: #fff; padding: 3px 10px; border-radius: 12px; font-weight: 600; }
+  .me { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #6ee7b7, #3b82f6); }
+  .page { display: grid; grid-template-columns: 220px 1fr 300px; height: calc(100% - 56px); }
+  nav { border-right: 1px solid var(--line); padding: 16px 12px; font-size: 14px; color: var(--muted); }
+  nav p { margin: 2px 0; padding: 9px 12px; border-radius: 8px; }
+  nav p.on { background: #1a2023; color: #fff; }
+  nav h4 { margin: 18px 12px 6px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+  #feed { overflow-y: auto; padding: 0 24px 40px; }
+  #feed::-webkit-scrollbar { width: 0; }
+  .banner { height: 96px; margin: 16px 0 0; border-radius: 12px; background: linear-gradient(120deg, #2a3a7a, #7f5aa8 50%, #f39a7a); }
+  .head { display: flex; align-items: flex-end; gap: 14px; margin: -28px 0 12px 16px; }
+  .head i { width: 72px; height: 72px; border-radius: 50%; border: 4px solid var(--bg); background: radial-gradient(circle at 35% 35%, #ffe6a7, #f39a7a 60%, #7f5aa8); }
+  .head h1 { margin: 0 0 6px; font-size: 26px; color: #fff; }
+  .sort { display: flex; gap: 8px; margin: 4px 0 8px; font-size: 13px; color: var(--muted); }
+  .sort span { padding: 6px 12px; border-radius: 16px; background: var(--chip); }
+  .post { border-top: 1px solid var(--line); padding: 14px 16px; border-radius: 0; }
+  .post:hover { background: #131a1d; border-radius: 16px; }
+  .meta { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+  .meta i { width: 22px; height: 22px; border-radius: 50%; display: inline-block; }
+  .meta b { color: var(--text); font-weight: 600; }
+  .post h3 { margin: 8px 0 6px; font-size: 18px; line-height: 1.35; color: #f2f4f5; font-weight: 600; }
+  .flair { display: inline-block; font-size: 12px; padding: 2px 8px; border-radius: 10px; margin-bottom: 6px; color: #0e1113; font-weight: 600; }
+  .post p { margin: 0; font-size: 14px; line-height: 1.5; color: #b8c5cb; }
+  .img { margin-top: 10px; height: 240px; border-radius: 14px; position: relative; overflow: hidden; }
+  .img.a { background: radial-gradient(circle at 72% 28%, #fff3c4 0 5%, transparent 6%), linear-gradient(180deg, #1d2b64 0%, #6a4c9c 45%, #f8b195 72%, #2b2140 73%, #120d22 100%); }
+  .img.a::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 45%; background: #120d22;
+    clip-path: polygon(0 45%, 10% 25%, 18% 50%, 30% 15%, 42% 55%, 55% 20%, 66% 45%, 78% 8%, 90% 50%, 100% 30%, 100% 100%, 0 100%); }
+  .img.b { background: linear-gradient(160deg, #0f3d3e 0%, #1f7a6d 40%, #a7e0c4 41%, #e8f6ef 100%); }
+  .img.b::after { content: "🐟"; position: absolute; font-size: 90px; left: 50%; top: 45%; transform: translate(-50%, -50%) rotate(-12deg); filter: drop-shadow(0 8px 12px #0006); }
+  .acts { display: flex; gap: 8px; margin-top: 10px; font-size: 13px; color: #d7dadc; }
+  .acts span { background: var(--chip); padding: 7px 12px; border-radius: 16px; display: flex; gap: 6px; align-items: center; }
+  .acts .vote b { color: var(--accent); }
+  aside { border-left: 1px solid var(--line); padding: 16px; font-size: 14px; color: #b8c5cb; }
+  .box { background: #161c1f; border-radius: 14px; padding: 16px; margin-bottom: 14px; }
+  .box h4 { margin: 0 0 8px; color: #fff; font-size: 15px; }
+  .box .stats { display: flex; gap: 24px; margin-top: 12px; } .box .stats b { display: block; color: #fff; font-size: 16px; }
+  .box ol { margin: 6px 0 0; padding-left: 18px; line-height: 1.9; }
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="logo"><i></i>threadly</div>
+  <div class="search"><b>s/starfallvalley</b><span id="q"></span></div>
+  <div class="me"></div>
+</div>
+<div class="page">
+  <nav id="nav"></nav>
+  <main id="feed">
+    <div class="banner"></div>
+    <div class="head"><i></i><h1>s/starfallvalley</h1></div>
+    <div class="sort" id="sort"></div>
+  </main>
+  <aside id="side"></aside>
+</div>
+<script>
+const params = new URLSearchParams(location.search);
+const lang = params.get("lang") === "ja" ? "ja" : "en";
+const T = {
+  en: {
+    q: "Search in s/starfallvalley", nav: ["Home", "Popular", "Explore", "All"], navHead: "Communities", subs: ["s/starfallvalley", "s/cozygames", "s/pixelart"],
+    sort: ["Best", "Hot", "New", "Top"], comments: "comments", share: "Share", ago: "h ago",
+    about: "Starfall Valley", aboutText: "Farming, fishing and friendship under a sky full of falling stars. Fan community.",
+    members: "members", online: "online", rules: "Rules", ruleList: ["Be kind to each other", "No spoilers in titles", "Tag your fan art"],
+    posts: [
+      ["mayafox", "#f47b67", "Discussion", "#ffd166", "Patch 1.4 finally fixed the double jump bug. What else are you hoping they fix next?", "After three months the bug where you could double jump off ladders is gone. Speedrunners are mourning, everyone else is celebrating.", "", 2412, 318, 5],
+      ["ollie_owl", "#c27cff", "Screenshot", "#8ecae6", "The sunset behind the lighthouse is the most beautiful thing in this game", "", "a", 5208, 196, 7],
+      ["junpark", "#58a6ff", "Guide", "#90e0a0", "How to catch the golden carp: the full guide (it's real, I promise)", "Go to the rocks behind the lighthouse between 8 PM and 2 AM on a clear night. Use the starlight lure and be patient — it took me forty minutes.", "b", 3877, 452, 11],
+      ["rinrin", "#f0b232", "Event", "#ffafcc", "Co-op raid tonight at 9 PM (UTC+9), looking for two more players", "We have a healer and two tanks. Bring fire resistance potions, the boss in the second room hits hard.", "", 864, 97, 13],
+      ["samwise", "#3ba55d", "Humor", "#bde0fe", "My farmer has been carrying 99 turnips for three in-game years and I don't know why", "", "", 6120, 540, 16],
+    ],
+  },
+  ja: {
+    q: "s/starfallvalley 内を検索", nav: ["ホーム", "人気", "見つける", "すべて"], navHead: "コミュニティ", subs: ["s/starfallvalley", "s/cozygames", "s/pixelart"],
+    sort: ["ベスト", "急上昇", "新着", "トップ"], comments: "件のコメント", share: "共有", ago: "時間前",
+    about: "Starfall Valley", aboutText: "流れ星の降る空の下で、農業と釣りと友情を。ファンコミュニティです。",
+    members: "メンバー", online: "オンライン", rules: "ルール", ruleList: ["お互いに親切に", "タイトルでネタバレ禁止", "ファンアートにはタグを"],
+    posts: [
+      ["mayafox", "#f47b67", "雑談", "#ffd166", "パッチ1.4でやっと二段ジャンプのバグが直った。次は何を直してほしい？", "3ヶ月かかったけど、はしごから二段ジャンプできるバグがついに消えた。RTA勢は悲しんでるけど、他のみんなはお祝いムード。", "", 2412, 318, 5],
+      ["ollie_owl", "#c27cff", "スクショ", "#8ecae6", "灯台の裏の夕焼けがこのゲームで一番きれいだと思う", "", "a", 5208, 196, 7],
+      ["junpark", "#58a6ff", "攻略", "#90e0a0", "金のコイの釣り方：完全ガイド（本当にいるよ）", "晴れた夜の午後8時から午前2時の間に灯台の裏の岩場へ。星明かりのルアーを使って気長に待とう。私は40分かかった。", "b", 3877, 452, 11],
+      ["rinrin", "#f0b232", "イベント", "#ffafcc", "今夜21時（日本時間）から協力レイド、あと2人募集中", "ヒーラー1人とタンク2人はいます。2部屋目のボスの攻撃が痛いので、炎耐性ポーションを持ってきてね。", "", 864, 97, 13],
+      ["samwise", "#3ba55d", "ネタ", "#bde0fe", "うちの農家、ゲーム内で3年間ずっとカブを99個持ち歩いてるんだけど理由がわからない", "", "", 6120, 540, 16],
+    ],
+  },
+}[lang];
+
+const k = n => n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, "") + "k" : String(n);
+document.getElementById("q").textContent = T.q;
+document.getElementById("nav").innerHTML = T.nav.map((n, i) => `<p class="${i === 0 ? "" : ""}">${n}</p>`).join("")
+  + `<h4>${T.navHead}</h4>` + T.subs.map((s, i) => `<p class="${i === 0 ? "on" : ""}">${s}</p>`).join("");
+document.getElementById("sort").innerHTML = T.sort.map(s => `<span>${s}</span>`).join("");
+document.getElementById("side").innerHTML = `<div class="box"><h4>${T.about}</h4><div>${T.aboutText}</div>
+  <div class="stats"><div><b>184k</b>${T.members}</div><div><b>2.1k</b>${T.online}</div></div></div>
+  <div class="box"><h4>${T.rules}</h4><ol>${T.ruleList.map(r => `<li>${r}</li>`).join("")}</ol></div>`;
+const feed = document.getElementById("feed");
+for (const [user, color, flair, flairColor, title, body, img, votes, comments, hours] of [...T.posts, ...T.posts]) {
+  const el = document.createElement("article");
+  el.className = "post";
+  el.innerHTML = `<div class="meta"><i style="background:${color}"></i><b>u/${user}</b> · ${hours}${T.ago}</div>
+    <h3></h3><span class="flair" style="background:${flairColor}">${flair}</span>
+    ${body ? "<p></p>" : ""}${img ? `<div class="img ${img}"></div>` : ""}
+    <div class="acts"><span class="vote">▲ <b>${k(votes)}</b> ▼</span><span>💬 ${lang === "ja" ? k(comments) + "件" : k(comments) + " " + T.comments}</span><span>↗ ${T.share}</span></div>`;
+  el.querySelector("h3").textContent = title;
+  if (body) el.querySelector("p").textContent = body;
+  feed.appendChild(el);
+}
+for (const step of (params.get("scroll") || "").split(",").filter(Boolean)) {
+  const [t, px] = step.split(":").map(Number);
+  setTimeout(() => feed.scrollBy({ top: px, behavior: "smooth" }), t * 1000);
+}
+</script>
+</body>
+</html>

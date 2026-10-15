@@ -1,5 +1,6 @@
 #!/bin/zsh
-# Builds, signs, notarizes and packages Mwoyea, and optionally publishes it.
+# Builds, signs, notarizes and packages Mwoyea, and optionally publishes it from this Mac.
+# Releases normally come from CI (.github/workflows/release.yml, on a v* tag); this is the same build, run locally.
 #
 #   scripts/release.sh 1.0.0             # → build/release/Mwoyea-1.0.0-arm64.dmg (notarized, stapled)
 #   scripts/release.sh 1.0.0 --publish   # … then the GitHub release and the Homebrew cask
@@ -64,31 +65,7 @@ gh release create "v$VERSION" "$DMG" --repo midagedev/mwoyea --title "Mwoyea $VE
 echo "==> Homebrew cask"
 TAP=$OUT/homebrew-tap
 gh repo clone midagedev/homebrew-tap "$TAP" -- --depth 1 -q
-cat > "$TAP/Casks/mwoyea.rb" <<EOF
-cask "mwoyea" do
-  version "$VERSION"
-  sha256 "$SHA"
-
-  url "https://github.com/midagedev/mwoyea/releases/download/v#{version}/Mwoyea-#{version}-arm64.dmg"
-  name "Mwoyea"
-  desc "Live, in-place screen translation"
-  homepage "https://github.com/midagedev/mwoyea"
-
-  depends_on arch: :arm64
-
-  app "Mwoyea.app"
-
-  zap trash: "~/Library/Preferences/dev.midagedev.mwoyea.plist"
-
-  caveats <<~EOS
-    Mwoyea needs macOS 27 and Screen Recording permission (asked on first launch).
-    The first text recognition after launch can take up to a minute while the model loads.
-  EOS
-end
-EOF
-grep -q "midagedev/tap/mwoyea" "$TAP/README.md" ||
-  sed -i '' 's|^brew install midagedev/tap/gadak        # |brew install midagedev/tap/mwoyea       # live, in-place screen translation (macOS 27)\
-brew install midagedev/tap/gadak        # |' "$TAP/README.md"
+scripts/cask.sh "$VERSION" "$SHA" > "$TAP/Casks/mwoyea.rb"
 git -C "$TAP" add -A
 git -C "$TAP" commit -qm "mwoyea $VERSION"
 git -C "$TAP" push -q

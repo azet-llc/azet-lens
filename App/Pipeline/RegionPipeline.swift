@@ -740,7 +740,8 @@ actor RegionPipeline {
     private func renderMissing() {
         for i in blocks.indices where blocks[i].image == nil {
             let b = blocks[i]
-            guard let text = b.translation, !text.isEmpty else { continue }
+            // A translation equal to the source means "leave it": no box, no erase, the original stays.
+            guard let text = b.translation, !text.isEmpty, text != b.source else { continue }
             let heights = b.lines.map(\.height).sorted()
             let lineHeight = heights.isEmpty ? b.rect.height : heights[heights.count / 2]
             let background: BlockRenderer.Background = b.erased.map { .erased($0) }

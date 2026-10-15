@@ -6,3 +6,4 @@ DerivedData/
 Config/Local.xcconfig
 .test.log
 .build.log
+.claude/

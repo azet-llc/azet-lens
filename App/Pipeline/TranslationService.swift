@@ -77,8 +77,13 @@ actor TranslationService {
         var result: [String: String] = [:]
         var todo: [String] = []
         var seen = Set<String>()
+        let cjkSource = ["ja", "zh-Hans", "zh-Hant", "ko"].contains(pageLanguage ?? "")
         for t in texts where seen.insert(t).inserted {
-            if let hit = cache[t] {
+            if !TranslationFilter.needsTranslation(t, cjkSource: cjkSource) {
+                // Not source-language text (a handle, a brand, a counter): kept as is, and the pipeline leaves it alone.
+                result[t] = t
+                onResult?(t, t)
+            } else if let hit = cache[t] {
                 result[t] = hit
                 onResult?(t, hit)
             } else {
@@ -166,7 +171,7 @@ actor TranslationService {
         var out: [String: String] = [:]
         for try await r in session.translate(batch: requests) {
             guard let id = r.clientIdentifier, let i = Int(id), i < items.count else { continue }
-            let t = applyGlossary(TranslationCleanup.standaloneJamo(r.targetText), source: items[i])
+            let t = applyGlossary(TranslationCleanup.restoreSourceTokens(TranslationCleanup.standaloneJamo(r.targetText), source: items[i]), source: items[i])
             out[items[i]] = t
             onResult(items[i], t)
         }
@@ -188,6 +193,11 @@ actor TranslationService {
     /// Languages seen in confidently detected text, so short or ambiguous snippets ("# fan-art", a user name)
     /// follow the page instead of being guessed as Catalan.
     private var seenLanguages: [String: Int] = [:]
+
+    /// The configured source language, or the language most of the page's longer lines were detected in.
+    private var pageLanguage: String? {
+        settings.sourceLanguage != "auto" ? settings.sourceLanguage : seenLanguages.max { $0.value < $1.value }?.key
+    }
 
     /// The configured source language, or the language of `text` when set to auto ("und" if unsure).
     func sourceLanguage(for text: String) -> String {

@@ -1,49 +1,47 @@
 # Hero clip
 
-One 15-second loop for the README and social posts. Everything in it is the real app on a real screen — no editing
-beyond trimming.
+One short loop for the README and social posts. Everything in it is the real app on a real screen; the lens moves
+and the page scrolls by script, so a take can be repeated exactly.
 
 ## Shot list
 
 | t | What happens | What it shows |
 |---|---|---|
-| 0–2 s | A Japanese visual novel fills the screen (`demo/vn.html`). ⌃⌥T, drag a lens over the dialogue box and the choices. | Picking is instant and native |
-| 2–5 s | The Japanese dissolves; Korean appears in the same place, size and colour, on the untouched painted background. | Seamless erase + rewrite, not a box |
-| 5–9 s | Grab the lens edge and glide it up across the title. The title is already Korean as it enters the lens. | The lens, and reading ahead |
-| 9–12 s | Cut to a Japanese article in Chrome (`demo/article.html`), lens on the body text, scroll with the trackpad. | Translations ride the scroll |
-| 12–14 s | ⌃⌥O twice: original, translation. | Before / after in one beat |
-| 14–15 s | End card: icon, “뭐여? 이제 바로 읽혀요.”, “100% on-device”. | |
+| 0–4 s | A Discord-style chat in English (`demo/chat.html`) with a lens over the messages. New messages arrive and are rewritten in Korean in place. | The everyday use: reading a chat in another language |
+| 4–8 s | The lens glides up over older messages. They are already Korean as they enter it. | The lens, and reading ahead |
+| 8–12 s | The chat scrolls back down. Translations ride the scroll instead of flickering. | Scrolling |
+| 12–14 s | ⌃⌥O: original, then translation. | Before / after in one beat |
+
+## Setting up
+
+```bash
+# The chat, 1200×800 at the top-left of the main display; scripted scrolls at 9 s (up) and 11 s (down)
+open -na "Google Chrome" --args --user-data-dir=/tmp/mwoyeo-demo \
+  --app="file://$PWD/demo/chat.html?every=3&history=16&scroll=9:-500,11:500" \
+  --window-position=0,40 --window-size=1200,800
+
+# A lens over the message column (global points, top-left origin), gliding up 260 pt after 5 s
+open -n build/dd/Build/Products/Release/Mwoyeo.app --args \
+  --add-region 340,330,820,380 --glide 0,-260,2.5,5
+```
+
+`--add-region` stores the lens like any other; remove it from the menu afterwards.
 
 ## Before recording
 
-1. **Language pack.** Install Japanese → Korean (System Settings › General › Language & Region › Translation
-   Languages). With it, new lines translate fast enough to keep up with a drag; without it each sentence takes
-   about a second.
-2. **Warm up once.** Run the whole sequence one time before the take. The first text recognition after launch takes
-   tens of seconds, and translations are cached for the rest of the session, so the take itself is instant.
-3. **Clean screen.** Hide the Dock and desktop icons, use a plain wallpaper, set Chrome to full screen.
-
-## Setting up the scenes
-
-```bash
-# Visual novel, 1440×900 window at the top-left of the main display
-open -na "Google Chrome" --args --app="file://$PWD/demo/vn.html" --window-position=0,0 --window-size=1440,900
-
-# Article
-open -na "Google Chrome" --args --app="file://$PWD/demo/article.html" --window-position=0,0 --window-size=1440,900
-
-# Start with a lens already placed (global points, top-left origin) instead of picking one on camera
-open -a build/dd/Build/Products/Release/Mwoyea.app --args --add-region 86,560,1268,260
-```
+1. **Warm up once.** The first text recognition after launch takes tens of seconds, and translations are cached for
+   the rest of the session. Run the sequence once, reload the page, then record.
+2. **Language pack.** For Japanese scenes install Japanese → Korean (System Settings › General › Language & Region ›
+   Translation Languages); English → Korean is fast without one.
+3. **Clean screen.** Nothing but the demo window in the recorded rect.
 
 ## Recording
 
-Screen Recording captures Mwoyea's overlays (only Mwoyea's own capture leaves them out), so any recorder works:
-⌘⇧5, QuickTime, or
+Screen recording captures Mwoyeo's overlays (only Mwoyeo's own capture leaves them out):
 
 ```bash
-screencapture -v -C hero.mov       # stop with ⌃C
-ffmpeg -i hero.mov -vf "fps=30,scale=1440:-2" -c:v libx264 -crf 20 -pix_fmt yuv420p docs/hero.mp4
+screencapture -v -V 14 -R 0,40,1200,800 hero.mov
+ffmpeg -i hero.mov -vf "fps=15,scale=960:-1:flags=lanczos,split[a][b];[a]palettegen[p];[b][p]paletteuse" docs/hero.gif
 ```
 
-Keep the pointer movements slow and deliberate — the lens should glide, not jump.
+Keep the GIF under 10 MB; the full-quality video goes on the release page.

@@ -2,86 +2,169 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>#general — Pixel Pals</title>
+<title>#general — Starfall Valley</title>
+<!--
+  A made-up chat app for demos and recordings. Parameters:
+    lang=en|ja            message language (default en)
+    every=N               a new message every N seconds (0 = none, default 4)
+    history=N             messages already in the log (default 10)
+    scroll=t:px,t:px      at t seconds, scroll the log smoothly by px (negative = up)
+-->
 <style>
-  :root { color-scheme: dark; --bg: #313338; --side: #2b2d31; --rail: #1e1f22; --text: #dbdee1; --muted: #949ba4; --line: #3f4147; }
+  :root { color-scheme: dark; --bg: #313338; --side: #2b2d31; --rail: #1e1f22; --text: #dbdee1; --muted: #949ba4; --hover: #2e3035; }
   * { box-sizing: border-box; }
-  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
-    font-family: "gg sans", "Helvetica Neue", "Segoe UI", sans-serif; overflow: hidden; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); overflow: hidden;
+    font-family: "Helvetica Neue", "Hiragino Sans", "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
   .app { display: grid; grid-template-columns: 72px 240px 1fr; height: 100%; }
   .rail { background: var(--rail); display: flex; flex-direction: column; align-items: center; gap: 8px; padding-top: 12px; }
-  .rail div { width: 48px; height: 48px; border-radius: 16px; background: #5865f2; }
-  .rail div:nth-child(2) { background: #23a55a; border-radius: 50%; } .rail div:nth-child(3) { background: #f0b232; border-radius: 50%; }
-  .side { background: var(--side); padding: 14px 10px; }
-  .side h2 { font-size: 16px; margin: 4px 8px 18px; color: #f2f3f5; }
-  .side p { margin: 2px 0; padding: 6px 8px; border-radius: 4px; color: var(--muted); font-size: 15px; }
+  .rail div { width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; color: #fff; font-size: 18px; }
+  .rail .on { border-radius: 16px; background: linear-gradient(135deg, #7c5cff, #ff6a88); }
+  .rail hr { width: 32px; border: 0; border-top: 2px solid #35363c; margin: 2px 0; }
+  .side { background: var(--side); display: flex; flex-direction: column; }
+  .side h2 { font-size: 16px; margin: 0; padding: 16px; color: #f2f3f5; border-bottom: 1px solid #1f2023; }
+  .side .cat { margin: 18px 16px 4px; font-size: 12px; font-weight: 700; letter-spacing: .02em; color: var(--muted); text-transform: uppercase; }
+  .side p { margin: 1px 8px; padding: 6px 8px; border-radius: 4px; color: var(--muted); font-size: 15px; }
   .side p.on { background: #404249; color: #f2f3f5; }
+  .side p.unread { color: #f2f3f5; font-weight: 600; }
+  .me { margin-top: auto; background: #232428; padding: 10px; display: flex; align-items: center; gap: 8px; font-size: 14px; }
+  .me i { width: 32px; height: 32px; border-radius: 50%; background: #5865f2; }
   .main { display: flex; flex-direction: column; min-width: 0; }
-  header { height: 48px; display: flex; align-items: center; padding: 0 16px; border-bottom: 1px solid #26272b; font-weight: 600; color: #f2f3f5; }
-  header span { color: var(--muted); font-weight: 400; margin-left: 12px; font-size: 14px; }
-  #log { flex: 1; overflow-y: auto; padding: 16px 0 8px; scroll-behavior: smooth; }
-  .msg { display: grid; grid-template-columns: 56px 1fr; padding: 6px 16px 6px 8px; }
-  .msg:hover { background: #2e3035; }
-  .av { width: 40px; height: 40px; border-radius: 50%; margin: 2px 0 0 8px; }
+  header { height: 48px; flex: none; display: flex; align-items: center; padding: 0 16px; border-bottom: 1px solid #26272b; font-weight: 600; color: #f2f3f5; }
+  header span { color: var(--muted); font-weight: 400; margin-left: 12px; font-size: 14px; border-left: 1px solid #3f4147; padding-left: 12px; }
+  #log { flex: 1; overflow-y: auto; padding: 16px 0 8px; }
+  #log::-webkit-scrollbar { width: 0; }
+  .day { display: flex; align-items: center; gap: 8px; margin: 8px 16px; color: var(--muted); font-size: 12px; font-weight: 600; }
+  .day::before, .day::after { content: ""; flex: 1; border-top: 1px solid #3f4147; }
+  .msg { display: grid; grid-template-columns: 56px 1fr; padding: 4px 48px 4px 8px; margin-top: 12px; }
+  .msg:hover { background: var(--hover); }
+  .av { width: 40px; height: 40px; border-radius: 50%; margin: 2px 0 0 8px; display: grid; place-items: center; font-size: 20px; }
   .who { font-weight: 600; font-size: 16px; } .who time { color: var(--muted); font-size: 12px; font-weight: 400; margin-left: 8px; }
-  .body { font-size: 16px; line-height: 1.45; margin-top: 2px; }
-  .new { animation: pop .35s ease-out; } @keyframes pop { from { opacity: 0; transform: translateY(6px); } }
-  footer { padding: 0 16px 24px; } footer div { background: #383a40; border-radius: 8px; padding: 12px 16px; color: var(--muted); }
+  .tag { font-size: 10px; font-weight: 700; padding: 1px 5px; border-radius: 4px; margin-left: 6px; vertical-align: 2px; color: #fff; }
+  .body { font-size: 16px; line-height: 1.4; margin-top: 2px; }
+  .reply { font-size: 13px; color: var(--muted); margin: 0 0 2px; display: flex; align-items: center; gap: 6px; }
+  .reply::before { content: ""; width: 28px; height: 10px; margin-left: -34px; border: 2px solid #4e5058; border-right: 0; border-bottom: 0; border-top-left-radius: 6px; }
+  .reacts { display: flex; gap: 4px; margin-top: 6px; }
+  .reacts span { background: #2b2d31; border: 1px solid #3a3c42; border-radius: 8px; padding: 2px 8px; font-size: 14px; color: #dbdee1; }
+  .reacts span.mine { background: #373a6a; border-color: #5865f2; }
+  .shot { margin-top: 8px; width: 360px; height: 190px; border-radius: 8px; position: relative; overflow: hidden;
+    background: radial-gradient(circle at 70% 30%, #ffe6a7 0 6%, transparent 7%), linear-gradient(180deg, #2a3a7a 0%, #7f5aa8 45%, #f39a7a 70%, #2b2140 71%, #1a1430 100%); }
+  .shot::after { content: ""; position: absolute; inset: auto 0 0 0; height: 40%;
+    background: repeating-linear-gradient(90deg, #1b1430 0 18px, #241a3e 18px 30px); clip-path: polygon(0 40%, 8% 20%, 16% 45%, 26% 10%, 38% 50%, 52% 15%, 63% 40%, 75% 5%, 88% 45%, 100% 25%, 100% 100%, 0 100%); }
+  .new { animation: pop .35s ease-out; } @keyframes pop { from { opacity: 0; transform: translateY(8px); } }
+  footer { padding: 0 16px 8px; flex: none; }
+  footer .box { background: #383a40; border-radius: 8px; padding: 12px 16px; color: var(--muted); display: flex; gap: 12px; align-items: center; }
+  footer .box b { width: 24px; height: 24px; border-radius: 50%; background: #b5bac1; color: #383a40; display: grid; place-items: center; font-size: 18px; }
+  .typing { height: 22px; padding: 2px 16px 0; font-size: 13px; color: var(--muted); }
+  .typing b { color: #dbdee1; }
+  .dots { display: inline-block; width: 22px; } .dots i { display: inline-block; width: 5px; height: 5px; margin-right: 2px; border-radius: 50%; background: #b5bac1; animation: blink 1.2s infinite; }
+  .dots i:nth-child(2) { animation-delay: .2s } .dots i:nth-child(3) { animation-delay: .4s }
+  @keyframes blink { 0%, 60%, 100% { opacity: .3 } 30% { opacity: 1 } }
 </style>
 </head>
 <body>
 <div class="app">
-  <nav class="rail"><div></div><div></div><div></div></nav>
+  <nav class="rail"><div class="on">SV</div><hr><div style="background:#23a55a">🎮</div><div style="background:#f0b232">⛏</div><div style="background:#eb459e">🎨</div></nav>
   <aside class="side">
-    <h2>Pixel Pals</h2>
-    <p># announcements</p><p class="on"># general</p><p># speedrunning</p><p># fan-art</p><p># memes</p><p>🔊 Lounge</p>
+    <h2>Starfall Valley</h2>
+    <div class="cat">Info</div><p># announcements</p><p># patch-notes</p>
+    <div class="cat">Community</div><p class="on"># general</p><p class="unread"># speedrun</p><p># fan-art</p><p># fishing-spots</p><p>🔊 Lounge</p>
+    <div class="me"><i></i><div><div style="color:#f2f3f5;font-weight:600">you</div><div style="color:#949ba4;font-size:12px">Online</div></div></div>
   </aside>
   <section class="main">
-    <header># general <span>Talk about anything. Be nice.</span></header>
-    <div id="log"></div>
-    <footer><div>Message #general</div></footer>
+    <header># general <span id="topic"></span></header>
+    <div id="log"><div class="day" id="day"></div></div>
+    <footer><div class="box"><b>+</b><span id="placeholder"></span></div></footer>
+    <div class="typing" id="typing"></div>
   </section>
 </div>
 <script>
-const people = { maya: ["Maya", "#f47b67"], jun: ["junpark", "#58a6ff"], ollie: ["Ollie 🌙", "#c27cff"], sam: ["samwise", "#3ba55d"], rin: ["rinrin", "#f0b232"] };
-const script = [
-  ["maya", "ok who stayed up for the patch notes last night"],
-  ["jun", "guilty. they finally fixed the double jump bug, I can't believe it took three months"],
-  ["ollie", "wait does that mean the skip in world 4 is dead?? I spent all weekend learning it"],
-  ["sam", "lol rip. honestly the skip was kind of broken anyway"],
-  ["rin", "Is anyone doing the co-op event tonight? I need two more people for the raid"],
-  ["maya", "I'm in! what time are you thinking"],
-  ["rin", "Around 9 my time, so like an hour from now?"],
-  ["jun", "count me in too, just let me finish dinner first"],
-  ["ollie", "Has anyone tried the new fishing spot behind the lighthouse? Someone on Reddit said you can catch a golden carp there at night"],
-  ["sam", "that thread was wild, half the comments were people saying it's fake and the other half posting screenshots"],
-  ["maya", "I caught one yesterday!! took me like forty minutes but it's real"],
-  ["rin", "Okay that settles it, we're going fishing after the raid"],
-  ["jun", "the devs replied on the subreddit btw, they said more secret spots are coming in the next update"],
-  ["ollie", "this is the best community I've ever been part of, no joke"],
-  ["sam", "don't get sappy on us now ollie"],
-  ["maya", "too late, I'm already emotional"],
-  ["rin", "Raid starts in five minutes, everyone grab your gear!"],
-];
+const params = new URLSearchParams(location.search);
+const lang = params.get("lang") === "ja" ? "ja" : "en";
+const people = {
+  maya: ["Maya", "#f47b67", "🦊", "MOD", "#5865f2"], jun: ["junpark", "#58a6ff", "🐧"], ollie: ["Ollie 🌙", "#c27cff", "🦉"],
+  sam: ["samwise", "#3ba55d", "🐸"], rin: ["rinrin", "#f0b232", "🐱", "EVENT", "#eb459e"],
+};
+const ui = {
+  en: { topic: "Talk about anything. Be nice.", day: "Today", box: "Message #general", typing: "is typing…" },
+  ja: { topic: "雑談なんでもOK。仲良くね。", day: "今日", box: "#general へメッセージを送信", typing: "が入力中…" },
+}[lang];
+// [who, text, extra]: extra = { reply: "who", reacts: [[emoji, n, mine]], shot: true }
+const script = {
+  en: [
+    ["maya", "ok who stayed up for the patch notes last night"],
+    ["jun", "guilty. they finally fixed the double jump bug, I can't believe it took three months", { reacts: [["😭", 4], ["🙏", 2, true]] }],
+    ["ollie", "wait does that mean the skip in world 4 is dead?? I spent all weekend learning it", { reply: "jun" }],
+    ["sam", "lol rip. honestly the skip was kind of broken anyway"],
+    ["rin", "Is anyone doing the co-op event tonight? I need two more people for the raid", { reacts: [["🙋", 3]] }],
+    ["maya", "I'm in! what time are you thinking"],
+    ["rin", "Around 9 my time, so like an hour from now?"],
+    ["ollie", "Someone said you can catch a golden carp behind the lighthouse at night. Look at this sunset though", { shot: true }],
+    ["sam", "that thread was wild, half the comments were saying it's fake", { reply: "ollie" }],
+    ["maya", "I caught one yesterday!! took me like forty minutes but it's real", { reacts: [["🐟", 7], ["👑", 3, true]] }],
+    ["jun", "the devs said more secret spots are coming in the next update"],
+    ["rin", "Okay that settles it, we're going fishing after the raid"],
+    ["ollie", "this is the best community I've ever been part of, no joke", { reacts: [["💜", 9, true]] }],
+    ["sam", "don't get sappy on us now ollie"],
+    ["maya", "too late, I'm already emotional"],
+    ["rin", "Raid starts in five minutes, everyone grab your gear!", { reacts: [["⚔️", 5]] }],
+  ],
+  ja: [
+    ["maya", "昨日の夜パッチノート待ってて起きてた人いる？"],
+    ["jun", "はい私。二段ジャンプのバグやっと直ったね、3ヶ月もかかるとは思わなかった", { reacts: [["😭", 4], ["🙏", 2, true]] }],
+    ["ollie", "え、じゃあワールド4のショートカットもう使えないの？？週末ずっと練習してたのに", { reply: "jun" }],
+    ["sam", "草。正直あのショートカットはバグっぽかったしね"],
+    ["rin", "今夜の協力イベント行く人いる？レイドにあと2人ほしい", { reacts: [["🙋", 3]] }],
+    ["maya", "行く！何時からにする？"],
+    ["rin", "こっちの時間で9時ごろ、つまり1時間後くらい？"],
+    ["ollie", "灯台の裏で夜に金のコイが釣れるって噂あるよね。それよりこの夕焼け見て", { shot: true }],
+    ["sam", "あのスレやばかったよね、コメントの半分はガセだって言ってた", { reply: "ollie" }],
+    ["maya", "昨日釣れたよ！！40分くらいかかったけど本当にいる", { reacts: [["🐟", 7], ["👑", 3, true]] }],
+    ["jun", "運営が次のアプデで隠しスポットもっと増やすって言ってた"],
+    ["rin", "よし決まり、レイド終わったら釣り行こう"],
+    ["ollie", "マジでここが今までで一番いいコミュニティだわ", { reacts: [["💜", 9, true]] }],
+    ["sam", "急にしんみりするのやめてｗ"],
+    ["maya", "もう遅い、すでに泣いてる"],
+    ["rin", "レイドあと5分で始まるよ、みんな装備準備して！", { reacts: [["⚔️", 5]] }],
+  ],
+}[lang];
+
+document.getElementById("topic").textContent = ui.topic;
+document.getElementById("day").textContent = ui.day;
+document.getElementById("placeholder").textContent = ui.box;
 const log = document.getElementById("log");
 let i = 0, minute = 12;
+
 function add(animate) {
-  const [who, text] = script[i % script.length];
-  const [name, color] = people[who];
+  const [who, text, extra = {}] = script[i % script.length];
+  const [name, color, emoji, tag, tagColor] = people[who];
   const el = document.createElement("div");
   el.className = "msg" + (animate ? " new" : "");
-  el.innerHTML = `<div class="av" style="background:${color}"></div><div><div class="who" style="color:${color}">${name}<time>Today at 8:${String(minute).padStart(2, "0")} PM</time></div><div class="body"></div></div>`;
+  const time = `${lang === "ja" ? "今日 20:" : "Today at 8:"}${String(minute).padStart(2, "0")}${lang === "ja" ? "" : " PM"}`;
+  el.innerHTML = `<div class="av" style="background:${color}33">${emoji}</div><div>`
+    + (extra.reply ? `<div class="reply"><span style="color:${people[extra.reply][1]}">@${people[extra.reply][0]}</span></div>` : "")
+    + `<div class="who" style="color:${color}">${name}${tag ? `<span class="tag" style="background:${tagColor}">${tag}</span>` : ""}<time>${time}</time></div>`
+    + `<div class="body"></div>`
+    + (extra.shot ? `<div class="shot"></div>` : "")
+    + (extra.reacts ? `<div class="reacts">${extra.reacts.map(([e, n, mine]) => `<span class="${mine ? "mine" : ""}">${e} ${n}</span>`).join("")}</div>` : "")
+    + `</div>`;
   el.querySelector(".body").textContent = text;
   const atBottom = log.scrollHeight - log.scrollTop - log.clientHeight < 40;
   log.appendChild(el);
   i++; minute = Math.min(59, minute + 1);
-  if (atBottom) log.scrollTop = log.scrollHeight; // like Discord: stay put while reading back
+  if (atBottom) log.scrollTo({ top: log.scrollHeight, behavior: animate ? "smooth" : "auto" }); // stay put while reading back
 }
-const params = new URLSearchParams(location.search);
+
 for (let k = 0; k < Number(params.get("history") || 10); k++) add(false);
+log.scrollTop = log.scrollHeight;
 const every = Number(params.get("every") || 4);
-if (every > 0) setInterval(() => add(true), every * 1000);
-// ?scroll=t1:px,t2:px — at t seconds, scroll the log smoothly by px (negative = up), for scripted recordings.
+const typing = document.getElementById("typing");
+if (every > 0) {
+  setInterval(() => {
+    const [who] = script[i % script.length];
+    typing.innerHTML = `<span class="dots"><i></i><i></i><i></i></span> <b>${people[who][0]}</b> ${ui.typing}`;
+    setTimeout(() => { typing.textContent = ""; add(true); }, Math.min(1500, every * 400));
+  }, every * 1000);
+}
 for (const step of (params.get("scroll") || "").split(",").filter(Boolean)) {
   const [t, px] = step.split(":").map(Number);
   setTimeout(() => log.scrollBy({ top: px, behavior: "smooth" }), t * 1000);

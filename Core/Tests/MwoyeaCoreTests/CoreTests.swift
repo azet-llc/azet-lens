@@ -314,3 +314,26 @@ func texture(width: Int, height: Int, seed: Int = 1) -> GrayImage {
     // A leading consonant followed by a vowel is part of a syllable and stays.
     #expect(TranslationCleanup.standaloneJamo("\u{1100}\u{1161}") == "\u{1100}\u{1161}")
 }
+
+@Test func translationFilterKeepsWhatIsNotSourceText() {
+    // Japanese page: only lines with Japanese in them are translated.
+    #expect(TranslationFilter.needsTranslation("パッチ1.4でバグが直った", cjkSource: true))
+    #expect(TranslationFilter.needsTranslation("318件", cjkSource: true))
+    #expect(!TranslationFilter.needsTranslation("threadly", cjkSource: true))
+    #expect(!TranslationFilter.needsTranslation("Starfall Valley", cjkSource: true))
+    #expect(!TranslationFilter.needsTranslation("4 2.4k ▼", cjkSource: true))
+    // English page: words are translated; handles, links and counters are not.
+    #expect(TranslationFilter.needsTranslation("Is anyone doing the raid tonight?", cjkSource: false))
+    #expect(TranslationFilter.needsTranslation("Share", cjkSource: false))
+    #expect(!TranslationFilter.needsTranslation("2.4k", cjkSource: false))
+    #expect(!TranslationFilter.needsTranslation("u/ollie_owl", cjkSource: false))
+    #expect(!TranslationFilter.needsTranslation("@junpark", cjkSource: false))
+    #expect(!TranslationFilter.needsTranslation("https://example.com/a", cjkSource: false))
+    #expect(!TranslationFilter.needsTranslation("— 12 —", cjkSource: false))
+}
+
+@Test func restoresSourceTokenCase() {
+    #expect(TranslationCleanup.restoreSourceTokens("S/starfallvalley 내 검색", source: "s/starfallvalley 内を検索") == "s/starfallvalley 내 검색")
+    #expect(TranslationCleanup.restoreSourceTokens("U/mayafox · 5시간 전", source: "u/mayafox · 5時間前") == "u/mayafox · 5시간 전")
+    #expect(TranslationCleanup.restoreSourceTokens("RTA 멤버들은", source: "RTA勢は") == "RTA 멤버들은")
+}

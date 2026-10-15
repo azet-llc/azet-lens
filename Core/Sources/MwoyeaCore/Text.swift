@@ -196,6 +196,22 @@ public enum TranslationCleanup {
         return String(out)
     }
 
+    /// Translators capitalise the first letter of a sentence, which turns "s/starfallvalley" into
+    /// "S/starfallvalley". Latin tokens copied from the source get their original spelling back.
+    public static func restoreSourceTokens(_ translated: String, source: String) -> String {
+        let tokens = source.matches(of: /[A-Za-z][A-Za-z0-9_\/.\-]*/).map { String($0.output) }
+        guard !tokens.isEmpty else { return translated }
+        var out = translated
+        for token in Set(tokens) {
+            var start = out.startIndex
+            while let r = out.range(of: token, options: .caseInsensitive, range: start..<out.endIndex) {
+                if out[r] != token { out.replaceSubrange(r, with: token) }
+                start = out.index(r.lowerBound, offsetBy: token.count)
+            }
+        }
+        return out
+    }
+
     /// Models asked to translate a numbered list often echo the numbering ("3. 게임 종료"). Strip it,
     /// but only when the source line did not itself start with that number.
     public static func stripEchoedNumbering(_ translated: String, index: Int, source: String) -> String {
@@ -208,5 +224,29 @@ public enum TranslationCleanup {
         guard let sep = rest.first, ".)：:、".contains(sep) else { return translated }
         rest = rest.dropFirst()
         return rest.trimmingCharacters(in: .whitespaces)
+    }
+}
+
+/// Decides which recognised lines are worth translating. Lines that are not in the source language at all —
+/// handles, brand names, counters like "2.4k", icon glyphs read as digits — are left on screen untouched.
+public enum TranslationFilter {
+    /// `cjkSource`: the source (configured, or the page's dominant language) is Japanese, Chinese or Korean.
+    public static func needsTranslation(_ text: String, cjkSource: Bool) -> Bool {
+        let scalars = text.unicodeScalars
+        if cjkSource { return scalars.contains(where: isCJK) }
+        guard scalars.contains(where: { CharacterSet.letters.contains($0) }) else { return false }
+        let t = text.trimmingCharacters(in: .whitespaces)
+        if t.contains("://") || t.hasPrefix("@") || t.range(of: #"^[a-z]{1,2}/\S+$"#, options: .regularExpression) != nil { return false }
+        // One token mixing letters with digits or code punctuation ("2.4k", "user_42", "v1.4.2").
+        if !t.contains(" "), t.range(of: #"[0-9_./]"#, options: .regularExpression) != nil { return false }
+        return true
+    }
+
+    static func isCJK(_ s: Unicode.Scalar) -> Bool {
+        switch s.value {
+        case 0x3040...0x30FF, 0x3400...0x4DBF, 0x4E00...0x9FFF, 0xF900...0xFAFF, 0xFF66...0xFF9D, // kana, han, half-width kana
+             0x1100...0x11FF, 0x3130...0x318F, 0xAC00...0xD7AF: true                                 // hangul
+        default: false
+        }
     }
 }
