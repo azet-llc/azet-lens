@@ -32,6 +32,7 @@ func texture(width: Int, height: Int, seed: Int = 1) -> GrayImage {
         #expect(m.changedCount == 1)
         #expect(m.changed[1 * 4 + 2])
         #expect(m.dirtyRect == PixelRect(x: 32, y: 16, width: 16, height: 16))
+        #expect(m.dirtyRect(outside: [PixelRect(x: 30, y: 0, width: 20, height: 48)]) == nil)
         #expect(m.intersects(PixelRect(x: 40, y: 0, width: 4, height: 48)))
         #expect(!m.intersects(PixelRect(x: 0, y: 0, width: 30, height: 48)))
     }
@@ -56,7 +57,7 @@ func texture(width: Int, height: Int, seed: Int = 1) -> GrayImage {
             GrayImage(width: 80, height: 120, pixels: Array(tall.pixels[(top * 80)..<((top + 120) * 80)]))
         }
         let a = window(at: 40), b = window(at: 40 - dy)
-        #expect(FrameDiff.verticalShift(from: a, to: b, maxShift: 30) == dy)
+        #expect(FrameDiff.verticalShift(from: a, to: b, maxShift: 30) == Double(dy))
     }
 
     @Test func shiftedImageMatchesScrolledFrame() {
@@ -100,6 +101,50 @@ func texture(width: Int, height: Int, seed: Int = 1) -> GrayImage {
         let b = texture(width: 80, height: 100, seed: 9)
         #expect(FrameDiff.verticalShift(from: a, to: b, maxShift: 20) == nil)
         #expect(FrameDiff.verticalShift(from: a, to: a, maxShift: 20) == nil)
+    }
+
+    @Test func findsSubpixelScroll() {
+        // Lines of text on a 4× finer "screen", box-downsampled like the capture; the page then scrolls by 2 screen
+        // pixels = ½ gray pixel.
+        let w = 480, h = 640
+        let ctx = CGContext(data: nil, width: w, height: h, bitsPerComponent: 8, bytesPerRow: w * 4, space: CGColorSpaceCreateDeviceRGB(),
+                            bitmapInfo: CGImageAlphaInfo.premultipliedFirst.rawValue | CGBitmapInfo.byteOrder32Little.rawValue)!
+        ctx.setFillColor(gray: 0.15, alpha: 1)
+        ctx.fill(CGRect(x: 0, y: 0, width: w, height: h))
+        let font = CTFontCreateWithName("Helvetica" as CFString, 28, nil)
+        let words = ["ok who stayed up for the patch notes", "guilty. they finally fixed it", "wait does that mean the skip",
+                     "lol rip honestly", "Is anyone doing the co-op event", "I'm in! what time"]
+        for i in 0..<15 {
+            let s = NSAttributedString(string: words[i % words.count], attributes: [
+                NSAttributedString.Key(kCTFontAttributeName as String): font,
+                NSAttributedString.Key(kCTForegroundColorAttributeName as String): CGColor(gray: 0.9, alpha: 1)])
+            let x = 10 + (i * 37) % 60, y = h - 40 - i * 41
+            ctx.textPosition = CGPoint(x: x, y: y)
+            CTLineDraw(CTLineCreateWithAttributedString(s), ctx)
+        }
+        let base = ctx.data!
+        func gray(top: Int) -> GrayImage {
+            GrayImage(bgra: base + top * w * 4, width: w, height: 400, bytesPerRow: w * 4, step: 4)
+        }
+        let dy = FrameDiff.verticalShift(from: gray(top: 100), to: gray(top: 98), maxShift: 20)
+        #expect(dy.map { abs($0 - 0.5) <= 0.25 } == true)
+    }
+
+    @Test func scrollsOnlyTheMovingColumn() {
+        // A fixed sidebar (x < 48) and header (y < 16) around a log that scrolls up by 6 pixels.
+        let page = texture(width: 128, height: 200, seed: 3), side = texture(width: 128, height: 128, seed: 8)
+        func frame(top: Int) -> GrayImage {
+            var g = GrayImage(width: 128, height: 128)
+            for y in 0..<128 { for x in 0..<128 { g[x, y] = x < 48 || y < 16 ? side[x, y] : page[x, top + y] } }
+            return g
+        }
+        let a = frame(top: 40), b = frame(top: 46)
+        let regions = FrameDiff.scrollRegions(from: a, to: b, change: FrameDiff.changeMap(from: a, to: b), maxShift: 30)
+        #expect(regions.count == 1)
+        #expect(regions.first?.dy == -6)
+        #expect(regions.first.map { $0.rect.x >= 32 && $0.rect.y >= 16 && $0.rect.x + $0.rect.width == 128 } == true)
+        // One shift over the whole frame does not explain it.
+        #expect(FrameDiff.verticalShift(from: a, to: b, maxShift: 30) == nil)
     }
 
     @Test func accumulatorKeepsFractionalMoves() {
@@ -299,6 +344,72 @@ func texture(width: Int, height: Int, seed: Int = 1) -> GrayImage {
         #expect(Overscan.plan(lens: lens, capture: capture, wide: false, allowResize: false, display: display) == .keep)
         guard case .resize = Overscan.plan(lens: lens, capture: capture, wide: false, allowResize: true, display: display)
         else { Issue.record("expected a resize"); return }
+    }
+
+    @Test func readsAheadWhereThingsAreHeading() {
+        let lens = CGRect(x: 500, y: 300, width: 400, height: 200)
+        let r = Overscan.rect(around: lens, wide: true, display: display, lead: CGVector(dx: 1, dy: 0))
+        // Same size; three times the margin ahead as behind.
+        #expect(r.size == Overscan.rect(around: lens, wide: true, display: display).size)
+        #expect(r.maxX - lens.maxX == 3 * (lens.minX - r.minX))
+    }
+}
+
+@Test func shiftsOnlyInsideARegion() {
+    var a = GrayImage(width: 3, height: 4)
+    for y in 0..<4 { for x in 0..<3 { a[x, y] = UInt8(10 * y + x + 1) } }
+    let r = PixelRect(x: 1, y: 1, width: 2, height: 3)
+    let s = a.shifted(dy: -1, within: r)
+    #expect(s.pixels == [1, 2, 3, 11, 22, 23, 21, 32, 33, 31, 0, 0])
+    #expect(GrayImage.vacated(dy: -1, within: r) == PixelRect(x: 1, y: 3, width: 2, height: 1))
+    #expect(a.replacing(r, from: s) == s)
+}
+
+@Suite struct ScrollPredictorTests {
+    @Test func followsTrackpadDeltasOneToOne() {
+        var p = ScrollPredictor()
+        p.latency = 0
+        for i in 0..<10 { p.wheel(delta: -4, time: 1 + Double(i) * 0.01, precise: true) }
+        // Only what came after the frame the overlay sits on counts.
+        #expect(p.offset(from: 1.045, to: 2) == -20)
+    }
+
+    @Test func momentumTailIsFollowedToTheEnd() {
+        var p = ScrollPredictor()
+        p.latency = 0
+        var d = -30.0, total = 0.0, tail = 0.0
+        for i in 0..<40 {
+            let t = Double(i) / 60
+            p.wheel(delta: d.rounded(), time: t, precise: true)
+            total += d.rounded()
+            if t >= 0.5 { tail += d.rounded() }
+            d *= 0.9
+        }
+        #expect(p.offset(from: -1, to: 1) == total)
+        // Between two frames late in the glide, only the decayed events between them.
+        #expect(p.offset(from: 0.5, to: 1) == tail)
+    }
+
+    @Test func learnsWheelLinesAndEasesThem() {
+        var p = ScrollPredictor()
+        p.latency = 0
+        p.wheel(delta: -1, time: 0, precise: false)
+        #expect(p.offset(from: 0, to: 1) == 0)   // unknown until a frame shows how far a line goes
+        p.confirm(shift: -40, from: 0, to: 1)
+        p.wheel(delta: -1, time: 2, precise: false)
+        // Mid-animation part of the step, all of it once done.
+        let mid = p.offset(from: 2, to: 2 + p.stepDuration / 2)
+        #expect(mid < -20 && mid > -40)
+        #expect(abs(p.offset(from: 2, to: 3) + 40) < 1e-9)
+    }
+
+    @Test func ignoresScrollingThatHitTheEnd() {
+        var p = ScrollPredictor()
+        p.latency = 0
+        p.wheel(delta: -50, time: 0, precise: true)
+        p.confirm(shift: 0, from: -1, to: 1)       // the page was already at its end
+        p.confirm(shift: -60, from: -1, to: 1)     // pages that scroll a bit more per point are learnt
+        #expect(abs(p.offset(from: -1, to: 1) + 53) < 1e-9)
     }
 }
 

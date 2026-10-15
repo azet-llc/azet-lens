@@ -33,6 +33,19 @@ struct OverlaySnapshot: @unchecked Sendable {
     /// Capture origin (global Quartz points) the block frames are relative to. The capture is wider than the visible
     /// lens, so blocks may lie outside the overlay; the overlay offsets them by its own origin and clips the rest.
     let origin: CGPoint
+    /// Capture time of the newest frame the block positions follow; scrolling after it is the overlay's to predict.
+    var time: TimeInterval = 0
+    /// Where content scrolled last (points, relative to `origin`): blocks there move with the next scroll.
+    var scrolling: [CGRect] = []
+}
+
+/// Content scrolled by `shift` points (positive = down) in `area` (global Quartz points) between frames captured at
+/// `from` and `to`.
+struct ScrollReport: Sendable {
+    let area: CGRect
+    let shift: CGFloat
+    let from: TimeInterval
+    let to: TimeInterval
 }
 
 enum RegionActivity: Sendable, Equatable {
@@ -116,10 +129,18 @@ actor RegionPipeline {
     private var activity = RegionActivity.idle
     /// Bumped when the capture size changes; a pass that awaited across a bump discards its result.
     private var geometryEpoch = 0
-    /// Total content shift applied to the blocks (image pixels) and to the gray references (gray pixels). A pass that
-    /// awaited while content moved (scroll, lens recentre) moves its results by the difference instead of dropping them.
-    private var contentShift = CGVector.zero
-    private var grayShift = (x: 0, y: 0)
+    /// Content moves applied to the blocks since the running pass started (scrolls, lens recentres): its results, read
+    /// from an older frame, are moved the same way instead of being dropped.
+    private var moves: [Move] = []
+    /// Gray-pixel areas that changed since the running pass started in ways no move explains.
+    private var unexplained: [PixelRect] = []
+    /// Where content scrolled last (image pixels).
+    private var scrollAreas: [CGRect] = []
+    /// Capture time of the newest frame read for changes.
+    private var frameTime: TimeInterval = 0
+    private var onScroll: (@Sendable (ScrollReport) -> Void)?
+    /// Where things are heading (-1…1 per axis): text from that side is translated first.
+    private var lead = CGVector.zero
     private var grayShiftX = ShiftAccumulator()
     private var grayShiftY = ShiftAccumulator()
     private var lastMotionNote: TimeInterval = 0
@@ -144,6 +165,8 @@ actor RegionPipeline {
     func setActivityHandler(_ h: @escaping @Sendable (RegionActivity) -> Void) { onActivity = h }
     /// Called (at most twice a second) when content moves a lot: scrolling, page flips, animation.
     func setMotionHandler(_ h: @escaping @Sendable () -> Void) { onMotion = h }
+    func setScrollHandler(_ h: @escaping @Sendable (ScrollReport) -> Void) { onScroll = h }
+    func setLead(_ v: CGVector) { lead = v }
 
     func update(options new: PipelineOptions) {
         guard new != options else { return }
@@ -190,6 +213,8 @@ actor RegionPipeline {
         }
         scale = frame.scale
         lastStep = frame.grayStep
+        let previous = frameTime
+        frameTime = frame.time
         if let full = prevGray, full.width == frame.gray.width, full.height == frame.gray.height {
             let prev = prevValid.map { full.cropped(to: $0) } ?? full
             let gray = prevValid.map { frame.gray.cropped(to: $0) } ?? frame.gray
@@ -197,12 +222,14 @@ actor RegionPipeline {
             if !change.isUnchanged {
                 lastChange = frame.time
                 seamlessDone = false
-                if change.ratio > 0.2 {
-                    noteMotion(frame.time)
-                    if !blocks.isEmpty, let dy = FrameDiff.verticalShift(from: prev, to: gray, maxShift: gray.height / 3) {
-                        followScroll(dyGray: dy, frame: frame)
-                    }
+                let scrolled = blocks.isEmpty ? [] : FrameDiff.scrollRegions(from: prev, to: gray, change: change, maxShift: gray.height / 3)
+                Trace.mark("\(Int(captureSize.width))×\(Int(captureSize.height)): changed \(Int(change.ratio * 100)) %, scrolled "
+                           + scrolled.map { "\($0.dy) in \($0.rect.width)×\($0.rect.height)" }.joined(separator: ", "), since: frame.time)
+                if !scrolled.isEmpty { followScroll(scrolled, offset: prevValid, frame: frame, since: previous) }
+                if let d = change.dirtyRect(outside: scrolled.map(\.rect)) {
+                    unexplained.append(PixelRect(x: d.x + (prevValid?.x ?? 0), y: d.y + (prevValid?.y ?? 0), width: d.width, height: d.height))
                 }
+                if change.ratio > 0.2 || !scrolled.isEmpty { noteMotion(frame.time) }
             }
         } else {
             lastChange = frame.time
@@ -295,9 +322,32 @@ actor RegionPipeline {
         return dirty?.intersection(full)
     }
 
-    private func followScroll(dyGray: Int, frame: CapturedFrame) {
-        shiftContent(dx: 0, dy: CGFloat(dyGray * frame.grayStep), dxGray: 0, dyGray: dyGray,
-                     imageSize: CGSize(width: frame.image.width, height: frame.image.height))
+    /// Moves the blocks of each scrolled area along with its content; fixed parts around it (headers, sidebars) stay.
+    /// Only the strip that scrolled into view needs reading. `offset` places the regions (found in the part of the
+    /// frame that could be compared) in the whole frame.
+    private func followScroll(_ regions: [ScrollRegion], offset: PixelRect?, frame: CapturedFrame, since t0: TimeInterval) {
+        let step = CGFloat(frame.grayStep)
+        // Where the references agreed with the previous frame, the new frame is exactly what they now describe; that
+        // also absorbs the part of a pixel a smooth scroll moved by, which would otherwise read as changed text.
+        let inSync = baseGray.flatMap { base in prevGray.map { FrameDiff.changeMap(from: base, to: $0) } }
+        var areas: [CGRect] = []
+        for r in regions {
+            let g = PixelRect(x: r.rect.x + (offset?.x ?? 0), y: r.rect.y + (offset?.y ?? 0), width: r.rect.width, height: r.rect.height)
+            let area = CGRect(x: CGFloat(g.x) * step, y: CGFloat(g.y) * step, width: CGFloat(g.width) * step, height: CGFloat(g.height) * step)
+            let gy = Int(r.dy.rounded()), strip = GrayImage.vacated(dy: Int(r.dy.rounded(.awayFromZero)), within: g)
+            if let base = baseGray, base.width == frame.gray.width, base.height == frame.gray.height {
+                let clean = inSync.map { $0.imageWidth == base.width && !$0.intersects(g) } ?? false
+                baseGray = clean ? base.replacing(g, from: frame.gray) : base.shifted(dy: gy, within: g)
+                forcedDirty = forcedDirty.map { $0.cgRect.intersects(g.cgRect) ? PixelRect(x: $0.x, y: $0.y + gy, width: $0.width, height: $0.height) : $0 }
+                    + [strip].compactMap { $0 }
+            }
+            apply(Move(area: area, dx: 0, dy: CGFloat(r.dy) * step, gx: 0, gy: gy, grayArea: g, strip: strip))
+            areas.append(area)
+            onScroll?(ScrollReport(area: CGRect(x: origin.x + area.minX / scale, y: origin.y + area.minY / scale,
+                                                width: area.width / scale, height: area.height / scale),
+                                   shift: CGFloat(r.dy) * step / scale, from: t0, to: frame.time))
+        }
+        scrollAreas = areas
     }
 
     /// The visible lens (global Quartz points), for translating what the user sees first.
@@ -305,6 +355,42 @@ actor RegionPipeline {
     func setVisible(_ rect: CGRect) {
         if rect != visible { lensMoved = ProcessInfo.processInfo.systemUptime }
         visible = rect
+    }
+
+    /// Content that moved: everything (the capture moved over still content) or one scrolled area.
+    private struct Move {
+        /// Image pixels, in the newer frame; nil = the whole frame.
+        var area: CGRect?
+        /// Image pixels.
+        var dx: CGFloat, dy: CGFloat
+        /// Gray pixels the references moved by, and the gray area (nil = all).
+        var gx: Int, gy: Int
+        var grayArea: PixelRect?
+        /// Rows of `grayArea` that scrolled into view.
+        var strip: PixelRect?
+
+        /// The block moved along, or nil when it left the frame or scrolled out of its area (under a fixed header).
+        func apply(to b: Block, bounds: CGRect) -> Block? {
+            if let area, !area.contains(CGPoint(x: b.rect.midX, y: b.rect.midY)) { return b }
+            var b = b
+            b.rect = b.rect.offsetBy(dx: dx, dy: dy)
+            b.lines = b.lines.map { $0.offsetBy(dx: dx, dy: dy) }
+            if let area { return area.contains(CGPoint(x: b.rect.midX, y: b.rect.midY)) ? b : nil }
+            // Blocks cut by the edge stay (the overlay clips them, like a lens); gone ones are dropped.
+            return b.rect.intersects(bounds) ? b : nil
+        }
+
+        /// A gray-pixel area that moved along.
+        func apply(to r: PixelRect) -> PixelRect {
+            if let g = grayArea, !g.cgRect.intersects(r.cgRect) { return r }
+            return PixelRect(x: r.x + gx, y: r.y + gy, width: r.width, height: r.height)
+        }
+
+        /// Where a rect now in the newer frame was before the move.
+        func undo(_ r: CGRect) -> CGRect {
+            if let area, !area.contains(CGPoint(x: r.midX, y: r.midY)) { return r }
+            return r.offsetBy(dx: -dx, dy: -dy)
+        }
     }
 
     /// The capture moved to `newOrigin` (global Quartz points) while the content under it moved by `contentDelta`
@@ -329,7 +415,13 @@ actor RegionPipeline {
             prevValid = PixelRect(x: valid.x + gx, y: valid.y + gy, width: valid.width, height: valid.height)
                 .clamped(width: prev.width, height: prev.height)
         }
-        shiftContent(dx: px, dy: py, dxGray: gx, dyGray: gy, imageSize: CGSize(width: captureSize.width * scale, height: captureSize.height * scale))
+        if let base = baseGray, gx != 0 || gy != 0 {
+            baseGray = base.shifted(dx: gx, dy: gy)
+            forcedDirty = forcedDirty.map { PixelRect(x: $0.x + gx, y: $0.y + gy, width: $0.width, height: $0.height) }
+                + base.vacatedStrips(dx: gx, dy: gy)
+        }
+        scrollAreas = scrollAreas.map { $0.offsetBy(dx: px, dy: py) }
+        apply(Move(area: nil, dx: px, dy: py, gx: gx, gy: gy, grayArea: nil, strip: nil))
         kick()
     }
 
@@ -346,6 +438,7 @@ actor RegionPipeline {
         seamlessDone = false
         latest = nil
         grayShiftX.reset(); grayShiftY.reset()
+        scrollAreas = scrollAreas.map { $0.offsetBy(dx: px, dy: py) }
         let bounds = CGRect(origin: .zero, size: size)
         blocks = blocks.compactMap { b in
             var b = b
@@ -374,42 +467,50 @@ actor RegionPipeline {
     /// Gray step of the frames (image pixels per gray pixel).
     private var lastStep = 4
 
-    private func shiftContent(dx: CGFloat, dy: CGFloat, dxGray: Int, dyGray: Int, imageSize: CGSize) {
-        contentShift.dx += dx; contentShift.dy += dy
-        grayShift.x += dxGray; grayShift.y += dyGray
-        let bounds = CGRect(origin: .zero, size: imageSize)
-        blocks = blocks.compactMap { b in
-            var b = b
-            b.rect = b.rect.offsetBy(dx: dx, dy: dy)
-            b.lines = b.lines.map { $0.offsetBy(dx: dx, dy: dy) }
-            // Blocks cut by the edge stay (the overlay clips them, like a lens); gone ones are dropped.
-            return b.rect.intersects(bounds) ? b : nil
-        }
-        if let base = baseGray, dxGray != 0 || dyGray != 0 {
-            baseGray = base.shifted(dx: dxGray, dy: dyGray)
-            forcedDirty = forcedDirty.map { PixelRect(x: $0.x + dxGray, y: $0.y + dyGray, width: $0.width, height: $0.height) }
-                + base.vacatedStrips(dx: dxGray, dy: dyGray)
-        }
+    private func apply(_ m: Move) {
+        moves.append(m)
+        unexplained = unexplained.map { m.apply(to: $0) }
+        let bounds = CGRect(x: 0, y: 0, width: captureSize.width * scale, height: captureSize.height * scale)
+        blocks = blocks.compactMap { m.apply(to: $0, bounds: bounds) }
         emit(animated: false)
     }
 
     /// Where a pass started, so its results can follow content that moved while it awaited.
     private struct PassStart {
         let epoch: Int
-        let shift: CGVector
-        let gray: (x: Int, y: Int)
     }
 
-    private var passStart: PassStart { PassStart(epoch: geometryEpoch, shift: contentShift, gray: grayShift) }
+    /// Passes run one at a time, so the moves since this one started are all the moves there are.
+    private func startPass() -> PassStart {
+        moves = []
+        unexplained = []
+        return PassStart(epoch: geometryEpoch)
+    }
 
-    /// After a pass's await: the content shift to apply to its results, or nil if the geometry changed under it.
-    /// Also makes `frame` the new reference, moved by the same shift.
-    private func finishPass(_ start: PassStart, frame: CapturedFrame) -> CGVector? {
+    /// After a pass's await: the moves to apply to its results, or nil if the geometry changed under it.
+    /// Also makes the reference what the results, moved, describe: the newest frame, except where it changed in ways
+    /// no move explains — there `frame` moved along stays, so those parts read as changed.
+    private func finishPass(_ start: PassStart, frame: CapturedFrame) -> [Move]? {
         guard start.epoch == geometryEpoch else { return nil }
-        let gx = grayShift.x - start.gray.x, gy = grayShift.y - start.gray.y
-        baseGray = gx == 0 && gy == 0 ? frame.gray : frame.gray.shifted(dx: gx, dy: gy)
-        forcedDirty = frame.gray.vacatedStrips(dx: gx, dy: gy)
-        return CGVector(dx: contentShift.dx - start.shift.dx, dy: contentShift.dy - start.shift.dy)
+        var base = frame.gray, forced: [PixelRect] = []
+        for m in moves {
+            if let g = m.grayArea {
+                base = base.shifted(dy: m.gy, within: g)
+                forced = forced.map { $0.cgRect.intersects(g.cgRect) ? PixelRect(x: $0.x, y: $0.y + m.gy, width: $0.width, height: $0.height) : $0 }
+                    + [m.strip].compactMap { $0 }
+            } else if m.gx != 0 || m.gy != 0 {
+                forced = forced.map { PixelRect(x: $0.x + m.gx, y: $0.y + m.gy, width: $0.width, height: $0.height) }
+                    + base.vacatedStrips(dx: m.gx, dy: m.gy)
+                base = base.shifted(dx: m.gx, dy: m.gy)
+            }
+        }
+        // Moves are only whole gray pixels; taking the newest frame also drops the fraction a smooth scroll leaves.
+        if !moves.isEmpty, let now = prevGray, now.width == base.width, now.height == base.height {
+            base = unexplained.reduce(now) { $0.replacing($1, from: base) }
+        }
+        baseGray = base
+        forcedDirty = forced
+        return moves
     }
 
     // MARK: - Passes
@@ -420,7 +521,7 @@ actor RegionPipeline {
 
     private func fastPass(_ frame: CapturedFrame, dirty: CGRect, stale: Staleness) async {
         setActivity(.reading)
-        let start = passStart
+        let start = startPass()
         let useFast = options.sourceLanguage != "auto" && Languages.isLatinScript(options.sourceLanguage)
         // Blocks whose pixels did not change stay as they are (seamless ones keep their erased background).
         let staleIDs = Set(blocks.filter { $0.rect.intersects(dirty) && stale.touches($0.rect, step: frame.grayStep) }.map(\.id))
@@ -472,16 +573,14 @@ actor RegionPipeline {
             if let prior, prior.source == ocr.text { b.translation = prior.translation }
             made.append(b)
         }
-        guard let shift = finishPass(start, frame: frame) else { return }
+        guard let moved = finishPass(start, frame: frame) else { return }
         let bounds = CGRect(x: 0, y: 0, width: frame.image.width, height: frame.image.height)
         // Translations that arrived meanwhile are on the current copies of the old blocks.
         let current = Dictionary(blocks.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
         made = made.compactMap { b in
-            var b = b
-            b.rect = b.rect.offsetBy(dx: shift.dx, dy: shift.dy)
-            b.lines = b.lines.map { $0.offsetBy(dx: shift.dx, dy: shift.dy) }
+            guard var b = moved.reduce(Optional(b), { b, m in b.flatMap { m.apply(to: $0, bounds: bounds) } }) else { return nil }
             if b.translation == nil, let c = current[b.id], c.source == b.source { b.translation = c.translation }
-            return b.rect.intersects(bounds) ? b : nil
+            return b
         }
         blocks = blocks.filter { !staleIDs.contains($0.id) } + made
         Trace.mark("fast: \(made.count) new blocks (\(wantsErase ? "erased" : "boxed")), \(blocks.count - made.count) kept", since: t)
@@ -493,7 +592,7 @@ actor RegionPipeline {
     @discardableResult
     private func seamlessPass(_ frame: CapturedFrame) async -> Bool {
         setActivity(.reading)
-        let start = passStart
+        let start = startPass()
         var t = Trace.now
         var found: [OCRBlock]
         do {
@@ -520,9 +619,9 @@ actor RegionPipeline {
         guard let full = RGBAImage(cgImage: frame.image) else { return true }
         Trace.mark("seamless: frame → RGBA", since: t); t = Trace.now
 
-        // Matched in the frame's coordinates: undo any shift applied to the blocks since the pass started.
-        let back = CGVector(dx: start.shift.dx - contentShift.dx, dy: start.shift.dy - contentShift.dy)
-        let matches = BlockMatcher.match(old: blocks.map { .init(rect: $0.rect.offsetBy(dx: back.dx, dy: back.dy), text: $0.source) },
+        // Matched in the frame's coordinates: undo any move applied to the blocks since the pass started.
+        let undone = blocks.map { b in moves.reversed().reduce(b.rect) { $1.undo($0) } }
+        let matches = BlockMatcher.match(old: blocks.indices.map { .init(rect: undone[$0], text: blocks[$0].source) },
                                          new: found.map { .init(rect: $0.rect, text: $0.text) })
         let prior = blocks
         var next: [Block] = []
@@ -536,14 +635,9 @@ actor RegionPipeline {
             next.append(b)
         }
         Trace.mark("seamless: erase \(next.count) blocks", since: t); t = Trace.now
-        guard let shift = finishPass(start, frame: frame) else { return true }
+        guard let moved = finishPass(start, frame: frame) else { return true }
         let bounds = CGRect(x: 0, y: 0, width: frame.image.width, height: frame.image.height)
-        blocks = next.compactMap { b in
-            var b = b
-            b.rect = b.rect.offsetBy(dx: shift.dx, dy: shift.dy)
-            b.lines = b.lines.map { $0.offsetBy(dx: shift.dx, dy: shift.dy) }
-            return b.rect.intersects(bounds) ? b : nil
-        }
+        blocks = next.compactMap { b in moved.reduce(Optional(b)) { b, m in b.flatMap { m.apply(to: $0, bounds: bounds) } } }
         fillTranslations()
         renderMissing()
         Trace.mark("seamless: render", since: t)
@@ -761,7 +855,9 @@ actor RegionPipeline {
                           width: visible.width * scale, height: visible.height * scale)
         if r.intersects(lens) { return (0, r.minY) }
         let dx = max(lens.minX - r.maxX, r.minX - lens.maxX, 0), dy = max(lens.minY - r.maxY, r.minY - lens.maxY, 0)
-        return (1, hypot(dx, dy))
+        // Text on the side things are heading to (a dragged lens, content scrolling in) reaches the lens first.
+        let side = CGVector(dx: r.midX < lens.minX ? -1 : r.midX > lens.maxX ? 1 : 0, dy: r.midY < lens.minY ? -1 : r.midY > lens.maxY ? 1 : 0)
+        return (1, hypot(dx, dy) / (1 + max(0, side.dx * lead.dx + side.dy * lead.dy)))
     }
 
     private func receive(_ result: [String: String]) {
@@ -805,7 +901,8 @@ actor RegionPipeline {
             return OverlayBlock(id: b.id, frame: CGRect(x: b.rect.minX / s, y: b.rect.minY / s, width: b.rect.width / s, height: b.rect.height / s),
                                 image: img, seamless: b.erased != nil)
         }
-        onSnapshot(OverlaySnapshot(version: version, blocks: out, animated: animated, origin: origin))
+        onSnapshot(OverlaySnapshot(version: version, blocks: out, animated: animated, origin: origin, time: frameTime,
+                                   scrolling: scrollAreas.map { CGRect(x: $0.minX / s, y: $0.minY / s, width: $0.width / s, height: $0.height / s) }))
         dump(out)
     }
 

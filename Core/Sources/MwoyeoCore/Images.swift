@@ -51,6 +51,40 @@ public struct GrayImage: Sendable, Equatable {
         return out
     }
 
+    /// Only the content inside `r` moved down by `dy` (negative = up), clipped to `r`: a scrolled column between fixed
+    /// parts. Rows of `r` left without content get `fill`.
+    public func shifted(dy: Int, within r: PixelRect, fill: UInt8 = 0) -> GrayImage {
+        let r = r.clamped(width: width, height: height)
+        var out = self
+        for y in r.y ..< r.y + r.height {
+            let sy = y - dy, dst = y * width + r.x
+            if sy >= r.y, sy < r.y + r.height {
+                out.pixels.replaceSubrange(dst ..< dst + r.width, with: pixels[sy * width + r.x ..< sy * width + r.x + r.width])
+            } else {
+                out.pixels.replaceSubrange(dst ..< dst + r.width, with: repeatElement(fill, count: r.width))
+            }
+        }
+        return out
+    }
+
+    /// The rows of `r` that `shifted(dy:within:)` leaves without content.
+    public static func vacated(dy: Int, within r: PixelRect) -> PixelRect? {
+        let h = min(abs(dy), r.height)
+        guard h > 0 else { return nil }
+        return PixelRect(x: r.x, y: dy > 0 ? r.y : r.y + r.height - h, width: r.width, height: h)
+    }
+
+    /// This image with the pixels of `r` taken from `other` (same size).
+    public func replacing(_ r: PixelRect, from other: GrayImage) -> GrayImage {
+        let r = r.clamped(width: width, height: height)
+        var out = self
+        for y in r.y ..< r.y + r.height {
+            let o = y * width + r.x
+            out.pixels.replaceSubrange(o ..< o + r.width, with: other.pixels[o ..< o + r.width])
+        }
+        return out
+    }
+
     /// Pixels a `shifted(dx:dy:)` leaves without content.
     public func vacatedStrips(dx: Int, dy: Int) -> [PixelRect] {
         uncovered(dx: dx, dy: dy, width: width, height: height)

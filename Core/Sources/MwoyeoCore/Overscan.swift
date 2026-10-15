@@ -25,9 +25,14 @@ public enum Overscan {
     public static let grid: CGFloat = 2
 
     /// The lens plus margins, slid (not cut) to stay on `display`, snapped to the grid.
-    public static func rect(around lens: CGRect, wide: Bool, display d: CGRect) -> CGRect {
+    ///
+    /// `lead` (-1…1 per axis) is where things are heading: the lens moving that way, or new content arriving from that
+    /// side while the page scrolls. Half a margin moves from the trailing side to the leading one, so text is read
+    /// before it reaches the lens, and a dragged lens travels further before the capture has to follow.
+    public static func rect(around lens: CGRect, wide: Bool, display d: CGRect, lead: CGVector = .zero) -> CGRect {
         let m = margins(for: lens.size, wide: wide)
         var r = lens.insetBy(dx: -m.width, dy: -m.height)
+            .offsetBy(dx: max(-1, min(1, lead.dx)) * m.width / 2, dy: max(-1, min(1, lead.dy)) * m.height / 2)
         func snap(_ v: CGFloat, _ rule: FloatingPointRoundingRule = .toNearestOrAwayFromZero) -> CGFloat { (v / grid).rounded(rule) * grid }
         r.size.width = snap(min(r.width, d.width), .down)
         r.size.height = snap(min(r.height, d.height), .down)
@@ -36,8 +41,8 @@ public enum Overscan {
         return r
     }
 
-    public static func plan(lens: CGRect, capture: CGRect, wide: Bool, allowResize: Bool, display: CGRect) -> Plan {
-        let want = rect(around: lens, wide: wide, display: display)
+    public static func plan(lens: CGRect, capture: CGRect, wide: Bool, allowResize: Bool, display: CGRect, lead: CGVector = .zero) -> Plan {
+        let want = rect(around: lens, wide: wide, display: display, lead: lead)
         let m = margins(for: lens.size, wide: wide)
         // Each side needs 40 % of its margin, or as much as the display allows there.
         let fits = lens.minX - capture.minX >= min(m.width * 0.4, lens.minX - want.minX) - 0.5

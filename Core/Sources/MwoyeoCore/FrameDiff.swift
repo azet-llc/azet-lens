@@ -15,10 +15,15 @@ public struct ChangeMap: Sendable, Equatable {
     public var isUnchanged: Bool { !changed.contains(true) }
 
     /// Bounding box of all changed tiles, in gray-image pixels. nil when nothing changed.
-    public var dirtyRect: PixelRect? {
+    public var dirtyRect: PixelRect? { dirtyRect(outside: []) }
+
+    /// Bounding box of the changed tiles whose centre lies outside all of `areas` (gray-image pixels).
+    public func dirtyRect(outside areas: [PixelRect]) -> PixelRect? {
         var minC = Int.max, minR = Int.max, maxC = -1, maxR = -1
         for r in 0..<rows {
             for c in 0..<columns where changed[r * columns + c] {
+                let x = min(c * tile + tile / 2, imageWidth - 1), y = min(r * tile + tile / 2, imageHeight - 1)
+                if areas.contains(where: { x >= $0.x && x < $0.x + $0.width && y >= $0.y && y < $0.y + $0.height }) { continue }
                 minC = min(minC, c); maxC = max(maxC, c)
                 minR = min(minR, r); maxR = max(maxR, r)
             }
@@ -70,35 +75,46 @@ public enum FrameDiff {
                          imageWidth: b.width, imageHeight: b.height)
     }
 
-    /// Detects a pure vertical scroll: content of `a` shifted by `dy` pixels appears in `b`
-    /// (positive dy = content moved down). Returns nil when no shift explains the change clearly better than no shift.
-    public static func verticalShift(from a: GrayImage, to b: GrayImage, maxShift: Int) -> Int? {
+    /// Detects a pure vertical scroll: content of `a` shifted by `dy` pixels appears in `b` (positive dy = content
+    /// moved down), to a quarter pixel: smooth scrolling moves by less than a downsampled pixel per frame.
+    /// Returns nil when no shift explains the change clearly better than no shift.
+    public static func verticalShift(from a: GrayImage, to b: GrayImage, maxShift: Int) -> Double? {
         guard a.width == b.width, a.height == b.height, a.height > 8 else { return nil }
         let maxShift = min(maxShift, a.height / 2)
         let base = meanAbsDiff(a, b, dy: 0)
         guard base > 0.5 else { return nil }
-        var best = (dy: 0, err: base)
+        var best = (dy: 0.0, err: base)
         for dy in -maxShift...maxShift where dy != 0 {
-            let e = meanAbsDiff(a, b, dy: dy)
-            if e < best.err { best = (dy, e) }
+            let e = meanAbsDiff(a, b, dy: Double(dy))
+            if e < best.err { best = (Double(dy), e) }
         }
-        // Must explain the change much better than "nothing moved", and match well in absolute terms.
-        guard best.dy != 0, best.err < base * 0.35, best.err < 3.0 else { return nil }
+        let whole = best.dy
+        for f in [-0.5, -0.25, 0.25, 0.5] {
+            let e = meanAbsDiff(a, b, dy: whole + f)
+            if e < best.err { best = (whole + f, e) }
+        }
+        // Must explain the change clearly better than "nothing moved", and match well in absolute terms (a fraction of a
+        // pixel only approximately: the capture averaged what is now split differently between pixels).
+        guard abs(best.dy) >= 0.25, best.err < base * 0.6, best.err < 8 else { return nil }
         return best.dy
     }
 
-    /// Mean |a(x, y) - b(x, y + dy)| over the overlapping rows, sampling every other column.
-    static func meanAbsDiff(_ a: GrayImage, _ b: GrayImage, dy: Int) -> Double {
-        let y0 = max(0, -dy), y1 = min(a.height, b.height - dy)
+    /// Mean |a(x, y) - b(x, y + dy)| over the overlapping rows, sampling every other column; a fractional `dy`
+    /// blends the two nearest rows of `b`.
+    static func meanAbsDiff(_ a: GrayImage, _ b: GrayImage, dy: Double) -> Double {
+        let k = Int(dy.rounded(.down)), f = dy - Double(k)
+        let w1 = Int((f * 256).rounded()), w0 = 256 - w1
+        let y0 = max(0, -k), y1 = min(a.height, b.height - k - (w1 > 0 ? 1 : 0))
         guard y1 > y0 else { return .infinity }
         var sum = 0, n = 0
         a.pixels.withUnsafeBufferPointer { pa in
             b.pixels.withUnsafeBufferPointer { pb in
                 for y in y0..<y1 {
-                    let oa = y * a.width, ob = (y + dy) * b.width
+                    let oa = y * a.width, ob = (y + k) * b.width, ob1 = ob + (w1 > 0 ? b.width : 0)
                     var x = 0
                     while x < a.width {
-                        sum += abs(Int(pa[oa + x]) - Int(pb[ob + x]))
+                        let v = (Int(pb[ob + x]) * w0 + Int(pb[ob1 + x]) * w1) >> 8
+                        sum += abs(Int(pa[oa + x]) - v)
                         x += 2
                     }
                     n += (a.width + 1) / 2
@@ -107,6 +123,59 @@ public enum FrameDiff {
         }
         return Double(sum) / Double(max(n, 1))
     }
+
+    /// What scrolled between `a` and `b`, found column band by column band: pages keep fixed parts (headers, sidebars,
+    /// a message box) beside the part that scrolls, and one shift for the whole frame explains neither. Each band is
+    /// matched over its changed rows only; a band too plain to tell on its own (a few short lines, a move of a fraction
+    /// of a pixel) takes its neighbour's shift if that explains it better than no move. Neighbouring bands that agree
+    /// form one region. Bands that changed without scrolling (a hover, a typing indicator) end a region and are left
+    /// to be re-read.
+    public static func scrollRegions(from a: GrayImage, to b: GrayImage, change: ChangeMap, maxShift: Int, bandTiles: Int = 2) -> [ScrollRegion] {
+        guard a.width == b.width, a.height == b.height, change.imageWidth == b.width, change.imageHeight == b.height else { return [] }
+        // Changed bands, left to right, with their own shift if one is clear.
+        var bands: [(rect: PixelRect, dy: Double?)] = []
+        for c0 in stride(from: 0, to: change.columns, by: bandTiles) {
+            // The last band takes in the leftover columns (and the partial tile at the edge) instead of being a sliver.
+            let c1 = change.columns - c0 < 2 * bandTiles ? change.columns : c0 + bandTiles
+            if c0 > 0, c0 + bandTiles > change.columns { break }
+            let rows = (0..<change.rows).filter { r in (c0..<c1).contains { change.changed[r * change.columns + $0] } }
+            guard let r0 = rows.first, let r1 = rows.last else { continue }   // untouched band: neither scrolls nor breaks
+            let rect = PixelRect(x: c0 * change.tile, y: r0 * change.tile, width: (c1 - c0) * change.tile, height: (r1 - r0 + 1) * change.tile)
+                .clamped(width: b.width, height: b.height)
+            // A short or sliver band matches repeating things (avatars, list rows) at a wrong shift; a scrolling column
+            // changes along its whole height, so a real shift stays well within it.
+            let dy = rect.width < change.tile ? nil
+                : verticalShift(from: a.cropped(to: rect), to: b.cropped(to: rect), maxShift: min(maxShift, rect.height / 4))
+            bands.append((rect, dy))
+        }
+        for i in bands.indices where bands[i].dy == nil {
+            let near = [i - 1, i + 1].filter { bands.indices.contains($0) }.compactMap { bands[$0].dy }
+            let ca = a.cropped(to: bands[i].rect), cb = b.cropped(to: bands[i].rect)
+            bands[i].dy = near.first { meanAbsDiff(ca, cb, dy: $0) < 0.8 * meanAbsDiff(ca, cb, dy: 0) }
+        }
+        var regions: [ScrollRegion] = []
+        var open = false
+        for band in bands {
+            guard let dy = band.dy else { open = false; continue }
+            if open, let last = regions.last, abs(last.dy - dy) <= 0.5 {
+                // Wider bands weigh more in the shared shift.
+                let w0 = Double(last.rect.width), w1 = Double(band.rect.width)
+                regions[regions.count - 1] = ScrollRegion(rect: PixelRect(last.rect.cgRect.union(band.rect.cgRect)),
+                                                          dy: (last.dy * w0 + dy * w1) / (w0 + w1))
+            } else {
+                regions.append(ScrollRegion(rect: band.rect, dy: dy))
+                open = true
+            }
+        }
+        return regions
+    }
+}
+
+/// Part of a frame whose content moved vertically: `rect` (gray pixels, in the newer frame) moved down by `dy` pixels.
+public struct ScrollRegion: Sendable, Equatable {
+    public var rect: PixelRect
+    public var dy: Double
+    public init(rect: PixelRect, dy: Double) { self.rect = rect; self.dy = dy }
 }
 
 /// Turns fractional moves into whole-pixel steps without losing the remainder, so many tiny moves

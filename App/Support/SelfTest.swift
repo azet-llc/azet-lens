@@ -9,8 +9,10 @@ import UniformTypeIdentifiers
 /// Prints what was read and translated, and writes the composited result. Exits when done.
 ///
 /// Simulated lens drag over a still "screen" (points; writes the lens view per step as outdir/frame_NNN.png):
-///   Mwoyeo --render screen.png outdir --pan --lens x,y,w,h --to x,y [--steps 40] [--step-ms 100] [--hold-ms 3000]
-/// With `--scroll`, the lens stays and the content scrolls by `--to` instead (screen.png is the whole page).
+///   Mwoyea --render screen.png outdir --pan --lens x,y,w,h --to x,y [--steps 40] [--step-ms 100] [--hold-ms 3000]
+/// With `--scroll`, the lens stays and the content scrolls by `--to` instead (screen.png is the whole page); `--scroll-rect x,y,w,h`
+/// scrolls only that part (a message log between a fixed sidebar, header and footer), `--ease` decelerates like inertial scrolling.
+/// Each step prints how far the shown translations are from the text they translate ("drift", points).
 enum SelfTest {
     static func run(_ args: [String]) -> Never {
         setvbuf(stdout, nil, _IOLBF, 0)
@@ -119,6 +121,9 @@ enum SelfTest {
         let l = numbers("--lens"), to = numbers("--to")
         guard l.count == 4, to.count == 2 else { throw Failure(description: "--pan needs --lens x,y,w,h and --to x,y") }
         let scrolling = option("--scroll") != nil || CommandLine.arguments.contains("--scroll")
+        let sr = numbers("--scroll-rect")
+        let scrollRect = sr.count == 4 ? CGRect(x: sr[0], y: sr[1], width: sr[2], height: sr[3]) : CGRect.infinite
+        let ease = CommandLine.arguments.contains("--ease")
         // Content offset (points): the screen shows the page from here. Only `--scroll` changes it.
         var scroll = CGVector.zero
         let steps = Int(option("--steps") ?? "40") ?? 40
@@ -138,10 +143,25 @@ enum SelfTest {
         let motion = Collector()   // reused as a flag: any snapshot stored = motion seen
         await pipeline.setMotionHandler { motion.put(OverlaySnapshot(version: 0, blocks: [], animated: false, origin: .zero)) }
 
+        /// What the display shows in `r` (points): the page, scrolled by `scroll` inside `scrollRect`.
+        func compose(_ r: CGRect) -> CGImage? {
+            let w = Int((r.width * scale).rounded()), h = Int((r.height * scale).rounded()), sh = CGFloat(screen.height)
+            guard let ctx = CGContext(data: nil, width: w, height: h, bitsPerComponent: 8, bytesPerRow: 0,
+                                      space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+            else { return nil }
+            func draw(from o: CGPoint) {
+                ctx.draw(screen, in: CGRect(x: -o.x * scale, y: CGFloat(h) + o.y * scale - sh, width: CGFloat(screen.width), height: sh))
+            }
+            draw(from: r.origin)
+            let s = scrollRect.intersection(r)
+            if !s.isNull {
+                ctx.clip(to: CGRect(x: (s.minX - r.minX) * scale, y: CGFloat(h) - (s.maxY - r.minY) * scale, width: s.width * scale, height: s.height * scale))
+                draw(from: CGPoint(x: r.minX + scroll.dx, y: r.minY + scroll.dy))
+            }
+            return ctx.makeImage()
+        }
         func feed() async {
-            let c = capture.offsetBy(dx: scroll.dx, dy: scroll.dy)
-            let px = CGRect(x: c.minX * scale, y: c.minY * scale, width: c.width * scale, height: c.height * scale)
-            guard let crop = screen.cropping(to: px), let rgba = RGBAImage(cgImage: crop), let image = rgba.cgImage else { return }
+            guard let crop = compose(capture), let rgba = RGBAImage(cgImage: crop), let image = rgba.cgImage else { return }
             let gray = rgba.withBGRA { GrayImage(bgra: $0, width: rgba.width, height: rgba.height, bytesPerRow: rgba.width * 4, step: 4) }
             await pipeline.ingest(CapturedFrame(image: image, gray: gray, grayStep: 4, scale: scale, rect: capture,
                                                 time: ProcessInfo.processInfo.systemUptime))
@@ -155,15 +175,17 @@ enum SelfTest {
             await feed()
         }
         var frameIndex = 0
+        // Where each shown block sat on the page when first seen (page points), to measure drift from its text.
+        var anchors: [UUID: (page: CGPoint, size: CGSize, scrolls: Bool)] = [:]
+        var drifts: [CGFloat] = []
         func shoot() throws {
             let w = Int(lens.width * scale), h = Int(lens.height * scale)
             guard let ctx = CGContext(data: nil, width: w, height: h, bitsPerComponent: 8, bytesPerRow: 0,
                                       space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue),
-                  let under = screen.cropping(to: CGRect(x: (lens.minX + scroll.dx) * scale, y: (lens.minY + scroll.dy) * scale,
-                                                         width: CGFloat(w), height: CGFloat(h)))
+                  let under = compose(lens)
             else { throw Failure(description: "context") }
             ctx.draw(under, in: CGRect(x: 0, y: 0, width: w, height: h))
-            var shown = 0
+            var shown = 0, drift: CGFloat = 0
             if let snap = collector.latest {
                 for b in snap.blocks {
                     // Snapshot frames are relative to the capture origin; the lens is the overlay panel.
@@ -171,8 +193,19 @@ enum SelfTest {
                     guard g.intersects(CGRect(origin: .zero, size: lens.size)) else { continue }
                     shown += 1
                     ctx.draw(b.image, in: CGRect(x: g.minX * scale, y: CGFloat(h) - g.maxY * scale, width: g.width * scale, height: g.height * scale))
+                    let onScreen = b.frame.offsetBy(dx: snap.origin.x, dy: snap.origin.y)
+                    var a = anchors[b.id]
+                    // A re-read may re-lay a block out; measure from there.
+                    if a == nil || a!.size != b.frame.size {
+                        let scrolls = scrollRect.contains(CGPoint(x: onScreen.midX, y: onScreen.midY))
+                        a = (CGPoint(x: onScreen.minX + (scrolls ? scroll.dx : 0), y: onScreen.minY + (scrolls ? scroll.dy : 0)), b.frame.size, scrolls)
+                        anchors[b.id] = a
+                    }
+                    let page = CGPoint(x: onScreen.minX + (a!.scrolls ? scroll.dx : 0), y: onScreen.minY + (a!.scrolls ? scroll.dy : 0))
+                    drift = max(drift, hypot(page.x - a!.page.x, page.y - a!.page.y))
                 }
             }
+            drifts.append(drift)
             guard let out = ctx.makeImage() else { return }
             let url = outdir.appendingPathComponent(String(format: "frame_%03d.png", frameIndex))
             if let dest = CGImageDestinationCreateWithURL(url as CFURL, UTType.png.identifier as CFString, 1, nil) {
@@ -180,8 +213,8 @@ enum SelfTest {
                 CGImageDestinationFinalize(dest)
             }
             frameIndex += 1
-            print(String(format: "frame %03d lens (%4.0f,%4.0f) capture (%4.0f,%4.0f %4.0f×%4.0f) blocks shown %d",
-                         frameIndex - 1, lens.minX, lens.minY, capture.minX, capture.minY, capture.width, capture.height, shown))
+            print(String(format: "frame %03d lens (%4.0f,%4.0f) capture (%4.0f,%4.0f %4.0f×%4.0f) blocks shown %d drift %.1f",
+                         frameIndex - 1, lens.minX, lens.minY, capture.minX, capture.minY, capture.width, capture.height, shown, drift))
         }
 
         // At rest: read and translate the start position completely.
@@ -198,7 +231,7 @@ enum SelfTest {
         if scrolling {
             // Scroll: frames change under a still capture; the pipeline notices the motion and asks for wide margins.
             for i in 1...steps {
-                let f = CGFloat(i) / CGFloat(steps)
+                let t = CGFloat(i) / CGFloat(steps), f = ease ? 1 - pow(1 - t, 3) : t
                 scroll = CGVector(dx: (to[0] * f).rounded(), dy: (to[1] * f).rounded())
                 if !wide, motion.latest != nil {
                     wide = true
@@ -230,6 +263,8 @@ enum SelfTest {
         for (source, translation) in await pipeline.debugState().blocks {
             print("  \(source) → \(translation ?? "(no translation)")")
         }
+        print(String(format: "drift: mean %.1f pt, max %.1f pt, %d of %d frames over 2 pt", drifts.reduce(0, +) / CGFloat(max(1, drifts.count)),
+                     drifts.max() ?? 0, drifts.filter { $0 > 2 }.count, drifts.count))
     }
 }
 
