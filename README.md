@@ -11,7 +11,7 @@ Put a lens over a chat, a feed or a game. The original text disappears and the t
   <sub>macOS 27 · Apple silicon · everything on-device</sub>
 </p>
 
-<!-- HERO -->
+<p align="center"><img src="docs/media/hero.gif" width="640" alt="A lens over a Japanese chat: messages are rewritten in Korean in place as they arrive, while the lens is dragged and resized and the chat scrolls."></p>
 
 ## What it does
 
