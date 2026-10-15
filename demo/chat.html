@@ -15,7 +15,7 @@
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); overflow: hidden;
     font-family: "Helvetica Neue", "Hiragino Sans", "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
-  .app { display: grid; grid-template-columns: 72px 240px 1fr; height: 100%; }
+  .app { display: grid; grid-template-columns: 72px 240px 1fr; grid-template-rows: minmax(0, 1fr); height: 100%; }
   .rail { background: var(--rail); display: flex; flex-direction: column; align-items: center; gap: 8px; padding-top: 12px; }
   .rail div { width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; color: #fff; font-size: 18px; }
   .rail .on { border-radius: 16px; background: linear-gradient(135deg, #7c5cff, #ff6a88); }
