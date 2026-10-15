@@ -36,9 +36,11 @@ rm -rf "$OUT"; mkdir -p "$OUT"
 xcodegen generate >/dev/null
 xcodebuild -project Mwoyeo.xcodeproj -scheme Mwoyeo -configuration Release -derivedDataPath "$OUT/dd" \
   MARKETING_VERSION="$VERSION" CURRENT_PROJECT_VERSION="$(git rev-list --count HEAD)" \
-  MWOYEO_SIGN_IDENTITY="$IDENTITY" MWOYEO_TEAM="$TEAM" OTHER_CODE_SIGN_FLAGS=--timestamp \
+  MWOYEO_SIGN_IDENTITY="$IDENTITY" MWOYEO_TEAM="$TEAM" OTHER_CODE_SIGN_FLAGS=--timestamp CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO \
   build > "$OUT/build.log" 2>&1 || { tail -30 "$OUT/build.log"; exit 1; }
 codesign --verify --strict --deep --verbose=2 "$APP"
+! codesign -d --entitlements - "$APP" 2>/dev/null | grep -q get-task-allow ||
+  { echo "the app is signed with get-task-allow, which notarization rejects" >&2; exit 1; }
 [[ -d "$APP/Contents/Resources/MIGAN_512.mlmodelc" ]] || { echo "the app has no inpainting model" >&2; exit 1; }
 
 echo "==> Disk image"
