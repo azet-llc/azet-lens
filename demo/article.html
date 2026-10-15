@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>テックノート ― オンデバイスAIの今</title>
+<style>
+  :root { --ink: #1d1d1f; --sub: #6e6e73; --line: #e5e5ea; --accent: #e8533f; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #fbfaf7; color: var(--ink); font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", sans-serif; }
+  header { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; gap: 28px; padding: 16px 48px;
+    background: rgba(251,250,247,.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
+  .logo { font-weight: 800; font-size: 22px; letter-spacing: .02em; }
+  .logo span { color: var(--accent); }
+  nav { display: flex; gap: 22px; font-size: 15px; color: var(--sub); }
+  main { display: grid; grid-template-columns: minmax(0, 720px) 280px; gap: 56px; justify-content: center; padding: 48px 48px 120px; }
+  .kicker { color: var(--accent); font-weight: 700; font-size: 14px; letter-spacing: .08em; }
+  h1 { font-size: 40px; line-height: 1.35; margin: 10px 0 14px; letter-spacing: .01em; }
+  .meta { color: var(--sub); font-size: 14px; margin-bottom: 28px; }
+  .hero { height: 300px; border-radius: 18px; margin-bottom: 10px;
+    background: radial-gradient(circle at 30% 30%, #ffd1a8, transparent 50%), radial-gradient(circle at 75% 60%, #a8c8ff, transparent 55%), linear-gradient(135deg, #ff9a8b, #6a82fb);
+    display: flex; align-items: flex-end; padding: 22px 26px; color: #fff; font-size: 26px; font-weight: 700; text-shadow: 0 2px 10px rgba(0,0,0,.25); }
+  figcaption { color: var(--sub); font-size: 13px; margin-bottom: 32px; }
+  h2 { font-size: 26px; margin: 44px 0 14px; padding-left: 14px; border-left: 4px solid var(--accent); }
+  p { font-size: 18px; line-height: 1.95; margin: 0 0 20px; letter-spacing: .01em; }
+  blockquote { margin: 28px 0; padding: 18px 24px; background: #fff; border-radius: 14px; border: 1px solid var(--line); font-size: 18px; line-height: 1.8; color: #3a3a3c; }
+  .note { padding: 18px 22px; border-radius: 14px; background: #fff4e5; border: 1px solid #ffd8a8; font-size: 16px; line-height: 1.8; margin: 24px 0; }
+  aside { position: sticky; top: 96px; align-self: start; }
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 20px; margin-bottom: 18px; }
+  .card h3 { margin: 0 0 12px; font-size: 16px; }
+  .card li { font-size: 15px; line-height: 1.7; color: #3a3a3c; margin-bottom: 8px; }
+  .tag { display: inline-block; margin: 0 6px 8px 0; padding: 5px 12px; border-radius: 999px; background: #f2f2f7; font-size: 13px; color: #3a3a3c; }
+  .btn { display: block; text-align: center; padding: 12px; border-radius: 12px; background: var(--ink); color: #fff; font-weight: 700; font-size: 15px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">テック<span>ノート</span></div>
+  <nav><span>ニュース</span><span>レビュー</span><span>解説</span><span>動画</span><span>ログイン</span></nav>
+</header>
+<main>
+  <article>
+    <div class="kicker">特集　オンデバイスAI</div>
+    <h1>クラウドに送らない翻訳は、ここまで来た</h1>
+    <div class="meta">2026年10月15日　文・佐藤 美咲　読了時間 6分</div>
+    <div class="hero">画面の文字が、その場で母国語に変わる</div>
+    <figcaption>写真：ゲーム画面の上で動作するリアルタイム翻訳のイメージ</figcaption>
+
+    <p>海外のゲームや漫画、まだ翻訳されていない最新の技術記事。言葉の壁は、いつも一番おもしろいところに立ちはだかる。これまではスクリーンショットを撮り、翻訳アプリに貼り付け、元の画面と見比べるしかなかった。</p>
+    <p>しかし最近のパソコンは、文字認識も翻訳も、すべて端末の中だけで処理できるようになった。インターネットに接続していなくても、画面の一部を選ぶだけで、その場所の文字が自然な日本語や韓国語に置き換わる。</p>
+
+    <h2>なぜ「その場で」が大切なのか</h2>
+    <p>翻訳結果を別のウィンドウに表示する方式では、視線が何度も行き来してしまう。原文があった位置に、同じ大きさと色で訳文を書き戻せば、読む人はまるで最初からその言語で作られた画面を見ているように感じる。</p>
+    <blockquote>「翻訳だと気づかないくらい自然なこと。それが一番の目標でした」と開発者は語る。</blockquote>
+    <p>そのためには、元の文字をきれいに消す必要がある。単色の背景なら周りの色で塗りつぶせばよいが、写真やイラストの上の文字はそう簡単ではない。ここで活躍するのが、消した部分の背景を描き直す画像補完の技術だ。</p>
+
+    <h2>スクロールしても、ずれない</h2>
+    <p>ページをスクロールすると、文字の位置は一瞬で変わる。毎回すべてを読み直していては遅すぎるし、電池もすぐになくなってしまう。そこで画面全体が平行に動いたことを検出し、すでに訳した部分はそのまま一緒に動かし、新しく現れた行だけを読み取る。</p>
+    <p>同じ文章は二度翻訳しない。一度訳した結果は記憶しておき、次に同じ文が現れたときは瞬時に表示する。こうした工夫を積み重ねることで、動画の字幕のように変化の激しい画面にもついていけるようになった。</p>
+    <div class="note">ポイント：変化がない画面では、ほとんど電力を使いません。画面が変わったときだけ、変わった部分だけを処理します。</div>
+
+    <h2>これからの課題</h2>
+    <p>縦書きの漫画や、手書き風の文字、背景と見分けにくい装飾文字など、まだ難しい場面も残っている。それでも、旅行先の看板から深夜のゲームまで、私たちが「読めない」と諦めていた瞬間は、確実に減っていくだろう。</p>
+    <p>言葉の壁がなくなったとき、私たちは何を読むのだろうか。答えはきっと、画面のすぐ向こうにある。</p>
+  </article>
+  <aside>
+    <div class="card">
+      <h3>人気の記事</h3>
+      <ol>
+        <li>新しいノートパソコンは何が変わったのか</li>
+        <li>電池を長持ちさせる七つの設定</li>
+        <li>初心者でもわかる画像生成の仕組み</li>
+      </ol>
+    </div>
+    <div class="card">
+      <h3>関連タグ</h3>
+      <span class="tag">翻訳</span><span class="tag">文字認識</span><span class="tag">ゲーム</span><span class="tag">漫画</span><span class="tag">プライバシー</span>
+    </div>
+    <div class="card">
+      <h3>ニュースレター</h3>
+      <p style="font-size:14px;line-height:1.7;color:#6e6e73;margin-bottom:14px">毎週金曜日に、最新の記事をお届けします。</p>
+      <div class="btn">無料で登録する</div>
+    </div>
+  </aside>
+</main>
+</body>
+</html>

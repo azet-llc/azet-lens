@@ -88,6 +88,18 @@ func texture(width: Int, height: Int, seed: Int = 1) -> GrayImage {
         #expect(FrameDiff.verticalShift(from: a, to: a, maxShift: 20) == nil)
     }
 
+    @Test func accumulatorKeepsFractionalMoves() {
+        var a = ShiftAccumulator()
+        var total = 0
+        for _ in 0..<20 { total += a.add(0.3) }
+        #expect(total == 6)
+        var b = ShiftAccumulator()
+        var back = 0
+        for _ in 0..<10 { back += b.add(-0.45) }
+        #expect(back == -4) // -4.5 → 4 whole steps applied, -0.5 pending
+        #expect(b.add(-0.5) == -1)
+    }
+
     @Test func downsamplesBGRA() {
         // 4×2 BGRA: left 2×2 block white, right 2×2 block black → 2×1 gray at step 2.
         var bytes = [UInt8](repeating: 0, count: 4 * 2 * 4)
@@ -132,6 +144,29 @@ func texture(width: Int, height: Int, seed: Int = 1) -> GrayImage {
         #expect(m.appearance.textColor == RGBA(250, 250, 250))
         // Dilation by 1 turns each 2×8 bar into 4×10.
         #expect(m.count == 8 * 4 * 10)
+    }
+
+    @Test func ignoresBoxEdgesRunningOffThePatch() {
+        // Glyph bars plus a dark box edge along the bottom ring that spans the whole patch width.
+        var patch = glyphPatch(background: bg, ink: ink)
+        for x in 0..<60 { for y in 17..<20 { patch.set(x: x, y: y, ink) } }
+        let m = TextEraser.mask(for: patch, textRect: PixelRect(x: 4, y: 4, width: 52, height: 12), dilation: 0)
+        #expect(m.count == 8 * 2 * 8)           // only the bars
+        #expect(m.bits[18 * 60 + 30] == 0)       // the edge survives
+        #expect(m.glyphBounds == PixelRect(x: 6, y: 6, width: 44, height: 8))
+        #expect(m.appearance.backgroundColor == bg) // median ignores the edge
+        #expect(m.appearance.isFlatBackground)
+    }
+
+    @Test func fillsHolesEnclosedByTheMask() {
+        // A 3×3 ring of mask with an unmasked centre, plus an open "C" whose inside reaches the border.
+        var bits = [UInt8](repeating: 0, count: 8 * 5)
+        for (x, y) in [(1, 1), (2, 1), (3, 1), (1, 2), (3, 2), (1, 3), (2, 3), (3, 3)] { bits[y * 8 + x] = 1 }
+        for (x, y) in [(5, 1), (6, 1), (5, 2), (5, 3), (6, 3)] { bits[y * 8 + x] = 1 }
+        TextEraser.fillEnclosedHoles(&bits, width: 8, height: 5)
+        #expect(bits[2 * 8 + 2] == 1)   // enclosed → filled
+        #expect(bits[2 * 8 + 6] == 0)   // open to the border → untouched
+        #expect(bits.reduce(0) { $0 + Int($1) } == 14)
     }
 
     @Test func fillContinuesAGradientThroughTheHole() {

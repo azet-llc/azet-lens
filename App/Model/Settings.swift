@@ -2,24 +2,26 @@ import CoreGraphics
 import Foundation
 
 enum TranslationEngineChoice: String, Codable, CaseIterable, Identifiable {
-    /// Apple Translation while things move (fast), Apple Intelligence once the screen settles (context-aware).
+    /// The language pack's fast model when installed, Apple Intelligence's translation model otherwise.
     case auto
-    case appleTranslation
-    case appleIntelligence
+    /// Always Apple Intelligence's high-fidelity translation model.
+    case highFidelity
+    /// A prompted on-device LLM (Foundation Models) that follows the glossary.
+    case customModel
 
     var id: String { rawValue }
     var title: String {
         switch self {
         case .auto: "자동"
-        case .appleTranslation: "Apple 번역"
-        case .appleIntelligence: "Apple Intelligence"
+        case .highFidelity: "고품질"
+        case .customModel: "용어집 우선"
         }
     }
     var detail: String {
         switch self {
-        case .auto: "움직일 땐 Apple 번역, 멈추면 Apple Intelligence"
-        case .appleTranslation: "가장 빠름 · 언어 팩 필요"
-        case .appleIntelligence: "자연스러운 말투 · 용어집 반영 · 조금 느림"
+        case .auto: "언어 팩이 있으면 가장 빠른 번역, 없으면 Apple Intelligence 번역"
+        case .highFidelity: "항상 Apple Intelligence 번역 모델 · 한 줄에 0.5초 안팎"
+        case .customModel: "Foundation Models가 용어집을 지켜 번역 · 게임·작품 고유명사에"
         }
     }
 }

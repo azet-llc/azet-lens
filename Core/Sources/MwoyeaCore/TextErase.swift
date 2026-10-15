@@ -23,63 +23,107 @@ public struct TextMask: Sendable {
     /// 1 = glyph (to erase), 0 = background.
     public var bits: [UInt8]
     public var appearance: TextAppearance
+    /// Bounding box of the detected glyph pixels before dilation (patch coordinates); nil if none were found.
+    public var glyphBounds: PixelRect?
 
     public var count: Int { bits.reduce(0) { $0 + Int($1) } }
 }
 
 public enum TextEraser {
     /// Builds a glyph mask for `patch`, where `textRect` (patch coordinates) bounds the text and the ring of
-    /// pixels outside it is background. Glyph pixels are the Otsu class whose luma lies farther from the
-    /// border's luma; the mask is then dilated by `dilation` px to swallow anti-aliased edges.
+    /// pixels around it is background.
+    ///
+    /// - Background colour and noise are robust (median / MAD) so a box edge or a bit of another UI element
+    ///   in the ring does not skew them.
+    /// - Glyph pixels are the Otsu class farther from the background, kept only as connected components that
+    ///   reach into the text rect and do not run off the patch's outer edge — glyphs sit inside the ring,
+    ///   while box borders, rules and neighbouring backgrounds continue past it.
+    /// - The mask is dilated by `dilation` px to swallow anti-aliased edges.
     public static func mask(for patch: RGBAImage, textRect: PixelRect, dilation: Int) -> TextMask {
         let w = patch.width, h = patch.height
         let inner = textRect.clamped(width: w, height: h)
-
-        // Background statistics from pixels outside the text rect (falls back to the patch edge).
-        var border: [RGBA] = []
-        for y in 0..<h {
-            for x in 0..<w where !(x >= inner.x && x < inner.x + inner.width && y >= inner.y && y < inner.y + inner.height) {
-                border.append(patch.color(x: x, y: y))
-            }
+        @inline(__always) func inInner(_ x: Int, _ y: Int) -> Bool {
+            x >= inner.x && x < inner.x + inner.width && y >= inner.y && y < inner.y + inner.height
         }
+
+        var border: [RGBA] = []
+        for y in 0..<h { for x in 0..<w where !inInner(x, y) { border.append(patch.color(x: x, y: y)) } }
         if border.isEmpty {
             for x in 0..<w { border.append(patch.color(x: x, y: 0)); border.append(patch.color(x: x, y: h - 1)) }
         }
-        let bg = meanColor(border)
-        let noise = stddev(border.map { Double($0.luma) })
+        let bg = medianColor(border)
+        let lumas = border.map(\.luma)
+        let medL = median(lumas)
+        let noise = 1.4826 * Double(median(lumas.map { abs($0 - medL) }))
 
-        // Otsu over the inner rect's luma.
         var hist = [Int](repeating: 0, count: 256)
         for y in inner.y..<(inner.y + inner.height) { for x in inner.x..<(inner.x + inner.width) { hist[patch.luma(x: x, y: y)] += 1 } }
         let t = otsuThreshold(hist)
-        let darkGlyphs = bg.luma > t // background on the bright side → glyphs are the dark class
-        let minContrast = max(12, Int(noise * 2))
+        let darkGlyphs = bg.luma > t
+        let minContrast = max(12, Int(noise * 2.5))
 
-        var bits = [UInt8](repeating: 0, count: w * h)
-        var glyphColors: [(RGBA, Int)] = []
-        for y in inner.y..<(inner.y + inner.height) {
-            for x in inner.x..<(inner.x + inner.width) {
+        var candidate = [Bool](repeating: false, count: w * h)
+        for y in 0..<h {
+            for x in 0..<w {
                 let l = patch.luma(x: x, y: y)
-                let isGlyphClass = darkGlyphs ? l <= t : l > t
-                let contrast = abs(l - bg.luma)
-                if isGlyphClass && contrast >= minContrast {
-                    bits[y * w + x] = 1
-                    glyphColors.append((patch.color(x: x, y: y), contrast))
-                }
+                candidate[y * w + x] = (darkGlyphs ? l <= t : l > t) && abs(l - bg.luma) >= minContrast
             }
         }
 
-        let innerArea = max(1, inner.width * inner.height)
-        var coverage = Double(glyphColors.count) / Double(innerArea)
-        // Thresholding failed (textured or low-contrast background): erase the whole text rect instead.
-        if coverage > 0.6 || glyphColors.isEmpty {
-            for y in inner.y..<(inner.y + inner.height) { for x in inner.x..<(inner.x + inner.width) { bits[y * w + x] = 1 } }
-            coverage = 1
+        // Connected components (8-neighbour). Only edges that have a ring count as "outer": if the patch was
+        // clipped at the screen edge, glyphs may legitimately touch it.
+        let ringLeft = inner.x > 0, ringTop = inner.y > 0
+        let ringRight = inner.x + inner.width < w, ringBottom = inner.y + inner.height < h
+        var bits = [UInt8](repeating: 0, count: w * h)
+        var seen = [Bool](repeating: false, count: w * h)
+        var stack: [Int] = []
+        var component: [Int] = []
+        var minX = Int.max, minY = Int.max, maxX = -1, maxY = -1
+        var glyphColors: [(RGBA, Int)] = []
+        var innerGlyphs = 0
+        for start in 0..<(w * h) where candidate[start] && !seen[start] {
+            component.removeAll(keepingCapacity: true)
+            var touchesOuter = false, reachesInner = false
+            stack.append(start)
+            seen[start] = true
+            while let i = stack.popLast() {
+                component.append(i)
+                let x = i % w, y = i / w
+                if (x == 0 && ringLeft) || (x == w - 1 && ringRight) || (y == 0 && ringTop) || (y == h - 1 && ringBottom) { touchesOuter = true }
+                if inInner(x, y) { reachesInner = true }
+                for dy in -1...1 {
+                    for dx in -1...1 where dx != 0 || dy != 0 {
+                        let nx = x + dx, ny = y + dy
+                        guard nx >= 0, ny >= 0, nx < w, ny < h else { continue }
+                        let j = ny * w + nx
+                        if candidate[j] && !seen[j] { seen[j] = true; stack.append(j) }
+                    }
+                }
+            }
+            guard reachesInner, !touchesOuter else { continue }
+            for i in component {
+                bits[i] = 1
+                let x = i % w, y = i / w
+                minX = min(minX, x); maxX = max(maxX, x); minY = min(minY, y); maxY = max(maxY, y)
+                let c = patch.color(x: x, y: y)
+                glyphColors.append((c, abs(c.luma - bg.luma)))
+                if inInner(x, y) { innerGlyphs += 1 }
+            }
         }
 
-        // Text color from the most contrasting half of glyph pixels — edge pixels are blended with the background.
+        var coverage = Double(innerGlyphs) / Double(max(1, inner.width * inner.height))
+        var glyphBounds: PixelRect? = maxX >= 0 ? PixelRect(x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1) : nil
+        // Segmentation failed (textured or low-contrast background): erase the whole text rect instead.
+        if coverage > 0.6 || glyphColors.isEmpty {
+            bits = [UInt8](repeating: 0, count: w * h)
+            for y in inner.y..<(inner.y + inner.height) { for x in inner.x..<(inner.x + inner.width) { bits[y * w + x] = 1 } }
+            coverage = 1
+            glyphBounds = nil
+        }
+
+        // Text colour from the most contrasting half of glyph pixels — edge pixels are blended with the background.
         let textColor: RGBA
-        if glyphColors.isEmpty {
+        if glyphColors.isEmpty || coverage == 1 {
             textColor = bg.luma > 128 ? RGBA(0, 0, 0) : RGBA(255, 255, 255)
         } else {
             let core = glyphColors.sorted { $0.1 > $1.1 }.prefix(max(1, glyphColors.count / 2)).map(\.0)
@@ -87,7 +131,8 @@ public enum TextEraser {
         }
 
         var m = TextMask(width: w, height: h, bits: bits,
-                         appearance: TextAppearance(textColor: textColor, backgroundColor: bg, backgroundNoise: noise, coverage: coverage))
+                         appearance: TextAppearance(textColor: textColor, backgroundColor: bg, backgroundNoise: noise, coverage: coverage),
+                         glyphBounds: glyphBounds)
         m.bits = dilate(m.bits, width: w, height: h, radius: dilation)
         return m
     }
@@ -146,6 +191,25 @@ public enum TextEraser {
         img.pixels = px.map { UInt8(clamping: $0) }
     }
 
+    /// Marks every unmasked pixel that cannot reach the image border without crossing the mask — the gaps
+    /// inside and between big glyphs. Left alone, an inpainter treats them as known pixels and they show up
+    /// as islands of the old glyph colour.
+    public static func fillEnclosedHoles(_ bits: inout [UInt8], width w: Int, height h: Int) {
+        var outside = [Bool](repeating: false, count: w * h)
+        var stack: [Int] = []
+        func seed(_ i: Int) { if bits[i] == 0 && !outside[i] { outside[i] = true; stack.append(i) } }
+        for x in 0..<w { seed(x); seed((h - 1) * w + x) }
+        for y in 0..<h { seed(y * w); seed(y * w + w - 1) }
+        while let i = stack.popLast() {
+            let x = i % w, y = i / w
+            if x > 0 { seed(i - 1) }
+            if x < w - 1 { seed(i + 1) }
+            if y > 0 { seed(i - w) }
+            if y < h - 1 { seed(i + w) }
+        }
+        for i in bits.indices where bits[i] == 0 && !outside[i] { bits[i] = 1 }
+    }
+
     public static func otsuThreshold(_ hist: [Int]) -> Int {
         let total = hist.reduce(0, +)
         guard total > 0 else { return 127 }
@@ -188,6 +252,18 @@ public enum TextEraser {
         for c in cs { r += Int(c.r); g += Int(c.g); b += Int(c.b); a += Int(c.a) }
         let n = cs.count
         return RGBA(UInt8(r / n), UInt8(g / n), UInt8(b / n), UInt8(a / n))
+    }
+
+    static func median(_ xs: [Int]) -> Int {
+        guard !xs.isEmpty else { return 0 }
+        return xs.sorted()[xs.count / 2]
+    }
+
+    /// Per-channel median.
+    static func medianColor(_ cs: [RGBA]) -> RGBA {
+        guard !cs.isEmpty else { return RGBA(255, 255, 255) }
+        return RGBA(UInt8(median(cs.map { Int($0.r) })), UInt8(median(cs.map { Int($0.g) })),
+                    UInt8(median(cs.map { Int($0.b) })), UInt8(median(cs.map { Int($0.a) })))
     }
 
     static func stddev(_ xs: [Double]) -> Double {

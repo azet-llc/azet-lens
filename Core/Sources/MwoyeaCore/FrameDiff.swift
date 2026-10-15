@@ -108,3 +108,21 @@ public enum FrameDiff {
         return Double(sum) / Double(max(n, 1))
     }
 }
+
+/// Turns fractional moves into whole-pixel steps without losing the remainder, so many tiny moves
+/// (a slow drag) add up to exactly the same shift as one big move.
+public struct ShiftAccumulator: Sendable {
+    private var remainder: CGFloat = 0
+    public init() {}
+
+    /// Adds `delta` and returns the whole steps to apply now.
+    public mutating func add(_ delta: CGFloat) -> Int {
+        remainder += delta
+        // Nudge by an epsilon so 20 × 0.3 counts as 6, not 5.999….
+        let whole = (remainder + (remainder >= 0 ? 1e-9 : -1e-9)).rounded(.towardZero)
+        remainder -= whole
+        return Int(whole)
+    }
+
+    public mutating func reset() { remainder = 0 }
+}

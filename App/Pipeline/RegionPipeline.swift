@@ -71,8 +71,11 @@ actor RegionPipeline {
         var lines: [CGRect]         // image pixels
         var source: String
         var translation: String?
-        var isQualityTranslation = false
         var appearance: TextAppearance
+        /// Font size (pixels) estimated from the original glyphs.
+        var fontSize: CGFloat?
+        /// Free background to the right of the text, included in `rect`, that a longer translation may use.
+        var spareWidth: CGFloat = 0
         var erased: RGBAImage?      // seamless background covering `rect`
         var image: CGImage?
     }
@@ -101,6 +104,8 @@ actor RegionPipeline {
     /// Bumped whenever blocks are moved by a scroll; a pass that awaited across a bump discards its result.
     private var scrollEpoch = 0
     private var ignoreFramesUntil: TimeInterval = 0
+    private var grayShiftX = ShiftAccumulator()
+    private var grayShiftY = ShiftAccumulator()
 
     /// Region origin, global Quartz points.
     private var origin: CGPoint
@@ -137,7 +142,7 @@ actor RegionPipeline {
 
     /// Re-translate everything currently on screen (e.g. after the user downloads a language pack).
     func refresh() {
-        for i in blocks.indices { blocks[i].translation = nil; blocks[i].isQualityTranslation = false }
+        for i in blocks.indices { blocks[i].translation = nil; blocks[i].image = nil }
         baseGray = nil
         seamlessDone = false
         kick()
@@ -222,7 +227,8 @@ actor RegionPipeline {
     }
 
     private func followScroll(dyGray: Int, frame: CapturedFrame) {
-        shiftContent(dxGray: 0, dyGray: dyGray, step: frame.grayStep, imageSize: CGSize(width: frame.image.width, height: frame.image.height))
+        shiftContent(dx: 0, dy: CGFloat(dyGray * frame.grayStep), dxGray: 0, dyGray: dyGray,
+                     imageSize: CGSize(width: frame.image.width, height: frame.image.height))
     }
 
     /// The region moved to `newOrigin` (global Quartz points).
@@ -236,13 +242,15 @@ actor RegionPipeline {
         origin = newOrigin
         ignoreFramesUntil = ProcessInfo.processInfo.systemUptime + 0.12
         guard !contentMoved, let frame = latest else { return }
+        // Blocks move by the exact pixel delta; the gray references only by whole gray pixels, with the
+        // fraction carried over so a slow drag never drifts.
+        let px = -delta.dx * scale, py = -delta.dy * scale
         let step = CGFloat(frame.grayStep)
-        let dx = Int((-delta.dx * scale / step).rounded()), dy = Int((-delta.dy * scale / step).rounded())
-        guard dx != 0 || dy != 0 else { return }
+        let gx = grayShiftX.add(px / step), gy = grayShiftY.add(py / step)
         lastChange = ProcessInfo.processInfo.systemUptime
         seamlessDone = false
-        prevGray = prevGray?.shifted(dx: dx, dy: dy)
-        shiftContent(dxGray: dx, dyGray: dy, step: frame.grayStep, imageSize: CGSize(width: frame.image.width, height: frame.image.height))
+        if gx != 0 || gy != 0 { prevGray = prevGray?.shifted(dx: gx, dy: gy) }
+        shiftContent(dx: px, dy: py, dxGray: gx, dyGray: gy, imageSize: CGSize(width: frame.image.width, height: frame.image.height))
         kick()
     }
 
@@ -255,9 +263,8 @@ actor RegionPipeline {
         ignoreFramesUntil = ProcessInfo.processInfo.systemUptime + 0.12
     }
 
-    private func shiftContent(dxGray: Int, dyGray: Int, step: Int, imageSize: CGSize) {
+    private func shiftContent(dx: CGFloat, dy: CGFloat, dxGray: Int, dyGray: Int, imageSize: CGSize) {
         scrollEpoch += 1
-        let dx = CGFloat(dxGray * step), dy = CGFloat(dyGray * step)
         let bounds = CGRect(origin: .zero, size: imageSize)
         blocks = blocks.compactMap { b in
             var b = b
@@ -266,7 +273,7 @@ actor RegionPipeline {
             // Blocks cut by the edge stay (the overlay clips them, like a lens); gone ones are dropped.
             return b.rect.intersects(bounds) ? b : nil
         }
-        if let base = baseGray {
+        if let base = baseGray, dxGray != 0 || dyGray != 0 {
             baseGray = base.shifted(dx: dxGray, dy: dyGray)
             for strip in base.vacatedStrips(dx: dxGray, dy: dyGray) {
                 forcedDirty = forcedDirty.map { PixelRect($0.cgRect.union(strip.cgRect)) } ?? strip
@@ -312,7 +319,7 @@ actor RegionPipeline {
                 let textChanged = b.source != line.text
                 b.rect = boxRect
                 b.lines = [line.rect]
-                if textChanged { b.source = line.text; b.translation = nil; b.isQualityTranslation = false }
+                if textChanged { b.source = line.text; b.translation = nil }
                 if moved || textChanged || b.erased != nil {
                     b.erased = nil
                     b.appearance = appearance(of: line.rect, in: frame.image)
@@ -327,7 +334,7 @@ actor RegionPipeline {
         blocks = updated
         baseGray = frame.gray
         forcedDirty = nil
-        await fillTranslations(tier: .fast)
+        await fillTranslations()
         renderMissing()
         emit(animated: false)
     }
@@ -358,24 +365,19 @@ actor RegionPipeline {
                                          new: found.map { .init(rect: $0.rect, text: $0.text) })
         var next: [Block] = []
         for (i, ocr) in found.enumerated() {
-            guard let (rect, erased, look) = erase(ocr, in: full) else { continue }
-            var b = Block(id: UUID(), rect: rect.cgRect, lines: ocr.lines.map(\.rect), source: ocr.text, appearance: look)
-            if let oi = matches[i] {
-                let old = blocks[oi]
-                b = Block(id: old.id, rect: rect.cgRect, lines: b.lines, source: ocr.text, appearance: look)
-                if old.source == ocr.text {
-                    b.translation = old.translation
-                    b.isQualityTranslation = old.isQualityTranslation
-                }
-            }
-            b.erased = erased
+            guard let e = erase(ocr, in: full) else { continue }
+            let id = matches[i].map { blocks[$0].id } ?? UUID()
+            var b = Block(id: id, rect: e.rect.cgRect, lines: ocr.lines.map(\.rect), source: ocr.text, appearance: e.look,
+                          fontSize: e.fontSize, spareWidth: e.spare)
+            if let oi = matches[i], blocks[oi].source == ocr.text { b.translation = blocks[oi].translation }
+            b.erased = e.patch
             next.append(b)
         }
         Trace.mark("seamless: erase \(next.count) blocks", since: t); t = Trace.now
         blocks = next
         baseGray = frame.gray
         forcedDirty = nil
-        await fillTranslations(tier: .quality)
+        await fillTranslations()
         renderMissing()
         Trace.mark("seamless: render", since: t)
         emit(animated: true)
@@ -383,24 +385,41 @@ actor RegionPipeline {
 
     // MARK: - Erasing
 
-    /// Erases a block's text. Returns the patch rect (pixels), the repaired patch and the text's look.
-    private func erase(_ block: OCRBlock, in full: RGBAImage) -> (PixelRect, RGBAImage, TextAppearance)? {
+    private struct Erased {
+        var rect: PixelRect
+        var patch: RGBAImage
+        var look: TextAppearance
+        var fontSize: CGFloat?
+        var spare: CGFloat
+    }
+
+    /// Erases a block's text: builds the glyph mask per line, then fills it (flat backgrounds) or inpaints it
+    /// (textured ones). The patch also takes in free background to the right for longer translations.
+    private func erase(_ block: OCRBlock, in full: RGBAImage) -> Erased? {
         let lineHeight = block.lines.map(\.rect.height).sorted()[block.lines.count / 2]
         let ring = max(3, Int(lineHeight * 0.18))
-        let rect = PixelRect(block.rect.insetBy(dx: -CGFloat(ring), dy: -CGFloat(ring))).clamped(width: full.width, height: full.height)
+        var rect = PixelRect(block.rect.insetBy(dx: -CGFloat(ring), dy: -CGFloat(ring))).clamped(width: full.width, height: full.height)
         guard !rect.isEmpty else { return nil }
-        var patch = full.cropped(to: rect)
-        var mask = [UInt8](repeating: 0, count: rect.width * rect.height)
-        var looks: [TextAppearance] = []
 
+        var masks: [(PixelRect, TextMask)] = []
+        var glyphHeights: [CGFloat] = []
         for line in block.lines {
             let lr = PixelRect(line.rect.insetBy(dx: -CGFloat(ring), dy: -CGFloat(ring))).clamped(width: full.width, height: full.height)
             guard !lr.isEmpty else { continue }
-            let sub = full.cropped(to: lr)
             let text = PixelRect(line.rect).clamped(width: full.width, height: full.height)
             let local = PixelRect(x: text.x - lr.x, y: text.y - lr.y, width: text.width, height: text.height)
-            let m = TextEraser.mask(for: sub, textRect: local, dilation: max(1, Int(line.rect.height * 0.07)))
-            looks.append(m.appearance)
+            let m = TextEraser.mask(for: full.cropped(to: lr), textRect: local, dilation: max(1, Int(line.rect.height * 0.07)))
+            masks.append((lr, m))
+            if let g = m.glyphBounds { glyphHeights.append(CGFloat(g.height)) }
+        }
+        // Prefer a line whose glyphs were actually segmented over a whole-box fallback.
+        guard let look = masks.map(\.1.appearance).first(where: { $0.coverage < 0.95 }) ?? masks.first?.1.appearance else { return nil }
+
+        let spare = freeWidth(rightOf: rect, in: full, background: look.backgroundColor)
+        rect.width += spare
+        var patch = full.cropped(to: rect)
+        var mask = [UInt8](repeating: 0, count: rect.width * rect.height)
+        for (lr, m) in masks {
             for y in 0..<lr.height {
                 for x in 0..<lr.width where m.bits[y * lr.width + x] != 0 {
                     let px = lr.x + x - rect.x, py = lr.y + y - rect.y
@@ -408,11 +427,12 @@ actor RegionPipeline {
                 }
             }
         }
-        // Prefer a line whose glyphs were actually segmented over a whole-box fallback.
-        guard let look = looks.first(where: { $0.coverage < 0.95 }) ?? looks.first else { return nil }
 
-        let flat = looks.allSatisfy(\.isFlatBackground)
-        if !flat, options.useInpainting, let inpainter {
+        TextEraser.fillEnclosedHoles(&mask, width: rect.width, height: rect.height)
+        let flat = masks.allSatisfy(\.1.appearance.isFlatBackground)
+        if ProcessInfo.processInfo.environment["MWOYEA_ERASE_ONLY"] == "mask" {
+            for i in mask.indices where mask[i] != 0 { patch.set(x: i % rect.width, y: i / rect.width, RGBA(255, 0, 0)) }
+        } else if !flat, options.useInpainting, let inpainter {
             do {
                 patch = try inpainter.inpaint(frame: full, rect: rect, mask: mask)
             } catch {
@@ -422,7 +442,34 @@ actor RegionPipeline {
         } else {
             TextEraser.fill(&patch, mask: mask)
         }
-        return (rect, patch, look)
+        let glyph = glyphHeights.isEmpty ? nil : glyphHeights.sorted()[glyphHeights.count / 2]
+        return Erased(rect: rect, patch: patch, look: look, fontSize: glyph.map { Self.emSize(glyphHeight: $0, text: block.text) },
+                      spare: CGFloat(spare))
+    }
+
+    /// Columns to the right of `rect` that hold nothing but the background colour (up to 80 % more width).
+    private func freeWidth(rightOf rect: PixelRect, in full: RGBAImage, background: RGBA) -> Int {
+        let limit = min(full.width - (rect.x + rect.width), Int(Double(rect.width) * 0.8))
+        guard limit > 0 else { return 0 }
+        var free = 0
+        columns: while free < limit {
+            let x = rect.x + rect.width + free
+            for y in stride(from: rect.y, to: rect.y + rect.height, by: 2) where full.color(x: x, y: y).distance(to: background) > 22 {
+                break columns
+            }
+            free += 1
+        }
+        // Leave a margin before whatever stopped us (a box edge, another label).
+        return free < limit ? max(0, free - max(4, rect.height / 4)) : free
+    }
+
+    /// Em size from the measured glyph height: CJK and Hangul glyphs fill ~88 % of the em; Latin text spans
+    /// cap height (~70 %) or, with descenders, ascender-to-descender (~95 %).
+    static func emSize(glyphHeight h: CGFloat, text: String) -> CGFloat {
+        if text.contains(where: TextRecognizer.isCJK) || text.unicodeScalars.contains(where: { (0xAC00...0xD7A3).contains($0.value) }) {
+            return h / 0.88
+        }
+        return text.contains(where: { "gjpqy".contains($0) }) ? h / 0.95 : h / 0.72
     }
 
     private func appearance(of lineRect: CGRect, in image: CGImage) -> TextAppearance {
@@ -439,54 +486,44 @@ actor RegionPipeline {
     // MARK: - Translation
 
     /// Fills translations from the cache right away, and requests the rest in the background.
-    private func fillTranslations(tier: TranslationTier) async {
+    private func fillTranslations() async {
         var missing: [String] = []
-        for i in blocks.indices {
-            let b = blocks[i]
-            if tier == .quality, !b.isQualityTranslation, await translator.hasQualityTranslation(b.source) {
-                blocks[i].translation = await translator.cached(b.source)
-                blocks[i].isQualityTranslation = true
-                blocks[i].image = nil
-            } else if b.translation == nil, let hit = await translator.cached(b.source) {
+        // Reading order, so translations fill in top to bottom.
+        for i in blocks.indices.sorted(by: { blocks[$0].rect.minY < blocks[$1].rect.minY }) where blocks[i].translation == nil {
+            if let hit = await translator.cached(blocks[i].source) {
                 blocks[i].translation = hit
                 blocks[i].image = nil
-            }
-            if blocks[i].translation == nil || (tier == .quality && !blocks[i].isQualityTranslation) {
-                missing.append(b.source)
+            } else {
+                missing.append(blocks[i].source)
             }
         }
-        request(missing, tier: tier)
+        request(missing)
     }
 
-    private func request(_ texts: [String], tier: TranslationTier) {
-        let tag = tier == .quality ? "q|" : "f|"
-        let todo = Array(Set(texts)).filter { !inFlight.contains(tag + $0) }
+    private func request(_ texts: [String]) {
+        var seen = Set<String>()
+        let todo = texts.filter { !inFlight.contains($0) && seen.insert($0).inserted }
         guard !todo.isEmpty else { return }
-        todo.forEach { inFlight.insert(tag + $0) }
+        inFlight.formUnion(todo)
         setActivity(.translating)
         Task {
             let t = Trace.now
-            let result = await translator.translate(todo, tier: tier) { source, translated in
-                Task { await self.receive([source: translated], tier: tier, requested: []) }
+            let result = await translator.translate(todo) { source, translated in
+                Task { await self.receive([source: translated], requested: []) }
             }
-            Trace.mark("translate \(tier) ×\(todo.count)", since: t)
-            self.receive(result, tier: tier, requested: todo)
+            Trace.mark("translate ×\(todo.count)", since: t)
+            self.receive(result, requested: todo)
         }
     }
 
-    private func receive(_ result: [String: String], tier: TranslationTier, requested: [String]) {
-        let tag = tier == .quality ? "q|" : "f|"
-        requested.forEach { inFlight.remove(tag + $0) }
+    private func receive(_ result: [String: String], requested: [String]) {
+        requested.forEach { inFlight.remove($0) }
         var changed = false
         for i in blocks.indices {
-            guard let t = result[blocks[i].source] else { continue }
-            if tier == .fast, blocks[i].isQualityTranslation { continue }
-            if blocks[i].translation != t {
-                blocks[i].translation = t
-                blocks[i].image = nil
-                changed = true
-            }
-            if tier == .quality { blocks[i].isQualityTranslation = true }
+            guard let t = result[blocks[i].source], blocks[i].translation != t else { continue }
+            blocks[i].translation = t
+            blocks[i].image = nil
+            changed = true
         }
         if changed {
             renderMissing()
@@ -507,7 +544,8 @@ actor RegionPipeline {
                 ?? .box(b.appearance.backgroundColor, opacity: options.boxOpacity)
             blocks[i].image = BlockRenderer.render(.init(
                 size: b.rect.size, text: text, background: background, appearance: b.appearance,
-                lineHeight: lineHeight, originalLineCount: max(1, b.lines.count), fontStyle: options.fontStyle,
+                lineHeight: lineHeight, fontSize: b.fontSize, originalLineCount: max(1, b.lines.count), spareWidth: b.spareWidth,
+                fontStyle: options.fontStyle,
                 targetLanguage: options.targetLanguage, scale: scale))
         }
     }

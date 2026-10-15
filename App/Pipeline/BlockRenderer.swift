@@ -16,9 +16,13 @@ enum BlockRenderer {
         var text: String
         var background: Background
         var appearance: TextAppearance
-        /// Height of one original text line in pixels — the starting point for the font size.
+        /// Height of one original text line box in pixels.
         var lineHeight: CGFloat
+        /// Font size (pixels, em) estimated from the original glyphs; the starting point for fitting.
+        var fontSize: CGFloat?
         var originalLineCount: Int
+        /// Extra pixels on the right the text may spill into (flat background, nothing else there).
+        var spareWidth: CGFloat = 0
         var fontStyle: FontStyleChoice
         var targetLanguage: String
         var scale: CGFloat
@@ -43,21 +47,41 @@ enum BlockRenderer {
             ctx.fillPath()
         }
 
-        let padX = max(1, input.lineHeight * 0.08), padY = max(0, input.lineHeight * 0.02)
-        let box = bounds.insetBy(dx: padX, dy: padY)
+        let padX = max(1, input.lineHeight * 0.06), padY = max(0, input.lineHeight * 0.02)
+        // The text box is the original block; `spareWidth` on the right is only used if the text needs it.
+        let full = bounds.insetBy(dx: padX, dy: padY)
+        let original = CGRect(x: full.minX, y: full.minY, width: max(1, full.width - input.spareWidth), height: full.height)
         let textColor = legibleTextColor(input.appearance)
         let weight = fontWeight(coverage: input.appearance.coverage)
-
-        // Glyphs fill ~75% of a recognized line box; start there and shrink to fit.
-        let maxSize = max(6 * input.scale, input.lineHeight * 0.78)
-        let minSize = min(maxSize, max(7 * input.scale, input.lineHeight * 0.45))
-        let size = TextFitter.fitFontSize(in: box.size, minSize: minSize, maxSize: maxSize) { s in
-            TextFitter.measure(attributed(input.text, size: s, weight: weight, style: input.fontStyle, color: textColor,
-                                          language: input.targetLanguage), width: box.width)
+        func make(_ s: CGFloat) -> NSAttributedString {
+            attributed(input.text, size: s, weight: weight, style: input.fontStyle, color: textColor, language: input.targetLanguage)
         }
-        let string = attributed(input.text, size: size, weight: weight, style: input.fontStyle, color: textColor,
-                                language: input.targetLanguage)
-        let measured = TextFitter.measure(string, width: box.width)
+
+        let maxSize = max(6 * input.scale, min(input.fontSize ?? input.lineHeight * 0.78, input.lineHeight * 1.05))
+        let minSize = min(maxSize, max(7 * input.scale, maxSize * 0.55))
+        var box = original
+        var size: CGFloat
+        var wraps = input.originalLineCount != 1
+        if !wraps {
+            // A single line stays a single line: first at full size within the original width, then spilling
+            // right into free space, and only then shrinking. Wrap as a last resort.
+            let unwrapped = { (s: CGFloat) in TextFitter.measure(make(s), width: .greatestFiniteMagnitude) }
+            let needed = unwrapped(maxSize).width
+            if needed > original.width { box.size.width = min(full.width, max(original.width, needed + 2)) }
+            size = TextFitter.fitFontSize(in: CGSize(width: box.width, height: .greatestFiniteMagnitude), minSize: minSize, maxSize: maxSize, measure: unwrapped)
+            if unwrapped(size).width > box.width + 0.5 {
+                wraps = true
+                size = TextFitter.fitFontSize(in: box.size, minSize: minSize * 0.8, maxSize: maxSize) { TextFitter.measure(make($0), width: box.width) }
+            }
+        } else {
+            size = TextFitter.fitFontSize(in: box.size, minSize: minSize, maxSize: maxSize) { TextFitter.measure(make($0), width: box.width) }
+            if TextFitter.measure(make(size), width: box.width).height > box.height + 0.5, input.spareWidth > 0 {
+                box.size.width = full.width
+                size = TextFitter.fitFontSize(in: box.size, minSize: minSize, maxSize: maxSize) { TextFitter.measure(make($0), width: box.width) }
+            }
+        }
+        let string = make(size)
+        let measured = TextFitter.measure(string, width: wraps ? box.width : .greatestFiniteMagnitude)
 
         // Vertically centre; CoreText draws in a y-up space, which matches CGContext's default.
         let textRect = CGRect(x: box.minX, y: box.midY - measured.height / 2, width: box.width, height: measured.height)
@@ -65,8 +89,10 @@ enum BlockRenderer {
             // Busy background: a soft halo in the background colour keeps text readable.
             ctx.setShadow(offset: .zero, blur: size * 0.25, color: input.appearance.backgroundColor.cgColor)
         }
+        if ProcessInfo.processInfo.environment["MWOYEA_ERASE_ONLY"] != nil { return ctx.makeImage() } // debug: background only
         let setter = CTFramesetterCreateWithAttributedString(string)
-        let frame = CTFramesetterCreateFrame(setter, CFRange(location: 0, length: 0), CGPath(rect: textRect.insetBy(dx: 0, dy: -2), transform: nil), nil)
+        let path = CGPath(rect: CGRect(x: textRect.minX, y: textRect.minY - 2, width: max(textRect.width, measured.width + 1), height: textRect.height + 4), transform: nil)
+        let frame = CTFramesetterCreateFrame(setter, CFRange(location: 0, length: 0), path, nil)
         CTFrameDraw(frame, ctx)
         return ctx.makeImage()
     }

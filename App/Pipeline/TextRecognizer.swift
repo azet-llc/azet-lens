@@ -31,11 +31,15 @@ enum TextRecognizer {
             req.recognitionLanguages = languages
         }
         let size = CGSize(width: image.width, height: image.height)
-        if let roi { req.regionOfInterest = normalized(roi, in: size) }
+        let region = roi.map { normalized($0, in: size) } ?? NormalizedRect(x: 0, y: 0, width: 1, height: 1)
+        req.regionOfInterest = region
         let observations = try await req.perform(on: image)
         return observations.compactMap { obs in
             guard let candidate = obs.topCandidates(1).first, candidate.confidence >= 0.3 else { return nil }
-            return OCRLine(rect: pixelRect(obs.boundingBox.cgRect, in: size), text: candidate.string)
+            // Boxes come back normalized to the region of interest, not the whole image.
+            let r = region.cgRect, b = obs.boundingBox.cgRect
+            let full = CGRect(x: r.minX + b.minX * r.width, y: r.minY + b.minY * r.height, width: b.width * r.width, height: b.height * r.height)
+            return OCRLine(rect: pixelRect(full, in: size), text: candidate.string)
         }
     }
 

@@ -158,7 +158,13 @@ private final class FrameChromeView: NSView {
         let dx = m.x - startMouse.x, dy = m.y - startMouse.y
         switch drag {
         case .move:
-            let r = startRegion.offsetBy(dx: dx, dy: dy)
+            var r = startRegion.offsetBy(dx: dx, dy: dy)
+            // Keep the lens on its screen: the capture cannot span displays.
+            if let screen = NSScreen.screens.first(where: { $0.frame.contains(NSPoint(x: startRegion.midX, y: startRegion.midY)) }) {
+                let f = screen.frame
+                r.origin.x = min(max(r.minX, f.minX), f.maxX - r.width)
+                r.origin.y = min(max(r.minY, f.minY), f.maxY - r.height)
+            }
             w.setRegion(r)
             w.onMove?(r)
         case .resize:

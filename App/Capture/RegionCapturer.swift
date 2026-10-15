@@ -43,7 +43,8 @@ final class RegionCapturer: NSObject, SCStreamOutput, SCStreamDelegate, @uncheck
 
     /// Moves/resizes the captured rect without restarting (same display).
     func update(rect: CGRect, fps: Double) async throws {
-        guard let stream, displayFrame.intersects(rect) else {
+        // Moving onto another display needs a new filter; within one display, reconfigure in place.
+        guard let stream, displayFrame.contains(CGPoint(x: rect.midX, y: rect.midY)) else {
             try await start(rect: rect, fps: fps)
             return
         }

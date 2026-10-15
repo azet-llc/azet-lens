@@ -4,16 +4,6 @@ import MwoyeaCore
 import NaturalLanguage
 import Translation
 
-/// Which kind of pass a translation is for. Seamless passes may use the slower, more natural engine.
-enum TranslationTier: Sendable {
-    case fast
-    case quality
-}
-
-struct TranslationRequestItem: Sendable, Hashable {
-    let text: String
-}
-
 /// Something the user can act on (missing language pack, Apple Intelligence off, …).
 enum TranslationIssue: Error, Equatable, Sendable {
     case languagePackMissing(source: String, target: String)
@@ -33,10 +23,17 @@ enum TranslationIssue: Error, Equatable, Sendable {
 }
 
 /// Owns every translation engine and the translation cache. Shared by all regions.
+///
+/// Engines, all on-device:
+/// - Apple Translation, low latency — needs the language pack; the fastest.
+/// - Apple Translation, high fidelity — Apple Intelligence's translation model; no pack needed, ~0.5 s a line.
+/// - Foundation Models — a prompted LLM, for when the glossary must be followed.
 actor TranslationService {
+    private typealias Strategy = TranslationSession.Strategy
+
     private var settings: AppSettings
     private let cache = LRUCache<String, String>(capacity: 5000)
-    private var appleSessions: [String: TranslationSession] = [:]
+    private var sessions: [String: TranslationSession] = [:]
     private var pairStatus: [String: LanguageAvailability.Status] = [:]
     private let intelligence = IntelligenceTranslator()
     private var issueHandler: (@Sendable (TranslationIssue?) -> Void)?
@@ -46,11 +43,13 @@ actor TranslationService {
     }
 
     func update(settings new: AppSettings) {
-        let languagesChanged = new.sourceLanguage != settings.sourceLanguage || new.targetLanguage != settings.targetLanguage
-        let glossaryChanged = new.glossary != settings.glossary
+        let changed = new.sourceLanguage != settings.sourceLanguage || new.targetLanguage != settings.targetLanguage
+            || new.glossary != settings.glossary || new.engine != settings.engine
         settings = new
-        if languagesChanged || glossaryChanged { cache.removeAll() }
-        if languagesChanged { appleSessions.removeAll() }
+        if changed {
+            cache.removeAll()
+            sessions.removeAll()
+        }
     }
 
     func setIssueHandler(_ h: @escaping @Sendable (TranslationIssue?) -> Void) { issueHandler = h }
@@ -58,28 +57,27 @@ actor TranslationService {
     /// Call after the user downloads a language pack.
     func invalidateAvailability() {
         pairStatus.removeAll()
-        appleSessions.removeAll()
+        sessions.removeAll()
     }
 
-    func prewarm() {
-        intelligence.prewarm(settings: settings)
+    func prewarm() async {
+        if settings.engine == .customModel { intelligence.prewarm(settings: settings); return }
+        // Loading the translation model takes a moment the first time; do it before the first region.
+        let source = settings.sourceLanguage == "auto" ? "ja" : settings.sourceLanguage
+        if let (session, _) = try? await session(source: source) { _ = try? await session.translate("。") }
     }
 
-    /// Best cached translation without doing any work. Quality results win over fast ones.
-    func cached(_ text: String) -> String? {
-        cache[key(text, tier: .quality)] ?? cache[key(text, tier: .fast)]
-    }
+    /// Cached translation, without doing any work.
+    func cached(_ text: String) -> String? { cache[key(text)] }
 
-    func hasQualityTranslation(_ text: String) -> Bool { cache[key(text, tier: .quality)] != nil }
-
-    /// Translates `texts`, returning a dictionary of source → translation for those that succeeded.
-    /// `onResult` fires as each translation lands (Apple Intelligence finishes short lines first), so callers can show them progressively.
-    func translate(_ texts: [String], tier: TranslationTier,
-                   onResult: (@Sendable (String, String) -> Void)? = nil) async -> [String: String] {
+    /// Translates `texts` (in the given order — callers pass reading order so results fill the screen top to
+    /// bottom), returning source → translation for those that succeeded. `onResult` fires as each one lands.
+    func translate(_ texts: [String], onResult: (@Sendable (String, String) -> Void)? = nil) async -> [String: String] {
         var result: [String: String] = [:]
         var todo: [String] = []
-        for t in Set(texts) {
-            if let hit = cache[key(t, tier: tier)] ?? (tier == .fast ? cache[key(t, tier: .quality)] : nil) {
+        var seen = Set<String>()
+        for t in texts where seen.insert(t).inserted {
+            if let hit = cache[key(t)] {
                 result[t] = hit
                 onResult?(t, hit)
             } else {
@@ -88,19 +86,23 @@ actor TranslationService {
         }
         guard !todo.isEmpty else { return result }
 
-        let target = Locale.Language(identifier: settings.targetLanguage)
-        // Group by source language so each Apple Translation session handles one pair.
+        // Group by source language (keeping order) so each session handles one pair.
+        var order: [String] = []
         var groups: [String: [String]] = [:]
-        for t in todo { groups[sourceLanguage(for: t), default: []].append(t) }
+        for t in todo {
+            let lang = sourceLanguage(for: t)
+            if groups[lang] == nil { order.append(lang) }
+            groups[lang, default: []].append(t)
+        }
 
-        for (source, items) in groups {
+        for source in order {
+            let items = groups[source]!
+            let deliver: @Sendable (String, String) -> Void = { s, t in onResult?(s, t) }
             do {
-                let translated = try await translateGroup(items, source: source, target: target, tier: tier) { s, t in
-                    onResult?(s, t)
-                }
+                let translated = try await translateGroup(items, source: source, onResult: deliver)
                 for (s, t) in translated {
                     result[s] = t
-                    cache[key(s, tier: tier)] = t
+                    cache[key(s)] = t
                 }
                 issueHandler?(nil)
             } catch let issue as TranslationIssue {
@@ -114,69 +116,58 @@ actor TranslationService {
 
     // MARK: - Engines
 
-    private func translateGroup(_ items: [String], source: String, target: Locale.Language, tier: TranslationTier,
+    private func translateGroup(_ items: [String], source: String,
                                 onResult: @escaping @Sendable (String, String) -> Void) async throws -> [String: String] {
-        let targetID = settings.targetLanguage
-        let wantsIntelligence: Bool = switch settings.engine {
-        case .appleIntelligence: true
-        case .appleTranslation: false
-        case .auto: tier == .quality
-        }
-
-        if wantsIntelligence, intelligence.isAvailable {
-            do {
-                return try await intelligence.translate(items, source: source == "und" ? nil : source, target: targetID,
-                                                        glossary: settings.glossaryPairs, onResult: onResult)
-            } catch {
-                // Guardrails or an unsupported language: fall through to Apple Translation when we can.
-                if settings.engine == .appleIntelligence, try await appleTranslationStatus(source: source) != .installed {
-                    throw TranslationIssue.failed(error.localizedDescription)
-                }
-            }
-        }
-
-        switch try await appleTranslationStatus(source: source) {
-        case .installed:
-            let out = try await appleTranslate(items, source: source, target: target)
-            for (s, t) in out { onResult(s, t) }
-            return out
-        case .supported:
-            // No pack yet. Apple Intelligence can still cover this pair in auto mode.
-            if settings.engine != .appleTranslation, intelligence.isAvailable {
-                return try await intelligence.translate(items, source: source == "und" ? nil : source, target: targetID,
-                                                        glossary: settings.glossaryPairs, onResult: onResult)
-            }
-            throw TranslationIssue.languagePackMissing(source: source, target: targetID)
-        default:
+        if settings.engine == .customModel {
             if intelligence.isAvailable {
-                return try await intelligence.translate(items, source: nil, target: targetID,
+                return try await intelligence.translate(items, source: source == "und" ? nil : source, target: settings.targetLanguage,
                                                         glossary: settings.glossaryPairs, onResult: onResult)
             }
-            if let why = intelligence.unavailableReason { throw TranslationIssue.intelligenceUnavailable(why) }
-            throw TranslationIssue.unsupportedPair(source: source, target: targetID)
+            // Fall through to Apple Translation; say why the chosen engine is not used.
+            issueHandler?(.intelligenceUnavailable(intelligence.unavailableReason ?? ""))
         }
+        guard source != "und" else { throw TranslationIssue.failed("언어를 알아볼 수 없습니다") }
+        let (session, _) = try await session(source: source)
+        return try await stream(items, through: session, onResult: onResult)
     }
 
-    private func appleTranslationStatus(source: String) async throws -> LanguageAvailability.Status {
-        guard source != "und" else { return .unsupported }
-        let pair = "\(source)>\(settings.targetLanguage)"
-        if let s = pairStatus[pair] { return s }
-        let s = await LanguageAvailability().status(from: Locale.Language(identifier: source),
-                                                     to: Locale.Language(identifier: settings.targetLanguage))
-        pairStatus[pair] = s
-        return s
+    /// Picks the session for `source` → target: the low-latency pack when installed (auto), otherwise
+    /// Apple Intelligence's high-fidelity model.
+    private func session(source: String) async throws -> (TranslationSession, Strategy) {
+        let wanted: [Strategy] = settings.engine == .highFidelity ? [.highFidelity] : [.lowLatency, .highFidelity]
+        var downloadable = false
+        for strategy in wanted {
+            let id = "\(source)>\(settings.targetLanguage)|\(strategy == .highFidelity ? "hf" : "ll")"
+            if let s = sessions[id] { return (s, strategy) }
+            let status: LanguageAvailability.Status
+            if let cached = pairStatus[id] { status = cached } else {
+                status = await LanguageAvailability(preferredStrategy: strategy)
+                    .status(from: Locale.Language(identifier: source), to: Locale.Language(identifier: settings.targetLanguage))
+                pairStatus[id] = status
+            }
+            if status == .supported { downloadable = true }
+            guard status == .installed else { continue }
+            let s = TranslationSession(installedSource: Locale.Language(identifier: source),
+                                       target: Locale.Language(identifier: settings.targetLanguage), preferredStrategy: strategy)
+            sessions[id] = s
+            return (s, strategy)
+        }
+        if downloadable {
+            throw TranslationIssue.languagePackMissing(source: source, target: settings.targetLanguage)
+        }
+        throw TranslationIssue.unsupportedPair(source: source, target: settings.targetLanguage)
     }
 
-    private func appleTranslate(_ items: [String], source: String, target: Locale.Language) async throws -> [String: String] {
-        let pair = "\(source)>\(settings.targetLanguage)"
-        let session = appleSessions[pair] ?? TranslationSession(installedSource: Locale.Language(identifier: source), target: target)
-        appleSessions[pair] = session
+    /// Batch request whose responses arrive one by one, in order.
+    private func stream(_ items: [String], through session: TranslationSession,
+                        onResult: @escaping @Sendable (String, String) -> Void) async throws -> [String: String] {
         let requests = items.enumerated().map { TranslationSession.Request(sourceText: $1, clientIdentifier: String($0)) }
-        let responses = try await session.translations(from: requests)
         var out: [String: String] = [:]
-        for r in responses {
+        for try await r in session.translate(batch: requests) {
             guard let id = r.clientIdentifier, let i = Int(id), i < items.count else { continue }
-            out[items[i]] = applyGlossary(r.targetText, source: items[i])
+            let t = applyGlossary(r.targetText, source: items[i])
+            out[items[i]] = t
+            onResult(items[i], t)
         }
         return out
     }
@@ -192,8 +183,8 @@ actor TranslationService {
 
     // MARK: - Helpers
 
-    private func key(_ text: String, tier: TranslationTier) -> String {
-        "\(tier == .quality ? "q" : "f")|\(settings.targetLanguage)|\(text)"
+    private func key(_ text: String) -> String {
+        "\(settings.engine.rawValue)|\(settings.targetLanguage)|\(text)"
     }
 
     /// The configured source language, or the dominant language of `text` when set to auto ("und" if unsure).
@@ -214,7 +205,7 @@ actor TranslationService {
 /// On-device Apple Intelligence (Foundation Models) translator: natural phrasing, glossary-aware.
 final class IntelligenceTranslator: @unchecked Sendable {
     private let model = SystemLanguageModel(guardrails: .permissiveContentTransformations)
-    private let maxConcurrent = 4
+    private let maxConcurrent = 3
 
     var isAvailable: Bool {
         if case .available = model.availability { return true }
@@ -246,15 +237,15 @@ final class IntelligenceTranslator: @unchecked Sendable {
                    onResult: (@Sendable (String, String) -> Void)? = nil) async throws -> [String: String] {
         var out: [String: String] = [:]
         var firstError: Error?
-        // Shortest first: they finish fastest and fill the screen quickly.
-        var queue = items.sorted { $0.count < $1.count }[...]
+        var queue = items[...] // reading order
+
         try await withThrowingTaskGroup(of: (String, String?, Error?).self) { group in
             func launch() {
                 guard let src = queue.popFirst() else { return }
                 group.addTask {
                     do {
                         let r = try await self.session(source: source, target: target, glossary: glossary)
-                            .respond(to: src, options: GenerationOptions(sampling: .greedy))
+                            .respond(to: src, options: GenerationOptions(samplingMode: .greedy))
                         return (src, Self.clean(r.content, source: src), nil)
                     } catch {
                         return (src, nil, error)
