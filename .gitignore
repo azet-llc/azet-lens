@@ -1,0 +1,8 @@
+.DS_Store
+build/
+.build/
+DerivedData/
+*.xcodeproj/
+Config/Local.xcconfig
+.test.log
+.build.log
