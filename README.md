@@ -8,7 +8,7 @@ Put a lens over a chat, a feed or a game. The original text disappears and the t
 
 <p align="center">
   <code>brew install midagedev/tap/mwoyeo</code><br>
-  <sub>macOS 27 · Apple silicon · everything on-device · <a href="https://github.com/midagedev/mwoyeo/releases/latest">v1.0.0</a></sub>
+  <sub>macOS 27 · Apple silicon · everything on-device · <a href="https://github.com/midagedev/mwoyeo/releases/latest">v1.0.2</a></sub>
 </p>
 
 <p align="center"><img src="docs/media/hero.gif" width="640" alt="A lens over a Japanese chat: new messages are rewritten in Korean in place; the lens is dragged and resized, the chat scrolls under it, and ⌃⌥O flips back to the original."></p>

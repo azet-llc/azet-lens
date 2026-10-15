@@ -8,10 +8,11 @@ struct KeyCombo: Codable, Equatable {
     var modifiers: UInt32
     var display: String
 
-    /// A combo from a key press, if it has a modifier besides ⇧ (bare keys would steal typing in every app).
+    /// A combo from a key press, if it has ⌃ or ⌥. Bare keys would steal typing in every app, and ⌘ combos are
+    /// the apps' own (⌘Q, ⌘W, ⌘C…): registered globally they would stop working everywhere.
     init?(event: NSEvent) {
         let f = event.modifierFlags.intersection([.control, .option, .shift, .command])
-        guard !f.intersection([.control, .option, .command]).isEmpty,
+        guard !f.intersection([.control, .option]).isEmpty,
               let key = event.charactersIgnoringModifiers?.uppercased(), !key.isEmpty else { return nil }
         keyCode = UInt32(event.keyCode)
         modifiers = (f.contains(.control) ? UInt32(controlKey) : 0) | (f.contains(.option) ? UInt32(optionKey) : 0)
