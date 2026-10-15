@@ -148,10 +148,20 @@ public enum FrameDiff {
                 : verticalShift(from: a.cropped(to: rect), to: b.cropped(to: rect), maxShift: min(maxShift, rect.height / 4))
             bands.append((rect, dy))
         }
-        for i in bands.indices where bands[i].dy == nil {
-            let near = [i - 1, i + 1].filter { bands.indices.contains($0) }.compactMap { bands[$0].dy }
+        func neighbours(_ i: Int) -> [Double] { [i - 1, i + 1].filter { bands.indices.contains($0) }.compactMap { bands[$0].dy } }
+        func explained(_ i: Int, by shifts: [Double]) -> Double? {
             let ca = a.cropped(to: bands[i].rect), cb = b.cropped(to: bands[i].rect)
-            bands[i].dy = near.first { meanAbsDiff(ca, cb, dy: $0) < 0.8 * meanAbsDiff(ca, cb, dy: 0) }
+            return shifts.first { meanAbsDiff(ca, cb, dy: $0) < 0.8 * meanAbsDiff(ca, cb, dy: 0) }
+        }
+        // A lone band at odds with every neighbour most likely matched something repeating at a wrong shift: it takes
+        // a neighbour's shift if that explains it, or none (a missed band is re-read; a wrong one moves translations).
+        for i in bands.indices {
+            guard let dy = bands[i].dy else { continue }
+            let near = neighbours(i)
+            if !near.isEmpty, near.allSatisfy({ abs($0 - dy) > 0.5 }) { bands[i].dy = explained(i, by: near) }
+        }
+        for i in bands.indices where bands[i].dy == nil {
+            bands[i].dy = explained(i, by: neighbours(i))
         }
         var regions: [ScrollRegion] = []
         var open = false

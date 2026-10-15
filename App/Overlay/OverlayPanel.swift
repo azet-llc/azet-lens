@@ -223,7 +223,9 @@ private final class OverlayHostView: NSView {
             guard let f = placed[id] else { continue }
             let dy = p.map { $0.area.contains(CGPoint(x: f.midX, y: f.midY)) ? $0.dy : 0 } ?? 0
             let target = CGPoint(x: f.midX, y: f.midY + dy)
-            let error = CGVector(dx: l.position.x - target.x, dy: l.position.y - target.y)
+            // Measured from where the block is seen: a correction still easing in carries on from there.
+            let shown = l.animation(forKey: "correction") != nil ? (l.presentation() ?? l).position : l.position
+            let error = CGVector(dx: shown.x - target.x, dy: shown.y - target.y)
             l.position = target
             // Only a correction of a prediction eases; a block placed or moved by the frames alone goes straight there.
             if correcting, was != nil || p != nil, error.dx != 0 || error.dy != 0, hypot(error.dx, error.dy) < 80,

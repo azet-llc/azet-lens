@@ -147,6 +147,23 @@ func texture(width: Int, height: Int, seed: Int = 1) -> GrayImage {
         #expect(FrameDiff.verticalShift(from: a, to: b, maxShift: 30) == nil)
     }
 
+    @Test func loneBandAtOddsTakesItsNeighboursShift() {
+        // Three bands scroll up by 6; the middle one repeats every 34 rows, so -40 matches it as well as -6 does.
+        let page = texture(width: 96, height: 260, seed: 4)
+        func frame(top: Int) -> GrayImage {
+            var g = GrayImage(width: 96, height: 200)
+            for y in 0..<200 { for x in 0..<96 {
+                g[x, y] = x >= 32 && x < 64 ? UInt8(truncatingIfNeeded: ((y + top) % 34) * 7 + x) : page[x, y + top]
+            } }
+            return g
+        }
+        let a = frame(top: 40), b = frame(top: 46)
+        let middle = PixelRect(x: 32, y: 0, width: 32, height: 200)
+        #expect(FrameDiff.verticalShift(from: a.cropped(to: middle), to: b.cropped(to: middle), maxShift: 50) == -40)
+        let regions = FrameDiff.scrollRegions(from: a, to: b, change: FrameDiff.changeMap(from: a, to: b), maxShift: 60)
+        #expect(regions == [ScrollRegion(rect: PixelRect(x: 0, y: 0, width: 96, height: 200), dy: -6)])
+    }
+
     @Test func accumulatorKeepsFractionalMoves() {
         var a = ShiftAccumulator()
         var total = 0
