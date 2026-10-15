@@ -709,6 +709,7 @@ actor RegionPipeline {
     /// Erases a block's text: builds the glyph mask per line, then fills it (flat backgrounds) or inpaints it
     /// (textured ones). The patch also takes in free background to the right for longer translations.
     private func erase(_ block: OCRBlock, in full: RGBAImage) -> Erased? {
+        Trace.count("erase")
         let lineHeight = block.lines.map(\.rect.height).sorted()[block.lines.count / 2]
         let ring = BlockRenderer.eraseMargin(lineHeight: lineHeight)
         var rect = PixelRect(block.rect.insetBy(dx: -CGFloat(ring), dy: -CGFloat(ring))).clamped(width: full.width, height: full.height)
@@ -747,6 +748,7 @@ actor RegionPipeline {
             for i in mask.indices where mask[i] != 0 { patch.set(x: i % rect.width, y: i / rect.width, RGBA(255, 0, 0)) }
         } else if !flat, options.useInpainting, let inpainter {
             do {
+                Trace.count("inpaint")
                 patch = try inpainter.inpaint(frame: full, rect: rect, mask: mask)
             } catch {
                 log.error("inpainting failed: \(error.localizedDescription)")
@@ -882,6 +884,7 @@ actor RegionPipeline {
             let lineHeight = heights.isEmpty ? b.rect.height : heights[heights.count / 2]
             let background: BlockRenderer.Background = b.erased.map { .erased($0) }
                 ?? .box(b.appearance.backgroundColor, opacity: options.boxOpacity)
+            Trace.count("render")
             blocks[i].image = BlockRenderer.render(.init(
                 size: b.rect.size, text: text, background: background, appearance: b.appearance,
                 lineHeight: lineHeight, fontSize: b.fontSize, originalLineCount: max(1, b.lines.count), spareWidth: b.spareWidth,
@@ -952,6 +955,10 @@ enum Trace {
         FileHandle.standardError.write("[trace] \(label()) \(ms) ms\n".data(using: .utf8)!)
     }
     static var now: TimeInterval { ProcessInfo.processInfo.systemUptime }
+    /// Work counters (OCR requests, erases, engine calls…), for the self-test to report.
+    private static let counters = OSAllocatedUnfairLock(initialState: [String: Int]())
+    static func count(_ key: String, _ n: Int = 1) { counters.withLock { $0[key, default: 0] += n } }
+    static func takeCounts() -> [String: Int] { counters.withLock { defer { $0 = [:] }; return $0 } }
     static let dumpDirectory: URL? = ProcessInfo.processInfo.environment["MWOYEO_DUMP"].map { URL(fileURLWithPath: $0) }
 }
 

@@ -12,6 +12,7 @@ import UniformTypeIdentifiers
 ///   Mwoyeo --render screen.png outdir --pan --lens x,y,w,h --to x,y [--steps 40] [--step-ms 100] [--hold-ms 3000]
 /// With `--scroll`, the lens stays and the content scrolls by `--to` instead (screen.png is the whole page); `--scroll-rect x,y,w,h`
 /// scrolls only that part (a message log between a fixed sidebar, header and footer), `--ease` decelerates like inertial scrolling.
+/// `--back` holds at the end, then scrolls back. Work counts (OCR, erase, engine calls) are printed per phase.
 /// `--wheel N` also sends N trackpad scroll events per captured frame and shows the translations where the scroll
 /// predictor puts them between frames (`--no-predict`: where the last frame left them).
 /// Each step prints how far the shown translations are from the text they translate ("drift", points).
@@ -93,6 +94,7 @@ enum SelfTest {
             if !state.busy, Date().timeIntervalSince(lastChange) > 0.6 { break }
         }
         print("pipeline: \(ms(start)) ms")
+        printCounts("still")
         for (source, translation) in await pipeline.debugState().blocks {
             print("  \(source)\n    → \(translation ?? "(no translation)")")
         }
@@ -116,6 +118,11 @@ enum SelfTest {
     }
 
     private static func ms(_ since: Date) -> Int { Int(Date().timeIntervalSince(since) * 1000) }
+
+    /// The work done since the last call: OCR requests, erases, engine calls.
+    private static func printCounts(_ phase: String) {
+        print("work[\(phase)]: " + Trace.takeCounts().sorted { $0.key < $1.key }.map { "\($0.key)=\($0.value)" }.joined(separator: " "))
+    }
 
     /// Drives the pipeline the way `RegionSession` does while a lens is dragged, with frames cropped from `screen`.
     private static func pan(screen: CGImage, scale: CGFloat, settings: AppSettings, translator: TranslationService, inpainter: Inpainter?,
@@ -238,13 +245,24 @@ enum SelfTest {
             if (await pipeline.debugState()).busy { quiet = Date() } else if Date().timeIntervalSince(quiet) > 0.6 { break }
         }
         print("settled at start: \(ms(start)) ms")
+        printCounts("start")
         try shoot()
 
         if scrolling {
             // Scroll: frames change under a still capture; the pipeline notices the motion and asks for wide margins.
             let sub = max(1, wheelsPerFrame)
+            // `--back`: hold at the end, then scroll back to the start (revisiting what was already read).
+            let legs = CommandLine.arguments.contains("--back") ? 2 : 1
+            for leg in 0..<legs {
+            if leg > 0 {
+                for _ in 0 ..< max(1, holdMs / 250) {
+                    try await Task.sleep(for: .milliseconds(250))
+                    try shoot()
+                }
+                printCounts("down")
+            }
             for i in 1...(steps * sub) {
-                let t = CGFloat(i) / CGFloat(steps * sub), f = ease ? 1 - pow(1 - t, 3) : t
+                let t = CGFloat(i) / CGFloat(steps * sub), e = ease ? 1 - pow(1 - t, 3) : t, f = leg == 0 ? e : 1 - e
                 let next = CGVector(dx: (to[0] * f).rounded(), dy: (to[1] * f).rounded())
                 // Scrolling the page down moves its content up.
                 if wheelsPerFrame > 0 { predictor.wheel(delta: Double(scroll.dy - next.dy), time: ProcessInfo.processInfo.systemUptime, precise: true) }
@@ -263,6 +281,7 @@ enum SelfTest {
                 }
                 try await Task.sleep(for: .milliseconds(stepMs / sub))
                 try shoot()
+            }
             }
         } else {
             // Drag: margins widen at once (as `noteMotion` does), then the lens moves in steps.
@@ -286,6 +305,7 @@ enum SelfTest {
         for (source, translation) in await pipeline.debugState().blocks {
             print("  \(source) → \(translation ?? "(no translation)")")
         }
+        printCounts(CommandLine.arguments.contains("--back") ? "back" : "moved")
         print(String(format: "drift: mean %.1f pt, max %.1f pt, %d of %d frames over 2 pt", drifts.reduce(0, +) / CGFloat(max(1, drifts.count)),
                      drifts.max() ?? 0, drifts.filter { $0 > 2 }.count, drifts.count))
     }

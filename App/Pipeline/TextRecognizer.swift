@@ -30,6 +30,7 @@ enum TextRecognizer {
     /// `fast` only reads Latin scripts; callers pick it only for those.
     static func lines(in image: CGImage, roi: CGRect? = nil, languages: [Locale.Language], fast: Bool,
                       customWords: [String] = []) async throws -> [OCRLine] {
+        Trace.count("ocr.lines")
         if fast { return try await fastLines(in: image, roi: roi, languages: languages) }
         var req = RecognizeTextRequest()
         req.recognitionLevel = fast ? .fast : .accurate
@@ -98,6 +99,7 @@ enum TextRecognizer {
 
     /// Paragraph-level recognition via the document recognizer, which groups lines into reading units.
     static func blocks(in image: CGImage, roi: CGRect? = nil, languages: [Locale.Language], customWords: [String] = []) async throws -> [OCRBlock] {
+        Trace.count("ocr.blocks")
         var req = RecognizeDocumentsRequest()
         req.textRecognitionOptions.customWords = customWords
         if languages.isEmpty {

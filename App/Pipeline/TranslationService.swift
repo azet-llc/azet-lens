@@ -124,6 +124,9 @@ actor TranslationService {
 
     private func translateGroup(_ items: [String], source: String,
                                 onResult: @escaping @Sendable (String, String) -> Void) async throws -> [String: String] {
+        Trace.count("translate.requests")
+        Trace.count("translate.texts", items.count)
+        Trace.mark("engine ← \(items.map { $0.debugDescription }.joined(separator: " | "))", since: Trace.now)
         if settings.engine == .customModel {
             if intelligence.isAvailable {
                 return try await intelligence.translate(items, source: source == "und" ? nil : source, target: settings.targetLanguage,
