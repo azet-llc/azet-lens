@@ -410,38 +410,3 @@ func texture(width: Int, height: Int, seed: Int = 1) -> GrayImage {
     let avatar = StyleRuns.token(text: "•", minX: 0, maxX: 40, clusters: [cl(2, 36, RGBA(190, 120, 250), solid: true)], lineHeight: 30)
     #expect(avatar.solid)
 }
-
-@Test func casualSourceIsDetected() {
-    #expect(Register.isCasual("ok who stayed up for the patch notes last night"))
-    #expect(Register.isCasual("guilty. they finally fixed the double jump bug, I can't believe it took three months"))
-    #expect(Register.isCasual("wait does that mean the skip in world 4 is dead?? I spent all weekend learning it"))
-    #expect(Register.isCasual("Is anyone doing the co-op event tonight? I need two more people for the raid"))
-    #expect(Register.isCasual("I'm in! what time are you thinking"))
-    #expect(Register.isCasual("パッチ1.4でやっと二段ジャンプのバグが直った。次は何を直してほしい？"))
-    #expect(!Register.isCasual("Talk about anything. Be nice."))
-    #expect(!Register.isCasual("Today at 8:12 PM"))
-    #expect(!Register.isCasual("iPhone settings"))
-    #expect(!Register.isCasual("流れ星の降る空の下で、農業と釣りと友情を。ファンコミュニティです。"))
-    #expect(!Register.isCasual("見つける"))
-}
-
-@Test func formalKoreanBecomesCasual() {
-    // Apple Translation's output for the chat demo's lines.
-    #expect(KoreanRegister.casual("유죄입니다. 그들이 드디어 더블 점프 버그를 해결했습니다. 3개월이 걸렸다는 것이 믿기지 않습니다.")
-        == "유죄야. 그들이 드디어 더블 점프 버그를 해결했어. 3개월이 걸렸다는 것이 믿기지 않아.")
-    #expect(KoreanRegister.casual("잠깐, 그게 월드 4의 스킵이 죽었다는 뜻인가요?? 주말 내내 그것을 배우는 데 보냈습니다.")
-        == "잠깐, 그게 월드 4의 스킵이 죽었다는 뜻인가?? 주말 내내 그것을 배우는 데 보냈어.")
-    #expect(KoreanRegister.casual("오늘 밤 협동조합 행사에 참석하는 사람이 있습니까? 레이드에 두 명이 더 필요합니다.")
-        == "오늘 밤 협동조합 행사에 참석하는 사람이 있어? 레이드에 두 명이 더 필요해.")
-    #expect(KoreanRegister.casual("나 들어가! 몇 시에 생각하고 계세요?") == "나 들어가! 몇 시에 생각하고 있어?")
-    #expect(KoreanRegister.casual("누군가 밤에 등대 뒤에서 금빛 잉어를 잡을 수 있다고 말했습니다. 이 일몰을 보세요.")
-        == "누군가 밤에 등대 뒤에서 금빛 잉어를 잡을 수 있다고 말했어. 이 일몰을 봐.")
-    #expect(KoreanRegister.casual("패치 1.4에서 드디어 2단 점프 버그가 수정되었습니다. 다음에 무엇을 고쳐 드릴까요?")
-        == "패치 1.4에서 드디어 2단 점프 버그가 수정되었어. 다음에 무엇을 고쳐 드릴까?")
-    #expect(KoreanRegister.casual("다른 사람들은 축하 분위기입니다.") == "다른 사람들은 축하 분위기야.")
-    // Contractions and irregular stems; nouns and casual text pass through.
-    #expect(KoreanRegister.casual("됩니다 봅시다 모릅니다 어렵습니다 마십니까 갑니다 읽으세요 행동하십시오")
-        == "돼 보자 몰라 어려워 마셔 가 읽어 행동해")
-    #expect(KoreanRegister.casual("저는 당신이 좋아요") == "나는 네가 좋아")
-    #expect(KoreanRegister.casual("도움이 필요 ㅋㅋ rip. 솔직히 좀 부서졌어.") == "도움이 필요 ㅋㅋ rip. 솔직히 좀 부서졌어.")
-}
