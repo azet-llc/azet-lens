@@ -5,7 +5,7 @@ import UniformTypeIdentifiers
 
 /// Headless end-to-end run on a still image:
 ///   Mwoyeo --render in.png out.png [--src ja] [--tgt ko] [--mode fast|seamless] [--engine auto|translation|intelligence]
-///                                  [--no-inpaint] [--scale 2]
+///                                  [--no-inpaint] [--scale 2] [--then en,ko,style]
 /// Prints what was read and translated, and writes the composited result. Exits when done.
 ///
 /// Simulated lens drag over a still "screen" (points; writes the lens view per step as outdir/frame_NNN.png):
@@ -86,15 +86,34 @@ enum SelfTest {
         await pipeline.ingest(CapturedFrame(image: image, gray: gray, grayStep: 4, scale: scale, rect: capture, time: ProcessInfo.processInfo.systemUptime))
 
         // Wait for reading + translation to finish (or give up after 120 s).
-        var lastChange = Date(), lastVersion = -1
-        while Date().timeIntervalSince(start) < 120 {
-            try await Task.sleep(for: .milliseconds(200))
-            let state = await pipeline.debugState()
-            if let v = collector.latest?.version, v != lastVersion { lastVersion = v; lastChange = Date() }
-            if !state.busy, Date().timeIntervalSince(lastChange) > 0.6 { break }
+        func settle(from start: Date) async throws {
+            var lastChange = Date(), lastVersion = -1
+            while Date().timeIntervalSince(start) < 120 {
+                try await Task.sleep(for: .milliseconds(200))
+                let state = await pipeline.debugState()
+                if let v = collector.latest?.version, v != lastVersion { lastVersion = v; lastChange = Date() }
+                if !state.busy, Date().timeIntervalSince(lastChange) > 0.6 { break }
+            }
         }
+        try await settle(from: start)
         print("pipeline: \(ms(start)) ms")
         printCounts("still")
+        // `--then en,ko,style`: change the settings as the user would (target language, or "style" = font and box
+        // opacity), and report what each change costs.
+        for step in (option("--then") ?? "").split(separator: ",").map(String.init) {
+            if step == "style" {
+                settings.fontStyle = settings.fontStyle == .serif ? .system : .serif
+                settings.boxOpacity = settings.boxOpacity == 1 ? 0.94 : 1
+            } else {
+                settings.targetLanguage = step
+            }
+            let t = Date()
+            await translator.update(settings: settings)
+            await pipeline.update(options: PipelineOptions(settings))
+            try await settle(from: t)
+            print("then \(step): \(ms(t)) ms")
+            printCounts(step)
+        }
         for (source, translation) in await pipeline.debugState().blocks {
             print("  \(source)\n    → \(translation ?? "(no translation)")")
         }
