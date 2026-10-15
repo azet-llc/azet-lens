@@ -288,7 +288,7 @@ private struct LensStyleCard: View {
 
     @ViewBuilder private var ring: some View {
         switch style {
-        case .glow: LensRing(cornerRadius: 7, lineWidth: 2, glow: 4, spinning: true, period: 9)
+        case .glow: LensRing(cornerRadius: 7, lineWidth: 2, glow: 4)
         case .subtle: LensRing(cornerRadius: 7, lineWidth: 1.2, glow: 0)
         case .minimal: RoundedRectangle(cornerRadius: 7, style: .continuous).stroke(.white.opacity(0.4), lineWidth: 1.2)
         }
@@ -405,6 +405,15 @@ private struct AboutView: View {
             }
             .font(.callout)
             .padding(.top, 4)
+            HStack(spacing: 18) {
+                Link(destination: URL(string: "mailto:midagedev@gmail.com")!) {
+                    Label { Text(verbatim: "midagedev@gmail.com") } icon: { Image(systemName: "envelope") }
+                }
+                Link(destination: URL(string: "https://x.com/midagedev")!) {
+                    Label { Text(verbatim: "@midagedev") } icon: { Image(systemName: "at") }
+                }
+            }
+            .font(.callout)
 
             Divider().frame(width: 300).padding(.vertical, 6)
             VStack(alignment: .leading, spacing: 6) {
