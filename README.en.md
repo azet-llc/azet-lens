@@ -8,9 +8,15 @@
 Put a lens over a chat, a feed or a game. The original text disappears and the translation is written in its place.</p>
 
 <p align="center">
-  <code>brew install midagedev/tap/mwoyeo</code><br>
-  <sub>macOS 27 · Apple silicon · everything on-device · <a href="https://github.com/midagedev/mwoyeo/releases/latest">v1.0.2</a></sub>
+  <a href="https://github.com/midagedev/mwoyeo/releases/latest"><img alt="Release" src="https://img.shields.io/github/v/release/midagedev/mwoyeo?style=flat-square&label=release&color=ff9f0a"></a>
+  <a href="https://github.com/midagedev/mwoyeo/releases"><img alt="Downloads" src="https://img.shields.io/github/downloads/midagedev/mwoyeo/total?style=flat-square&label=downloads&color=ff375f"></a>
+  <img alt="macOS 27+" src="https://img.shields.io/badge/macOS-27%2B-bf5af2?style=flat-square&logo=apple&logoColor=white">
+  <img alt="Apple silicon" src="https://img.shields.io/badge/Apple_silicon-native-5e5ce6?style=flat-square">
+  <img alt="Privacy: on-device" src="https://img.shields.io/badge/privacy-on--device-64d2ff?style=flat-square">
+  <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/github/license/midagedev/mwoyeo?style=flat-square&color=8e8e93"></a>
 </p>
+
+<p align="center"><code>brew install midagedev/tap/mwoyeo</code></p>
 
 <p align="center"><img src="docs/media/hero.en.gif" width="600" alt="A lens over a Korean chat: the text is rewritten in English in place; scrolling up, older messages are translated as they come into view; ⌃⌥O shows the original and back."></p>
 

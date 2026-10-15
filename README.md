@@ -8,9 +8,15 @@
 채팅이든 피드든 게임이든 렌즈만 올려 두면 원문은 지워지고 그 자리에 번역이 들어가요.</p>
 
 <p align="center">
-  <code>brew install midagedev/tap/mwoyeo</code><br>
-  <sub>macOS 27 · Apple silicon · 모든 처리는 Mac 안에서 · <a href="https://github.com/midagedev/mwoyeo/releases/latest">v1.0.2</a></sub>
+  <a href="https://github.com/midagedev/mwoyeo/releases/latest"><img alt="Release" src="https://img.shields.io/github/v/release/midagedev/mwoyeo?style=flat-square&label=release&color=ff9f0a"></a>
+  <a href="https://github.com/midagedev/mwoyeo/releases"><img alt="Downloads" src="https://img.shields.io/github/downloads/midagedev/mwoyeo/total?style=flat-square&label=downloads&color=ff375f"></a>
+  <img alt="macOS 27+" src="https://img.shields.io/badge/macOS-27%2B-bf5af2?style=flat-square&logo=apple&logoColor=white">
+  <img alt="Apple silicon" src="https://img.shields.io/badge/Apple_silicon-native-5e5ce6?style=flat-square">
+  <img alt="Privacy: on-device" src="https://img.shields.io/badge/privacy-on--device-64d2ff?style=flat-square">
+  <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/github/license/midagedev/mwoyeo?style=flat-square&color=8e8e93"></a>
 </p>
+
+<p align="center"><code>brew install midagedev/tap/mwoyeo</code></p>
 
 <p align="center"><img src="docs/media/hero.ko.gif" width="600" alt="일본어 채팅 위에 올린 렌즈. 글자가 그 자리에서 한국어로 바뀌어요. 위로 스크롤하면 새로 보이는 메시지도 곧바로 번역돼요. 마지막에 ⌃⌥O로 원문을 띄웠다가 돌아와요."></p>
 
