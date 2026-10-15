@@ -1,8 +1,8 @@
 import AppKit
 import QuartzCore
 
-/// The draggable "lens" around a region: a glowing, slowly turning gradient ring (in the colours of Apple
-/// Intelligence) that brightens while the lens reads and translates, a name pill on top, and a resize corner.
+/// The draggable "lens" around a region: a glowing gradient ring (in the colours of Apple Intelligence) that breathes
+/// while the lens reads and translates, a name pill on top, and a resize corner.
 /// The ring and pill are grabbable; the interior is fully transparent, so clicks there go to the app underneath.
 /// The pill's icon says whether the lens follows a window or is pinned to the screen; clicking it switches.
 final class RegionFrameWindow: NSPanel {
@@ -87,6 +87,9 @@ private final class FrameChromeView: NSView {
     private var drag: Drag?
     private var startMouse: NSPoint = .zero
     private var startRegion: NSRect = .zero
+    /// Follows a move the window server is doing, once per display frame.
+    private var moveLink: CADisplayLink?
+    private var followed: NSRect?
     private var emphasized = false
     private var hovering = false
     private var tracking: NSTrackingArea?
@@ -95,7 +98,10 @@ private final class FrameChromeView: NSView {
     private let corner: CGFloat = 20       // resize handle size
     private let radius: CGFloat = 12
 
-    // Ring: a conic gradient spinning inside a stroke-shaped mask; the glow is a wider, blurred copy.
+    // Ring: a conic gradient inside a stroke-shaped mask; the glow is a wider, blurred copy. Both hold still and are
+    // rasterized, so the window server draws them once: a spinning gradient was redrawn every display frame and took
+    // the window server from about 25 % to 90 % CPU, enough to make a dragged lens stutter. Reading shows as the glow
+    // breathing, an opacity change the compositor does on the cached image.
     private let ring = CALayer(), ringMask = CAShapeLayer(), ringGradient = CAGradientLayer()
     private let glow = CALayer(), glowMask = CAShapeLayer(), glowGradient = CAGradientLayer()
     private let sweepClip = CALayer(), sweepMask = CAShapeLayer(), sweepLayer = CAGradientLayer()
@@ -123,6 +129,7 @@ private final class FrameChromeView: NSView {
             mask.fillColor = nil
             mask.strokeColor = NSColor.black.cgColor
             container.mask = mask
+            container.shouldRasterize = true
             container.addSublayer(gradient)
             layer?.addSublayer(container)
         }
@@ -217,9 +224,10 @@ private final class FrameChromeView: NSView {
             container.frame = bounds
             mask.frame = bounds
             mask.path = path
-            // A square big enough to cover the ring at any angle, turning about the lens centre.
+            // A square big enough to cover the ring, centred on the lens.
             gradient.bounds = CGRect(x: 0, y: 0, width: diagonal, height: diagonal)
             gradient.position = CGPoint(x: regionRect.midX, y: regionRect.midY)
+            container.rasterizationScale = window?.backingScaleFactor ?? 2
         }
         sweepClip.frame = bounds
         sweepMask.frame = bounds
@@ -229,18 +237,9 @@ private final class FrameChromeView: NSView {
         CATransaction.commit()
     }
 
-    /// Calm and slow at rest; brighter and faster while reading or translating, or under the pointer.
+    /// Calm at rest; brighter under the pointer, and breathing while reading or translating.
     /// Subtle glows only while reading; minimal never does.
     private func updateGlow() {
-        let period: CFTimeInterval = busy && !original ? 2.4 : 9
-        for gradient in [ringGradient, glowGradient] {
-            let spin = CABasicAnimation(keyPath: "transform.rotation.z")
-            spin.fromValue = (gradient.presentation()?.value(forKeyPath: "transform.rotation.z") as? Double) ?? 0
-            spin.byValue = -2 * Double.pi
-            spin.duration = period
-            spin.repeatCount = .infinity
-            gradient.add(spin, forKey: "spin")
-        }
         CATransaction.begin()
         CATransaction.setAnimationDuration(0.35)
         switch style {
@@ -255,6 +254,20 @@ private final class FrameChromeView: NSView {
             glow.opacity = strong ? 0.25 : 0
         }
         CATransaction.commit()
+        // Minimal has no glow: its ring breathes instead.
+        let breathing = style == .minimal ? ring : glow
+        for l in [ring, glow] where l !== breathing || !busy || original { l.removeAnimation(forKey: "breathe") }
+        if busy, !original {
+            let breathe = CABasicAnimation(keyPath: "opacity")
+            breathe.fromValue = breathing.opacity * 0.45
+            breathe.toValue = breathing.opacity
+            breathe.duration = 0.9
+            breathe.autoreverses = true
+            breathe.repeatCount = .infinity
+            breathe.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+            breathe.preferredFrameRateRange = CAFrameRateRange(minimum: 20, maximum: 30, preferred: 30)
+            breathing.add(breathe, forKey: "breathe")
+        }
         updateToolTip() // the icon shifts when the close button shows
     }
 
@@ -308,39 +321,67 @@ private final class FrameChromeView: NSView {
         drag = zone(at: p)
         startMouse = NSEvent.mouseLocation
         startRegion = window_?.regionFrame ?? .zero
-        if drag == .move { NSCursor.closedHand.set() }
         updateGlow()
         needsDisplay = true
+        guard drag == .move, let w = window_ else { return }
+        // The window server moves the window, in step with the pointer however busy this app or the window server
+        // is. Moving it here took a round trip to the window server per event: the lens fell behind and jumped.
+        // `performDrag` returns at once and the mouse-up goes to the window server, so a display link follows the
+        // move (the translations and the capture go where the lens is) and notices the button going up.
+        NSCursor.closedHand.set()
+        w.performDrag(with: event)
+        let link = displayLink(target: self, selector: #selector(followMove))
+        link.add(to: .main, forMode: .common)
+        moveLink = link
+    }
+
+    @objc private func followMove() {
+        guard let w = window_ else { return }
+        let m = NSEvent.mouseLocation
+        let r = onScreen(startRegion.offsetBy(dx: m.x - startMouse.x, dy: m.y - startMouse.y))
+        guard NSEvent.pressedMouseButtons & 1 != 0 else {
+            moveLink?.invalidate()
+            moveLink = nil
+            // The window server lets a window go past the screen's sides: bring it back.
+            if w.regionFrame != r { w.setRegion(r) }
+            if followed != r { w.onMove?(r) }
+            followed = nil
+            finishDrag(at: convert(w.mouseLocationOutsideOfEventStream, from: nil))
+            return
+        }
+        if followed != r { followed = r; w.onMove?(r) }
+    }
+
+    /// Keeps the lens on the screen it started on: the capture cannot span displays.
+    private func onScreen(_ region: NSRect) -> NSRect {
+        var r = region
+        if let screen = NSScreen.screens.first(where: { $0.frame.contains(NSPoint(x: startRegion.midX, y: startRegion.midY)) }) {
+            let f = screen.frame
+            r.origin.x = min(max(r.minX, f.minX), f.maxX - r.width)
+            r.origin.y = min(max(r.minY, f.minY), f.maxY - r.height)
+        }
+        return r
     }
 
     override func mouseDragged(with event: NSEvent) {
-        guard let drag, let w = window_ else { return }
+        guard drag == .resize, let w = window_ else { return }
         let m = NSEvent.mouseLocation
         let dx = m.x - startMouse.x, dy = m.y - startMouse.y
-        switch drag {
-        case .move:
-            var r = startRegion.offsetBy(dx: dx, dy: dy)
-            // Keep the lens on its screen: the capture cannot span displays.
-            if let screen = NSScreen.screens.first(where: { $0.frame.contains(NSPoint(x: startRegion.midX, y: startRegion.midY)) }) {
-                let f = screen.frame
-                r.origin.x = min(max(r.minX, f.minX), f.maxX - r.width)
-                r.origin.y = min(max(r.minY, f.minY), f.maxY - r.height)
-            }
-            w.setRegion(r)
-            w.onMove?(r)
-        case .resize:
-            // Bottom-right corner: the top-left stays put (in AppKit, top = maxY).
-            let width = max(80, startRegion.width + dx), height = max(40, startRegion.height - dy)
-            let r = NSRect(x: startRegion.minX, y: startRegion.maxY - height, width: width, height: height)
-            w.setRegion(r)
-            w.onResize?(r)
-        }
+        // Bottom-right corner: the top-left stays put (in AppKit, top = maxY).
+        let width = max(80, startRegion.width + dx), height = max(40, startRegion.height - dy)
+        let r = NSRect(x: startRegion.minX, y: startRegion.maxY - height, width: width, height: height)
+        w.setRegion(r)
+        w.onResize?(r)
     }
 
     override func mouseUp(with event: NSEvent) {
-        guard drag != nil else { return }
+        guard drag == .resize else { return }
+        finishDrag(at: convert(event.locationInWindow, from: nil))
+    }
+
+    private func finishDrag(at p: NSPoint) {
         drag = nil
-        updateCursor(convert(event.locationInWindow, from: nil))
+        updateCursor(p)
         updateGlow()
         needsDisplay = true
         window_?.onCommit?()
