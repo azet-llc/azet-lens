@@ -147,6 +147,21 @@ func texture(width: Int, height: Int, seed: Int = 1) -> GrayImage {
         #expect(FrameDiff.verticalShift(from: a, to: b, maxShift: 30) == nil)
     }
 
+    @Test func fixedMessageBoxSplitsTheScrollingLogFromATypingLine() {
+        // Log (y < 96) scrolls up by 6; a fixed box (96..<120) sits still; a typing line (y >= 120) changes on its own.
+        let page = texture(width: 128, height: 200, seed: 5), box = texture(width: 128, height: 144, seed: 9)
+        func frame(top: Int, typing: Int) -> GrayImage {
+            var g = GrayImage(width: 128, height: 144)
+            for y in 0..<144 { for x in 0..<128 { g[x, y] = y < 96 ? page[x, top + y] : y < 120 ? box[x, y] : UInt8(truncatingIfNeeded: x * typing + y) } }
+            return g
+        }
+        let a = frame(top: 40, typing: 3), b = frame(top: 46, typing: 5)
+        let regions = FrameDiff.scrollRegions(from: a, to: b, change: FrameDiff.changeMap(from: a, to: b), maxShift: 30)
+        #expect(regions.count == 1)
+        #expect(regions.first?.dy == -6)
+        #expect(regions.first.map { $0.rect.y + $0.rect.height <= 96 } == true)
+    }
+
     @Test func loneBandAtOddsTakesItsNeighboursShift() {
         // Three bands scroll up by 6; the middle one repeats every 34 rows, so -40 matches it as well as -6 does.
         let page = texture(width: 96, height: 260, seed: 4)

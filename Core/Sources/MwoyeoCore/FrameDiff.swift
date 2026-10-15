@@ -139,7 +139,12 @@ public enum FrameDiff {
             let c1 = change.columns - c0 < 2 * bandTiles ? change.columns : c0 + bandTiles
             if c0 > 0, c0 + bandTiles > change.columns { break }
             let rows = (0..<change.rows).filter { r in (c0..<c1).contains { change.changed[r * change.columns + $0] } }
-            guard let r0 = rows.first, let r1 = rows.last else { continue }   // untouched band: neither scrolls nor breaks
+            // Changed rows split by an unchanged tile row are separate things: a scrolling log above a fixed message box
+            // with a typing indicator below it. The tallest run is what scrolls; the rest is re-read.
+            var runs: [ClosedRange<Int>] = []
+            for r in rows { if let last = runs.last, r == last.upperBound + 1 { runs[runs.count - 1] = last.lowerBound...r } else { runs.append(r...r) } }
+            guard let run = runs.max(by: { $0.count < $1.count }) else { continue }   // untouched band: neither scrolls nor breaks
+            let r0 = run.lowerBound, r1 = run.upperBound
             let rect = PixelRect(x: c0 * change.tile, y: r0 * change.tile, width: (c1 - c0) * change.tile, height: (r1 - r0 + 1) * change.tile)
                 .clamped(width: b.width, height: b.height)
             // A short or sliver band matches repeating things (avatars, list rows) at a wrong shift; a scrolling column
