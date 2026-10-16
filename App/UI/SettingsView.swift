@@ -69,6 +69,14 @@ private struct GeneralSettings: View {
             } header: {
                 Text("Performance")
             }
+            Section {
+                Toggle("Keep a transcript of each lens", isOn: $model.settings.keepsTranscript)
+            } header: {
+                Text("Transcript")
+            } footer: {
+                Text("Each line a lens translates is kept with the time it was on screen, in memory only. Save it from the lens in the menu as subtitles (.srt) or as text with the originals (.txt). Turning this off, removing the lens or quitting deletes it.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
         }
         .formStyle(.grouped)
     }
@@ -129,7 +137,7 @@ private struct TranslationSettings: View {
             } header: {
                 Text("Translation memory")
             } footer: {
-                Text("Text seen again is shown from memory instead of being translated again. It is kept only while Mwoyeo runs and is never written to disk.")
+                Text("Text seen again is shown from memory instead of being translated again. It is kept only while AZET Lens runs and is never written to disk.")
                     .font(.caption).foregroundStyle(.secondary)
             }
             .onAppear { cached = model.translator.cachedCount }
@@ -305,7 +313,7 @@ private struct ShortcutSettings: View {
                     LabeledContent(action.title) { ShortcutRecorder(action: action) }
                 }
             } footer: {
-                Text("These work in any app. If a shortcut also does something in another app, record a different one: macOS can’t tell Mwoyeo when two apps want the same keys.")
+                Text("These work in any app. If a shortcut also does something in another app, record a different one: macOS can’t tell AZET Lens when two apps want the same keys.")
                     .font(.caption).foregroundStyle(.secondary)
             }
             Section {
@@ -374,43 +382,34 @@ private struct ShortcutRecorder: View {
 }
 
 private struct AboutView: View {
-    @Environment(AppModel.self) private var model
-    private let updates = Updates.shared
+    private static let repository = URL(string: "https://github.com/azet-llc/azet-lens")!
+    private static let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0"
+    private static let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "0"
 
     var body: some View {
-        @Bindable var model = model
         VStack(spacing: 10) {
             AppGlyph(size: 80)
-            Text("Mwoyeo").font(.largeTitle.weight(.semibold))
+            Text("AZET Lens").font(.largeTitle.weight(.semibold))
             Text("Translates the screen in place, wherever you put a lens.")
                 .foregroundStyle(.secondary)
-            Text("Version \(Updates.version) (\(Updates.build))")
+            Text("Version \(Self.version) (\(Self.build))")
                 .font(.caption).foregroundStyle(.tertiary).textSelection(.enabled)
-
-            VStack(spacing: 6) {
-                HStack(spacing: 10) {
-                    Button("Check for Updates") { Task { await updates.check() } }
-                        .disabled(updates.state == .checking)
-                    updateStatus.font(.callout)
-                }
-                Toggle("Check automatically once a day", isOn: $model.settings.checksForUpdates)
-                    .toggleStyle(.checkbox).font(.callout)
-            }
-            .padding(.top, 6)
+            Text("AZET Lens never checks for updates. New versions are on GitHub Releases.")
+                .font(.callout).foregroundStyle(.secondary).padding(.top, 6)
 
             HStack(spacing: 18) {
-                Link(destination: Updates.repository) { Label("GitHub", systemImage: "chevron.left.forwardslash.chevron.right") }
-                Link(destination: Updates.releases) { Label("Release Notes", systemImage: "doc.text") }
-                Link(destination: Updates.issues) { Label("Report a Problem", systemImage: "exclamationmark.bubble") }
+                Link(destination: Self.repository) { Label("GitHub", systemImage: "chevron.left.forwardslash.chevron.right") }
+                Link(destination: Self.repository.appending(path: "releases")) { Label("Release Notes", systemImage: "doc.text") }
+                Link(destination: Self.repository.appending(path: "issues")) { Label("Report a Problem", systemImage: "exclamationmark.bubble") }
             }
             .font(.callout)
             .padding(.top, 4)
             HStack(spacing: 18) {
-                Link(destination: URL(string: "mailto:midagedev@gmail.com")!) {
-                    Label { Text(verbatim: "midagedev@gmail.com") } icon: { Image(systemName: "envelope") }
+                Link(destination: URL(string: "mailto:hello@azet.io")!) {
+                    Label { Text(verbatim: "hello@azet.io") } icon: { Image(systemName: "envelope") }
                 }
-                Link(destination: URL(string: "https://x.com/midagedev")!) {
-                    Label { Text(verbatim: "@midagedev") } icon: { Image(systemName: "at") }
+                Link(destination: URL(string: "https://github.com/midagedev/mwoyeo")!) {
+                    Label("Based on Mwoyeo by midagedev", systemImage: "heart")
                 }
             }
             .font(.callout)
@@ -418,30 +417,16 @@ private struct AboutView: View {
             Divider().frame(width: 300).padding(.vertical, 6)
             VStack(alignment: .leading, spacing: 6) {
                 Label("Screen text is read, erased and translated on this Mac and never leaves it", systemImage: "lock.shield")
-                Label("Update checks ask GitHub for the latest version and count installs without any identifier", systemImage: "arrow.down.circle")
+                Label("No network access: the App Sandbox blocks every connection this app could open", systemImage: "network.slash")
+                Label("Transcripts stay in memory until you save one", systemImage: "text.badge.checkmark")
                 Label("Vision · Translation · Apple Intelligence · Core ML", systemImage: "apple.intelligence")
                 Label("Inpainting: MI-GAN (Picsart AI Research, MIT)", systemImage: "paintbrush")
             }
             .font(.callout)
             .foregroundStyle(.secondary)
-            Text(verbatim: "© 2026 midagedev · MIT License").font(.caption2).foregroundStyle(.tertiary).padding(.top, 4)
+            Text(verbatim: "© 2026 midagedev (Mwoyeo) · © 2026 AZET LLC · MIT License").font(.caption2).foregroundStyle(.tertiary).padding(.top, 4)
         }
         .padding(.vertical, 20)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-
-    @ViewBuilder private var updateStatus: some View {
-        switch updates.state {
-        case .idle: EmptyView()
-        case .checking: ProgressView().controlSize(.small)
-        case .upToDate: Label("Mwoyeo is up to date", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
-        case .failed: Label("Couldn’t reach GitHub", systemImage: "wifi.exclamationmark").foregroundStyle(.secondary)
-        case .available(let version, let page):
-            HStack(spacing: 6) {
-                Text("Version \(version) is available").foregroundStyle(Color.accentColor)
-                Button(Updates.viaHomebrew ? String(localized: "What’s New") : String(localized: "Download")) { NSWorkspace.shared.open(page) }
-                    .controlSize(.small)
-            }
-        }
     }
 }

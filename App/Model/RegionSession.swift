@@ -21,6 +21,8 @@ final class RegionSession {
     /// The region's rect or anchor changed (lens dragged, window followed); persist it.
     var onConfigChange: ((RegionConfig) -> Void)?
     var onCloseRequest: (() -> Void)?
+    /// The (source, translation) pairs inside the lens, each time what it shows changes; set to keep a transcript.
+    var onShown: (([(source: String, translation: String)]) -> Void)?
 
     private let capturer = RegionCapturer()
     private let pipeline: RegionPipeline
@@ -49,7 +51,8 @@ final class RegionSession {
     private var scrollArea: CGRect?
     private var scrollWindow: CGWindowID?
     private var lastWheel: TimeInterval = 0
-    private let log = Logger(subsystem: "dev.midagedev.mwoyeo", category: "session")
+    private let log = Logger(subsystem: "io.azet.lens", category: "session")
+    private let sink: ShownSink
 
     init(config: RegionConfig, settings: AppSettings, translator: TranslationService, inpainter: Inpainter?) {
         self.config = config
@@ -63,11 +66,29 @@ final class RegionSession {
         chrome.setStyle(settings.lensStyle)
         let capture = Self.overscan(config.rect, wide: false)
         self.capture = capture
+        let sink = ShownSink()
+        self.sink = sink
         pipeline = RegionPipeline(options: PipelineOptions(settings), capture: capture, translator: translator,
-                                  inpainter: inpainter, onSnapshot: { snapshot in Task { @MainActor in panel.apply(snapshot) } })
+                                  inpainter: inpainter, onSnapshot: { snapshot in Task { @MainActor in panel.apply(snapshot); sink.take(snapshot) } })
         capturer.onFrame = { [pipeline] frame in Task { await pipeline.ingest(frame) } }
         capturer.onStop = { [weak self] error in Task { @MainActor in self?.captureStopped(error) } }
         wireChrome()
+        sink.shown = { [weak self] snapshot in
+            guard let self, let onShown else { return }
+            onShown(Self.pairs(in: snapshot, lens: config.rect))
+        }
+    }
+
+    /// Blocks at least half inside the lens (the capture reaches past it), in reading order.
+    static func pairs(in snapshot: OverlaySnapshot, lens: CGRect) -> [(source: String, translation: String)] {
+        var inside: [(frame: CGRect, source: String, translation: String)] = []
+        for b in snapshot.blocks where !b.source.isEmpty {
+            let f = b.frame.offsetBy(dx: snapshot.origin.x, dy: snapshot.origin.y)
+            let overlap = f.intersection(lens)
+            if overlap.width * overlap.height >= f.width * f.height / 2 { inside.append((f, b.source, b.translation)) }
+        }
+        inside.sort { $0.frame.minY != $1.frame.minY ? $0.frame.minY < $1.frame.minY : $0.frame.minX < $1.frame.minX }
+        return inside.map { (source: $0.source, translation: $0.translation) }
     }
 
     func start() async {
@@ -397,7 +418,7 @@ final class RegionSession {
         onConfigChange?(config)
     }
 
-    /// Window IDs do not survive the app relaunching (or Mwoyeo's): find the window again by app and title. Any
+    /// Window IDs do not survive the app relaunching (or AZET Lens's): find the window again by app and title. Any
     /// window of the app will do only for an ID that went stale before this session; a window closed while
     /// followed must not hand the lens to its sibling.
     private func refind(_ a: WindowAnchor) -> WindowInfo? {
@@ -412,4 +433,11 @@ final class RegionSession {
         panel.setTranslationsVisible(translationsVisible && !occluded)
         occluded ? chrome.orderOut(nil) : chrome.orderFrontRegardless()
     }
+}
+
+/// Hands overlay snapshots to the session once it exists (the pipeline is made before the session is).
+@MainActor
+private final class ShownSink {
+    var shown: ((OverlaySnapshot) -> Void)?
+    func take(_ s: OverlaySnapshot) { shown?(s) }
 }

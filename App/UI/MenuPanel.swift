@@ -12,12 +12,9 @@ struct MenuPanel: View {
                 IssueBanner(message: issue.message) { open() }
             }
             if !model.hasScreenPermission {
-                IssueBanner(message: String(localized: "Mwoyeo needs Screen Recording permission."), action: String(localized: "Allow…")) {
+                IssueBanner(message: String(localized: "AZET Lens needs Screen Recording permission."), action: String(localized: "Allow…")) {
                     WindowPresenter.shared.showOnboarding()
                 }
-            }
-            if case .available(let version, let page) = Updates.shared.state {
-                UpdateBanner(version: version) { NSWorkspace.shared.open(page) }
             }
             LanguageBar(source: $model.settings.sourceLanguage, target: $model.settings.targetLanguage)
             regionList
@@ -36,7 +33,7 @@ struct MenuPanel: View {
         HStack(spacing: 10) {
             AppGlyph(size: 32)
             VStack(alignment: .leading, spacing: 1) {
-                Text("Mwoyeo").font(.system(.headline, design: .rounded))
+                Text("AZET Lens").font(.system(.headline, design: .rounded))
                 Text(statusLine).font(.caption).foregroundStyle(.secondary).contentTransition(.opacity)
             }
             Spacer()
@@ -113,7 +110,7 @@ struct MenuPanel: View {
             Button { open() } label: { Image(systemName: "gearshape") }
                 .help("Settings")
             Button { NSApp.terminate(nil) } label: { Image(systemName: "power") }
-                .help("Quit Mwoyeo")
+                .help("Quit AZET Lens")
         }
         .buttonStyle(.borderless)
         .labelStyle(.titleAndIcon)
@@ -150,6 +147,17 @@ private struct RegionRow: View {
                 .font(.caption2).foregroundStyle(.secondary)
             }
             Spacer(minLength: 4)
+            if let t = model.transcripts[region.id], !t.isEmpty {
+                Button {
+                    model.saveTranscript(region.id)
+                } label: {
+                    Label("\(t.lines.count)", systemImage: "captions.bubble").labelStyle(.titleAndIcon)
+                }
+                .buttonStyle(.borderless)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .help("Save Transcript…")
+            }
             if hovering {
                 Button {
                     Task { await model.remove(region.id) }
@@ -298,27 +306,6 @@ struct LanguageBar: View {
         .buttonStyle(.plain)
         .menuIndicator(.hidden)
         .frame(maxWidth: .infinity)
-    }
-}
-
-private struct UpdateBanner: View {
-    let version: String
-    let open: () -> Void
-
-    var body: some View {
-        HStack(spacing: 8) {
-            Image(systemName: "arrow.down.circle.fill").foregroundStyle(Color.accentColor)
-            VStack(alignment: .leading, spacing: 1) {
-                Text("Mwoyeo \(version) is available").font(.caption.weight(.semibold))
-                if Updates.viaHomebrew {
-                    Text(verbatim: "brew upgrade mwoyeo").font(.caption2.monospaced()).foregroundStyle(.secondary).textSelection(.enabled)
-                }
-            }
-            Spacer(minLength: 0)
-            Button("What’s New", action: open).controlSize(.small)
-        }
-        .padding(10)
-        .background(Color.accentColor.opacity(0.1), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 }
 

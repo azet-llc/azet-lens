@@ -895,7 +895,7 @@
         }
       }
     },
-    "Allowed. Mwoyeo reads only what is under a lens, and never stores or sends it.": {
+    "Allowed. AZET Lens reads only what is under a lens, and never stores or sends it.": {
       "localizations": {
         "ko": {
           "stringUnit": {
@@ -906,61 +906,61 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "許可されています。Mwoyeoはレンズの下の内容だけを読み取り、保存も送信もしません。"
+            "value": "許可されています。AZET Lensはレンズの下の内容だけを読み取り、保存も送信もしません。"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "已允许。Mwoyeo 只会读取透镜下方的内容，绝不存储或发送。"
+            "value": "已允许。AZET Lens 只会读取透镜下方的内容，绝不存储或发送。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "已允許。Mwoyeo 只會讀取透鏡下方的內容，絕不儲存或傳送。"
+            "value": "已允許。AZET Lens 只會讀取透鏡下方的內容，絕不儲存或傳送。"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Erlaubt. Mwoyeo liest nur, was unter einer Linse liegt, und speichert oder sendet nichts."
+            "value": "Erlaubt. AZET Lens liest nur, was unter einer Linse liegt, und speichert oder sendet nichts."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Autorisé. Mwoyeo ne lit que ce qui se trouve sous une loupe, et ne l’enregistre ni ne l’envoie jamais."
+            "value": "Autorisé. AZET Lens ne lit que ce qui se trouve sous une loupe, et ne l’enregistre ni ne l’envoie jamais."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Permitido. Mwoyeo solo lee lo que hay bajo una lupa y nunca lo guarda ni lo envía."
+            "value": "Permitido. AZET Lens solo lee lo que hay bajo una lupa y nunca lo guarda ni lo envía."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Разрешено. Mwoyeo читает только то, что находится под линзой, и ничего не сохраняет и не отправляет."
+            "value": "Разрешено. AZET Lens читает только то, что находится под линзой, и ничего не сохраняет и не отправляет."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Permitido. O Mwoyeo lê apenas o que está sob uma lente e nunca armazena nem envia."
+            "value": "Permitido. O AZET Lens lê apenas o que está sob uma lente e nunca armazena nem envia."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Consentito. Mwoyeo legge solo ciò che si trova sotto una lente e non lo salva né lo invia mai."
+            "value": "Consentito. AZET Lens legge solo ciò che si trova sotto una lente e non lo salva né lo invia mai."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Дозволено. Mwoyeo читає лише те, що під лінзою, і нічого не зберігає й не надсилає."
+            "value": "Дозволено. AZET Lens читає лише те, що під лінзою, і нічого не зберігає й не надсилає."
           }
         }
       }
@@ -4891,80 +4891,80 @@
         }
       }
     },
-    "Mwoyeo": {
+    "AZET Lens": {
       "shouldTranslate": false
     },
-    "Mwoyeo %@ is available": {
+    "AZET Lens %@ is available": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyeo %@ 버전이 나왔습니다"
+            "value": "AZET Lens %@ 버전이 나왔습니다"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyeo %@が利用可能です"
+            "value": "AZET Lens %@が利用可能です"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyeo %@ 已推出"
+            "value": "AZET Lens %@ 已推出"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyeo %@ 已推出"
+            "value": "AZET Lens %@ 已推出"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyeo %@ est disponible"
+            "value": "AZET Lens %@ est disponible"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyeo %@ ist verfügbar"
+            "value": "AZET Lens %@ ist verfügbar"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyeo %@ está disponible"
+            "value": "AZET Lens %@ está disponible"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyeo %@ è disponibile"
+            "value": "AZET Lens %@ è disponibile"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyeo %@ está disponível"
+            "value": "AZET Lens %@ está disponível"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Доступен Mwoyeo %@"
+            "value": "Доступен AZET Lens %@"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Доступний Mwoyeo %@"
+            "value": "Доступний AZET Lens %@"
           }
         }
       }
     },
-    "Mwoyeo is up to date": {
+    "AZET Lens is up to date": {
       "localizations": {
         "ko": {
           "stringUnit": {
@@ -4981,60 +4981,60 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyeo 已是最新版本"
+            "value": "AZET Lens 已是最新版本"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyeo 已是最新版本"
+            "value": "AZET Lens 已是最新版本"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyeo est à jour"
+            "value": "AZET Lens est à jour"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyeo ist aktuell"
+            "value": "AZET Lens ist aktuell"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyeo está actualizado"
+            "value": "AZET Lens está actualizado"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyeo è aggiornato"
+            "value": "AZET Lens è aggiornato"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O Mwoyeo está atualizado"
+            "value": "O AZET Lens está atualizado"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyeo обновлён"
+            "value": "AZET Lens обновлён"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyeo оновлено"
+            "value": "AZET Lens оновлено"
           }
         }
       }
     },
-    "Mwoyeo needs Screen Recording permission.": {
+    "AZET Lens needs Screen Recording permission.": {
       "localizations": {
         "ko": {
           "stringUnit": {
@@ -5045,66 +5045,66 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyeoには画面収録の許可が必要です。"
+            "value": "AZET Lensには画面収録の許可が必要です。"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyeo 需要“屏幕录制”权限。"
+            "value": "AZET Lens 需要“屏幕录制”权限。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyeo 需要「螢幕錄製」權限。"
+            "value": "AZET Lens 需要「螢幕錄製」權限。"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyeo benötigt die Berechtigung „Bildschirmaufnahme“."
+            "value": "AZET Lens benötigt die Berechtigung „Bildschirmaufnahme“."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyeo a besoin de l’autorisation « Enregistrement de l’écran »."
+            "value": "AZET Lens a besoin de l’autorisation « Enregistrement de l’écran »."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyeo necesita el permiso de Grabación de pantalla."
+            "value": "AZET Lens necesita el permiso de Grabación de pantalla."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyeo требуется разрешение на запись экрана."
+            "value": "AZET Lens требуется разрешение на запись экрана."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O Mwoyeo precisa da permissão de Gravação de Tela."
+            "value": "O AZET Lens precisa da permissão de Gravação de Tela."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyeo ha bisogno dell’autorizzazione per la Registrazione schermo."
+            "value": "AZET Lens ha bisogno dell’autorizzazione per la Registrazione schermo."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyeo потрібен дозвіл на запис екрана."
+            "value": "AZET Lens потрібен дозвіл на запис екрана."
           }
         }
       }
     },
-    "Mwoyeo uses Apple Translation. Get a language pack in Settings › Translation.": {
+    "AZET Lens uses Apple Translation. Get a language pack in Settings › Translation.": {
       "localizations": {
         "ko": {
           "stringUnit": {
@@ -5115,66 +5115,66 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "MwoyeoはApple翻訳を使用します。設定 › 翻訳で言語パックを入手してください。"
+            "value": "AZET LensはApple翻訳を使用します。設定 › 翻訳で言語パックを入手してください。"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyeo 使用 Apple 翻译。请在“设置 › 翻译”中获取语言包。"
+            "value": "AZET Lens 使用 Apple 翻译。请在“设置 › 翻译”中获取语言包。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyeo 使用 Apple 翻譯。請在「設定 › 翻譯」中取得語言包。"
+            "value": "AZET Lens 使用 Apple 翻譯。請在「設定 › 翻譯」中取得語言包。"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyeo verwendet Apple Übersetzung. Laden Sie unter Einstellungen › Übersetzung ein Sprachpaket."
+            "value": "AZET Lens verwendet Apple Übersetzung. Laden Sie unter Einstellungen › Übersetzung ein Sprachpaket."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyeo utilise Traduction Apple. Téléchargez un pack de langue dans Réglages › Traduction."
+            "value": "AZET Lens utilise Traduction Apple. Téléchargez un pack de langue dans Réglages › Traduction."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyeo usa Traducción de Apple. Descarga un paquete de idioma en Ajustes › Traducción."
+            "value": "AZET Lens usa Traducción de Apple. Descarga un paquete de idioma en Ajustes › Traducción."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyeo использует Перевод Apple. Загрузите языковой пакет в Настройки › Перевод."
+            "value": "AZET Lens использует Перевод Apple. Загрузите языковой пакет в Настройки › Перевод."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O Mwoyeo usa a Tradução da Apple. Baixe um pacote de idioma em Ajustes › Tradução."
+            "value": "O AZET Lens usa a Tradução da Apple. Baixe um pacote de idioma em Ajustes › Tradução."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyeo usa Traduzione Apple. Scarica un pacchetto lingua in Impostazioni › Traduzione."
+            "value": "AZET Lens usa Traduzione Apple. Scarica un pacchetto lingua in Impostazioni › Traduzione."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyeo використовує Переклад Apple. Завантажте мовний пакет у Налаштування › Переклад."
+            "value": "AZET Lens використовує Переклад Apple. Завантажте мовний пакет у Налаштування › Переклад."
           }
         }
       }
     },
-    "Needed to read the text under a lens. You may have to reopen Mwoyeo after allowing it.": {
+    "Needed to read the text under a lens. You may have to reopen AZET Lens after allowing it.": {
       "localizations": {
         "ko": {
           "stringUnit": {
@@ -5185,61 +5185,61 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "レンズの下のテキストを読み取るために必要です。許可したあと、Mwoyeoを開き直す必要がある場合があります。"
+            "value": "レンズの下のテキストを読み取るために必要です。許可したあと、AZET Lensを開き直す必要がある場合があります。"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "用于读取透镜下方的文字。允许后可能需要重新打开 Mwoyeo。"
+            "value": "用于读取透镜下方的文字。允许后可能需要重新打开 AZET Lens。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "用於讀取透鏡下方的文字。允許後可能需要重新打開 Mwoyeo。"
+            "value": "用於讀取透鏡下方的文字。允許後可能需要重新打開 AZET Lens。"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Erforderlich, um den Text unter einer Linse zu lesen. Nach dem Erlauben müssen Sie Mwoyeo eventuell erneut öffnen."
+            "value": "Erforderlich, um den Text unter einer Linse zu lesen. Nach dem Erlauben müssen Sie AZET Lens eventuell erneut öffnen."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nécessaire pour lire le texte sous une loupe. Vous devrez peut-être rouvrir Mwoyeo après l’autorisation."
+            "value": "Nécessaire pour lire le texte sous une loupe. Vous devrez peut-être rouvrir AZET Lens après l’autorisation."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Necesario para leer el texto bajo una lupa. Puede que tengas que volver a abrir Mwoyeo tras permitirlo."
+            "value": "Necesario para leer el texto bajo una lupa. Puede que tengas que volver a abrir AZET Lens tras permitirlo."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Нужно, чтобы читать текст под линзой. После разрешения Mwoyeo, возможно, придётся открыть заново."
+            "value": "Нужно, чтобы читать текст под линзой. После разрешения AZET Lens, возможно, придётся открыть заново."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Necessário para ler o texto sob uma lente. Talvez seja preciso reabrir o Mwoyeo depois de permitir."
+            "value": "Necessário para ler o texto sob uma lente. Talvez seja preciso reabrir o AZET Lens depois de permitir."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Necessario per leggere il testo sotto una lente. Dopo aver consentito, potrebbe essere necessario riaprire Mwoyeo."
+            "value": "Necessario per leggere il testo sotto una lente. Dopo aver consentito, potrebbe essere necessario riaprire AZET Lens."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Потрібен, щоб читати текст під лінзою. Після дозволу Mwoyeo, можливо, доведеться відкрити знову."
+            "value": "Потрібен, щоб читати текст під лінзою. Після дозволу AZET Lens, можливо, доведеться відкрити знову."
           }
         }
       }
@@ -6924,72 +6924,72 @@
         }
       }
     },
-    "Quit Mwoyeo": {
+    "Quit AZET Lens": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyeo 종료"
+            "value": "AZET Lens 종료"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyeoを終了"
+            "value": "AZET Lensを終了"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "退出 Mwoyeo"
+            "value": "退出 AZET Lens"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "結束 Mwoyeo"
+            "value": "結束 AZET Lens"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyeo beenden"
+            "value": "AZET Lens beenden"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quitter Mwoyeo"
+            "value": "Quitter AZET Lens"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Salir de Mwoyeo"
+            "value": "Salir de AZET Lens"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Выйти из Mwoyeo"
+            "value": "Выйти из AZET Lens"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Encerrar Mwoyeo"
+            "value": "Encerrar AZET Lens"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Esci da Mwoyeo"
+            "value": "Esci da AZET Lens"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Вийти з Mwoyeo"
+            "value": "Вийти з AZET Lens"
           }
         }
       }
@@ -8884,72 +8884,72 @@
         }
       }
     },
-    "Text seen again is shown from memory instead of being translated again. It is kept only while Mwoyeo runs and is never written to disk.": {
+    "Text seen again is shown from memory instead of being translated again. It is kept only while AZET Lens runs and is never written to disk.": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "다시 나온 문구는 새로 번역하지 않고 메모리에서 바로 보여 줍니다. Mwoyeo가 실행 중일 때만 보관하며 디스크에는 저장하지 않습니다."
+            "value": "다시 나온 문구는 새로 번역하지 않고 메모리에서 바로 보여 줍니다. AZET Lens가 실행 중일 때만 보관하며 디스크에는 저장하지 않습니다."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "もう一度出てきた文は翻訳し直さず、メモリからすぐに表示します。Mwoyeoの実行中だけ保持し、ディスクには保存しません。"
+            "value": "もう一度出てきた文は翻訳し直さず、メモリからすぐに表示します。AZET Lensの実行中だけ保持し、ディスクには保存しません。"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "再次出现的文字会直接从内存显示，不再重新翻译。仅在 Mwoyeo 运行时保留，绝不写入磁盘。"
+            "value": "再次出现的文字会直接从内存显示，不再重新翻译。仅在 AZET Lens 运行时保留，绝不写入磁盘。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "再次出現的文字會直接從記憶體顯示，不再重新翻譯。僅在 Mwoyeo 執行時保留，絕不寫入磁碟。"
+            "value": "再次出現的文字會直接從記憶體顯示，不再重新翻譯。僅在 AZET Lens 執行時保留，絕不寫入磁碟。"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Le texte déjà vu est affiché depuis la mémoire au lieu d’être retraduit. Il n’est conservé que pendant l’exécution de Mwoyeo et n’est jamais écrit sur le disque."
+            "value": "Le texte déjà vu est affiché depuis la mémoire au lieu d’être retraduit. Il n’est conservé que pendant l’exécution de AZET Lens et n’est jamais écrit sur le disque."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bereits gesehener Text wird aus dem Speicher angezeigt, statt neu übersetzt zu werden. Er bleibt nur, solange Mwoyeo läuft, und wird nie auf die Festplatte geschrieben."
+            "value": "Bereits gesehener Text wird aus dem Speicher angezeigt, statt neu übersetzt zu werden. Er bleibt nur, solange AZET Lens läuft, und wird nie auf die Festplatte geschrieben."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "El texto que vuelve a aparecer se muestra desde la memoria en lugar de traducirse otra vez. Solo se guarda mientras Mwoyeo está abierto y nunca se escribe en el disco."
+            "value": "El texto que vuelve a aparecer se muestra desde la memoria en lugar de traducirse otra vez. Solo se guarda mientras AZET Lens está abierto y nunca se escribe en el disco."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Il testo già visto viene mostrato dalla memoria invece di essere tradotto di nuovo. Resta solo finché Mwoyeo è aperto e non viene mai scritto su disco."
+            "value": "Il testo già visto viene mostrato dalla memoria invece di essere tradotto di nuovo. Resta solo finché AZET Lens è aperto e non viene mai scritto su disco."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O texto que aparece de novo é mostrado da memória em vez de ser traduzido outra vez. Ele só fica guardado enquanto o Mwoyeo está aberto e nunca é gravado no disco."
+            "value": "O texto que aparece de novo é mostrado da memória em vez de ser traduzido outra vez. Ele só fica guardado enquanto o AZET Lens está aberto e nunca é gravado no disco."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Повторно встретившийся текст показывается из памяти, а не переводится заново. Он хранится, только пока Mwoyeo работает, и никогда не записывается на диск."
+            "value": "Повторно встретившийся текст показывается из памяти, а не переводится заново. Он хранится, только пока AZET Lens работает, и никогда не записывается на диск."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Текст, що трапляється знову, показується з пам’яті, а не перекладається вдруге. Він зберігається, лише поки Mwoyeo працює, і ніколи не записується на диск."
+            "value": "Текст, що трапляється знову, показується з пам’яті, а не перекладається вдруге. Він зберігається, лише поки AZET Lens працює, і ніколи не записується на диск."
           }
         }
       }
@@ -9170,72 +9170,72 @@
         }
       }
     },
-    "These work in any app. If a shortcut also does something in another app, record a different one: macOS can’t tell Mwoyeo when two apps want the same keys.": {
+    "These work in any app. If a shortcut also does something in another app, record a different one: macOS can’t tell AZET Lens when two apps want the same keys.": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "어느 앱에서든 동작합니다. 다른 앱에서도 같은 단축키가 다른 일을 한다면 다른 조합으로 바꿔 주세요. 두 앱이 같은 키를 쓰는지 macOS가 Mwoyeo에 알려 주지 않습니다."
+            "value": "어느 앱에서든 동작합니다. 다른 앱에서도 같은 단축키가 다른 일을 한다면 다른 조합으로 바꿔 주세요. 두 앱이 같은 키를 쓰는지 macOS가 AZET Lens에 알려 주지 않습니다."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "どのアプリでも使えます。ほかのアプリでも同じキーが別の操作をする場合は、別の組み合わせを記録してください。2つのアプリが同じキーを使っていても、macOSはMwoyeoに知らせません。"
+            "value": "どのアプリでも使えます。ほかのアプリでも同じキーが別の操作をする場合は、別の組み合わせを記録してください。2つのアプリが同じキーを使っていても、macOSはAZET Lensに知らせません。"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "这些快捷键在任何 App 中都有效。如果某个快捷键在其他 App 中也有作用，请录制另一个：两个 App 想用同一组按键时，macOS 不会告知 Mwoyeo。"
+            "value": "这些快捷键在任何 App 中都有效。如果某个快捷键在其他 App 中也有作用，请录制另一个：两个 App 想用同一组按键时，macOS 不会告知 AZET Lens。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "這些快速鍵在任何 App 中都有效。若某個快速鍵在其他 App 中也有作用，請錄製另一個：兩個 App 想用同一組按鍵時，macOS 不會告知 Mwoyeo。"
+            "value": "這些快速鍵在任何 App 中都有效。若某個快速鍵在其他 App 中也有作用，請錄製另一個：兩個 App 想用同一組按鍵時，macOS 不會告知 AZET Lens。"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ils fonctionnent dans toutes les apps. Si un raccourci fait aussi quelque chose dans une autre app, enregistrez-en un autre : macOS ne prévient pas Mwoyeo quand deux apps veulent les mêmes touches."
+            "value": "Ils fonctionnent dans toutes les apps. Si un raccourci fait aussi quelque chose dans une autre app, enregistrez-en un autre : macOS ne prévient pas AZET Lens quand deux apps veulent les mêmes touches."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sie funktionieren in jeder App. Wenn ein Kurzbefehl auch in einer anderen App etwas auslöst, nimm einen anderen auf: macOS teilt Mwoyeo nicht mit, wenn zwei Apps dieselben Tasten wollen."
+            "value": "Sie funktionieren in jeder App. Wenn ein Kurzbefehl auch in einer anderen App etwas auslöst, nimm einen anderen auf: macOS teilt AZET Lens nicht mit, wenn zwei Apps dieselben Tasten wollen."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Funcionan en cualquier app. Si un atajo también hace algo en otra app, graba uno distinto: macOS no avisa a Mwoyeo cuando dos apps quieren las mismas teclas."
+            "value": "Funcionan en cualquier app. Si un atajo también hace algo en otra app, graba uno distinto: macOS no avisa a AZET Lens cuando dos apps quieren las mismas teclas."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Funzionano in qualsiasi app. Se un’abbreviazione fa qualcosa anche in un’altra app, registrane una diversa: macOS non avvisa Mwoyeo quando due app vogliono gli stessi tasti."
+            "value": "Funzionano in qualsiasi app. Se un’abbreviazione fa qualcosa anche in un’altra app, registrane una diversa: macOS non avvisa AZET Lens quando due app vogliono gli stessi tasti."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Funcionam em qualquer app. Se um atalho também faz algo em outro app, grave outro: o macOS não avisa o Mwoyeo quando dois apps querem as mesmas teclas."
+            "value": "Funcionam em qualquer app. Se um atalho também faz algo em outro app, grave outro: o macOS não avisa o AZET Lens quando dois apps querem as mesmas teclas."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Работают в любом приложении. Если сочетание делает что-то и в другом приложении, запишите другое: macOS не сообщает Mwoyeo, когда двум приложениям нужны одни и те же клавиши."
+            "value": "Работают в любом приложении. Если сочетание делает что-то и в другом приложении, запишите другое: macOS не сообщает AZET Lens, когда двум приложениям нужны одни и те же клавиши."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Працюють у будь-якій програмі. Якщо комбінація робить щось і в іншій програмі, запишіть іншу: macOS не повідомляє Mwoyeo, коли двом програмам потрібні ті самі клавіші."
+            "value": "Працюють у будь-якій програмі. Якщо комбінація робить щось і в іншій програмі, запишіть іншу: macOS не повідомляє AZET Lens, коли двом програмам потрібні ті самі клавіші."
           }
         }
       }
@@ -11063,6 +11063,636 @@
           "stringUnit": {
             "state": "translated",
             "value": "勇者 = Герой\nポーション = Зілля"
+          }
+        }
+      }
+    },
+    "AZET Lens never checks for updates. New versions are on GitHub Releases.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AZET Lens는 업데이트를 확인하지 않아요. 새 버전은 GitHub Releases에 올라와요."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AZET Lens はアップデートを確認しません。新しいバージョンは GitHub Releases で公開されます。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AZET Lens 从不检查更新。新版本发布在 GitHub Releases。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AZET Lens 從不檢查更新。新版本發布在 GitHub Releases。"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AZET Lens ne recherche jamais de mises à jour. Les nouvelles versions sont sur GitHub Releases."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AZET Lens sucht nie nach Updates. Neue Versionen gibt es unter GitHub Releases."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AZET Lens nunca busca actualizaciones. Las nuevas versiones están en GitHub Releases."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AZET Lens non cerca mai aggiornamenti. Le nuove versioni sono su GitHub Releases."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O AZET Lens nunca procura atualizações. As novas versões ficam no GitHub Releases."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AZET Lens никогда не проверяет обновления. Новые версии публикуются в GitHub Releases."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AZET Lens ніколи не перевіряє оновлення. Нові версії публікуються в GitHub Releases."
+          }
+        }
+      }
+    },
+    "Based on Mwoyeo by midagedev": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "midagedev의 Mwoyeo를 바탕으로 만들었어요"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "midagedev の Mwoyeo をもとにしています"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "基于 midagedev 的 Mwoyeo"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "基於 midagedev 的 Mwoyeo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Basé sur Mwoyeo de midagedev"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Basiert auf Mwoyeo von midagedev"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Basado en Mwoyeo de midagedev"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Basato su Mwoyeo di midagedev"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Baseado no Mwoyeo de midagedev"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Основано на Mwoyeo от midagedev"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Засновано на Mwoyeo від midagedev"
+          }
+        }
+      }
+    },
+    "Each line a lens translates is kept with the time it was on screen, in memory only. Save it from the lens in the menu as subtitles (.srt) or as text with the originals (.txt). Turning this off, removing the lens or quitting deletes it.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "렌즈가 번역한 줄을 화면에 있던 시간과 함께 메모리에만 모아 둬요. 메뉴의 렌즈에서 자막(.srt)이나 원문이 함께 적힌 텍스트(.txt)로 저장해요. 이 설정을 끄거나 렌즈를 지우거나 앱을 끝내면 사라져요."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "レンズが翻訳した各行を、画面に出ていた時間と一緒にメモリにだけ残します。メニューのレンズから字幕（.srt）または原文付きテキスト（.txt）として保存できます。この設定をオフにする、レンズを削除する、アプリを終了すると消えます。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "透镜翻译的每一行连同在屏幕上出现的时间只保存在内存中。可在菜单中的透镜处保存为字幕（.srt）或附原文的文本（.txt）。关闭此设置、移除透镜或退出应用后即删除。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "透鏡翻譯的每一行連同在螢幕上出現的時間只留在記憶體中。可在選單中的透鏡處儲存為字幕（.srt）或附原文的文字（.txt）。關閉此設定、移除透鏡或結束 App 後即刪除。"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chaque ligne traduite par une loupe est gardée avec son temps d’affichage, en mémoire uniquement. Enregistrez-la depuis la loupe dans le menu en sous-titres (.srt) ou en texte avec les originaux (.txt). Désactiver ce réglage, supprimer la loupe ou quitter l’efface."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jede Zeile, die eine Linse übersetzt, wird mit der Zeit, in der sie zu sehen war, nur im Arbeitsspeicher gehalten. Sichere sie über die Linse im Menü als Untertitel (.srt) oder als Text mit den Originalen (.txt). Ausschalten, Entfernen der Linse oder Beenden löscht sie."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cada línea que traduce una lupa se guarda con el tiempo que estuvo en pantalla, solo en memoria. Guárdala desde la lupa en el menú como subtítulos (.srt) o como texto con los originales (.txt). Desactivar esto, quitar la lupa o salir la borra."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ogni riga tradotta da una lente viene tenuta con il tempo in cui era sullo schermo, solo in memoria. Salvala dalla lente nel menu come sottotitoli (.srt) o come testo con gli originali (.txt). Disattivare questa opzione, rimuovere la lente o uscire la elimina."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cada linha que uma lente traduz é mantida com o tempo em que ficou na tela, só na memória. Salve pela lente no menu como legendas (.srt) ou como texto com os originais (.txt). Desativar isto, remover a lente ou sair apaga tudo."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Каждая строка, переведённая линзой, хранится вместе со временем показа только в памяти. Сохраните её из линзы в меню как субтитры (.srt) или текст с оригиналами (.txt). Отключение этой настройки, удаление линзы или выход из приложения стирает запись."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Кожен рядок, перекладений лінзою, зберігається разом із часом показу лише в пам’яті. Збережіть його з лінзи в меню як субтитри (.srt) або текст з оригіналами (.txt). Вимкнення цього параметра, видалення лінзи або вихід із програми стирає запис."
+          }
+        }
+      }
+    },
+    "Keep a transcript of each lens": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "렌즈마다 기록 남기기"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "レンズごとに記録を残す"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "为每个透镜保留记录"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "為每個透鏡保留記錄"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Garder une transcription de chaque loupe"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Für jede Linse eine Mitschrift führen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar una transcripción de cada lupa"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tieni una trascrizione di ogni lente"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manter uma transcrição de cada lente"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вести запись для каждой линзы"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вести запис для кожної лінзи"
+          }
+        }
+      }
+    },
+    "No network access: the App Sandbox blocks every connection this app could open": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "네트워크 없음: App Sandbox가 이 앱이 여는 연결을 모두 막아요"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ネットワークなし：App Sandbox がこのアプリの接続をすべて遮断します"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无网络访问：App Sandbox 会阻止此应用发起的所有连接"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無網路存取：App Sandbox 會阻擋此 App 發起的所有連線"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun accès réseau : l’App Sandbox bloque toute connexion que l’app pourrait ouvrir"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kein Netzwerkzugriff: Die App Sandbox blockiert jede Verbindung, die diese App öffnen könnte"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin acceso a la red: el App Sandbox bloquea cualquier conexión que la app pudiera abrir"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nessun accesso alla rete: l’App Sandbox blocca ogni connessione che l’app potrebbe aprire"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sem acesso à rede: o App Sandbox bloqueia qualquer conexão que o app tente abrir"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Без доступа к сети: App Sandbox блокирует любое соединение, которое могло бы открыть приложение"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Без доступу до мережі: App Sandbox блокує будь-яке з’єднання, яке могла б відкрити програма"
+          }
+        }
+      }
+    },
+    "Save Transcript…": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "기록 저장…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "記録を保存…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存记录…"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "儲存記錄…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enregistrer la transcription…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mitschrift sichern …"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar transcripción…"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salva trascrizione…"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salvar transcrição…"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сохранить запись…"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Зберегти запис…"
+          }
+        }
+      }
+    },
+    "Save as .srt for subtitles, or .txt for the translation with the original under each line.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": ".srt로 저장하면 자막 파일, .txt로 저장하면 줄마다 번역 아래 원문이 적힌 텍스트가 돼요."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": ".srt で保存すると字幕ファイル、.txt で保存すると各行の翻訳の下に原文が入ったテキストになります。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存为 .srt 即字幕文件，保存为 .txt 则每行译文下附原文。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "儲存為 .srt 即字幕檔，儲存為 .txt 則每行譯文下附原文。"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enregistrez en .srt pour des sous-titres, ou en .txt pour la traduction avec l’original sous chaque ligne."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Als .srt sichern für Untertitel, oder als .txt für die Übersetzung mit dem Original unter jeder Zeile."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guarda como .srt para subtítulos, o como .txt para la traducción con el original debajo de cada línea."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salva in .srt per i sottotitoli, o in .txt per la traduzione con l’originale sotto ogni riga."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salve como .srt para legendas, ou como .txt para a tradução com o original abaixo de cada linha."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сохраните в .srt для субтитров или в .txt — перевод с оригиналом под каждой строкой."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Збережіть у .srt для субтитрів або в .txt — переклад з оригіналом під кожним рядком."
+          }
+        }
+      }
+    },
+    "Transcript": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "기록"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "記録"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "记录"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "記錄"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transcription"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mitschrift"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transcripción"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trascrizione"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transcrição"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Запись"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Запис"
+          }
+        }
+      }
+    },
+    "Transcripts stay in memory until you save one": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "기록은 저장하기 전까지 메모리에만 있어요"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "記録は保存するまでメモリにだけ置かれます"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "记录在保存之前只保存在内存中"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "記錄在儲存之前只留在記憶體中"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les transcriptions restent en mémoire jusqu’à ce que vous en enregistriez une"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mitschriften bleiben im Arbeitsspeicher, bis du eine sicherst"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las transcripciones se quedan en memoria hasta que guardas una"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le trascrizioni restano in memoria finché non ne salvi una"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "As transcrições ficam na memória até você salvar uma"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Записи хранятся только в памяти, пока вы их не сохраните"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Записи зберігаються лише в пам’яті, доки ви їх не збережете"
           }
         }
       }

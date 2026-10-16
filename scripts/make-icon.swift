@@ -9,7 +9,8 @@ func canvas() -> CGContext {
               bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
 }
 func rgb(_ r: CGFloat, _ g: CGFloat, _ b: CGFloat, _ a: CGFloat = 1) -> CGColor { CGColor(srgbRed: r / 255, green: g / 255, blue: b / 255, alpha: a) }
-let spectrum = [rgb(255, 158, 10), rgb(255, 56, 94), rgb(191, 90, 242), rgb(94, 92, 230), rgb(100, 210, 255), rgb(255, 158, 10)]
+// AZET Lens: a green-to-blue ring (Mwoyeo's is the full spectrum) so the two apps are told apart in the Dock.
+let spectrum = [rgb(52, 199, 89), rgb(48, 209, 188), rgb(100, 210, 255), rgb(10, 132, 255), rgb(48, 209, 188), rgb(52, 199, 89)]
 
 // The lens: a rounded rectangle on the icon grid.
 let lens = CGRect(x: 236, y: 300, width: 552, height: 424)

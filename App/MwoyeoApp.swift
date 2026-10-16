@@ -4,7 +4,7 @@ import SwiftUI
 @main
 enum Entry {
     static func main() {
-        // `Mwoyeo --render in.png out.png` runs the pipeline on a still image (no permissions needed).
+        // `AZET Lens --render in.png out.png` runs the pipeline on a still image (no permissions needed).
         if CommandLine.arguments.dropFirst().first == "--render" {
             SelfTest.run(Array(CommandLine.arguments.dropFirst(2)))
         }
@@ -22,7 +22,7 @@ struct MwoyeoApp: App {
                 .environment(model)
         } label: {
             Image(systemName: menuSymbol)
-                .accessibilityLabel("Mwoyeo")
+                .accessibilityLabel("AZET Lens")
         }
         .menuBarExtraStyle(.window)
 

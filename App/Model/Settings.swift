@@ -100,8 +100,8 @@ struct AppSettings: Codable, Equatable {
     var cacheSize = 5000
     /// HotKeyAction raw value → combo; an action missing here has no shortcut.
     var shortcuts = HotKeyAction.defaults
-    /// Ask GitHub once a day whether a newer version is out.
-    var checksForUpdates = true
+    /// Keep, in memory, what each lens showed and when, so it can be saved as subtitles. Off by default.
+    var keepsTranscript = false
     var hasCompletedOnboarding = false
 
     var glossaryPairs: [(String, String)] {
@@ -129,7 +129,7 @@ struct AppSettings: Codable, Equatable {
         boxOpacity = try c.decodeIfPresent(Double.self, forKey: .boxOpacity) ?? d.boxOpacity
         lensStyle = (try? c.decodeIfPresent(LensStyle.self, forKey: .lensStyle)) ?? d.lensStyle
         shortcuts = (try? c.decodeIfPresent([String: KeyCombo].self, forKey: .shortcuts)) ?? d.shortcuts
-        checksForUpdates = try c.decodeIfPresent(Bool.self, forKey: .checksForUpdates) ?? d.checksForUpdates
+        keepsTranscript = try c.decodeIfPresent(Bool.self, forKey: .keepsTranscript) ?? d.keepsTranscript
         cacheSize = max(100, try c.decodeIfPresent(Int.self, forKey: .cacheSize) ?? d.cacheSize)
         hasCompletedOnboarding = try c.decodeIfPresent(Bool.self, forKey: .hasCompletedOnboarding) ?? d.hasCompletedOnboarding
     }
@@ -168,7 +168,7 @@ enum Languages {
     static let sources = ["auto", "en", "ja", "ko", "zh-Hans", "zh-Hant", "fr", "de", "es", "it", "pt-BR", "ru", "uk", "vi", "th"]
     static let targets = ["en", "ko", "ja", "zh-Hans", "zh-Hant", "fr", "de", "es", "it", "pt-BR", "ru", "uk", "vi", "th"]
 
-    /// The first of the user's preferred languages that Mwoyeo can translate into.
+    /// The first of the user's preferred languages that AZET Lens can translate into.
     static var preferredTarget: String {
         for id in Locale.preferredLanguages {
             let l = Locale.Language(identifier: id)

@@ -9,7 +9,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyeo reads the text under your lenses so it can translate it in place."
+            "value": "AZET Lens reads the text under your lenses so it can translate it in place."
           }
         },
         "ko": {
@@ -21,61 +21,61 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyeoは、レンズの下にあるテキストを読み取り、その場で翻訳するために画面を使用します。"
+            "value": "AZET Lensは、レンズの下にあるテキストを読み取り、その場で翻訳するために画面を使用します。"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyeo 会读取透镜下方的文字,并就地翻译。"
+            "value": "AZET Lens 会读取透镜下方的文字,并就地翻译。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyeo 會讀取透鏡下方的文字,並就地翻譯。"
+            "value": "AZET Lens 會讀取透鏡下方的文字,並就地翻譯。"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyeo liest den Text unter einer Linse und übersetzt ihn direkt an Ort und Stelle."
+            "value": "AZET Lens liest den Text unter einer Linse und übersetzt ihn direkt an Ort und Stelle."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyeo lit le texte sous une loupe pour le traduire sur place."
+            "value": "AZET Lens lit le texte sous une loupe pour le traduire sur place."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyeo lee el texto que hay bajo una lupa para traducirlo en el mismo lugar."
+            "value": "AZET Lens lee el texto que hay bajo una lupa para traducirlo en el mismo lugar."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyeo читает текст под линзой, чтобы перевести его прямо на месте."
+            "value": "AZET Lens читает текст под линзой, чтобы перевести его прямо на месте."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O Mwoyeo lê o texto sob uma lente para traduzi-lo no próprio lugar."
+            "value": "O AZET Lens lê o texto sob uma lente para traduzi-lo no próprio lugar."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyeo legge il testo sotto una lente per tradurlo sul posto."
+            "value": "AZET Lens legge il testo sotto una lente per tradurlo sul posto."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mwoyeo читає текст під лінзою, щоб перекласти його прямо на місці."
+            "value": "AZET Lens читає текст під лінзою, щоб перекласти його прямо на місці."
           }
         }
       }

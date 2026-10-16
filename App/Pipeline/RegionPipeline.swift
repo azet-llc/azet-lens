@@ -24,6 +24,9 @@ struct OverlayBlock: Identifiable, @unchecked Sendable {
     var frame: CGRect
     var image: CGImage
     var seamless: Bool
+    /// What the block says, for the transcript.
+    var source = ""
+    var translation = ""
 }
 
 struct OverlaySnapshot: @unchecked Sendable {
@@ -101,7 +104,7 @@ actor RegionPipeline {
     private let inpainter: Inpainter?
     private let onSnapshot: @Sendable (OverlaySnapshot) -> Void
     private var onActivity: (@Sendable (RegionActivity) -> Void)?
-    private let log = Logger(subsystem: "dev.midagedev.mwoyeo", category: "pipeline")
+    private let log = Logger(subsystem: "io.azet.lens", category: "pipeline")
 
     private var options: PipelineOptions
     private var latest: CapturedFrame?
@@ -760,7 +763,7 @@ actor RegionPipeline {
             guard !lr.isEmpty else { continue }
             let text = PixelRect(line.rect).clamped(width: full.width, height: full.height)
             let local = PixelRect(x: text.x - lr.x, y: text.y - lr.y, width: text.width, height: text.height)
-            let m = TextEraser.mask(for: full.cropped(to: lr), textRect: local, dilation: max(1, Int(line.rect.height * 0.07)))
+            let m = TextEraser.mask(for: full.cropped(to: lr), textRect: local, dilation: max(1, Int(line.rect.height * 0.07)), outlines: true)
             masks.append((lr, m))
             if let g = m.glyphBounds { glyphHeights.append(CGFloat(g.height)) }
         }
@@ -927,7 +930,8 @@ actor RegionPipeline {
                 size: b.rect.size, text: text, background: background, appearance: b.appearance,
                 lineHeight: lineHeight, fontSize: b.fontSize, originalLineCount: max(1, b.lines.count), spareWidth: b.spareWidth,
                 fontStyle: options.fontStyle,
-                targetLanguage: options.targetLanguage, scale: scale))
+                targetLanguage: options.targetLanguage, scale: scale,
+                centered: LineAlignment.isCentered(b.lines.map { ($0.minX, $0.maxX) }, outlined: b.appearance.outlineColor != nil)))
         }
     }
 
@@ -937,7 +941,7 @@ actor RegionPipeline {
         let out = blocks.compactMap { b -> OverlayBlock? in
             guard let img = b.image else { return nil }
             return OverlayBlock(id: b.id, frame: CGRect(x: b.rect.minX / s, y: b.rect.minY / s, width: b.rect.width / s, height: b.rect.height / s),
-                                image: img, seamless: b.erased != nil)
+                                image: img, seamless: b.erased != nil, source: b.source, translation: b.translation ?? "")
         }
         onSnapshot(OverlaySnapshot(version: version, blocks: out, animated: animated, origin: origin, time: frameTime))
         dump(out)

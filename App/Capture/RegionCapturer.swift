@@ -5,7 +5,7 @@ import MwoyeoCore
 import ScreenCaptureKit
 import os
 
-/// Streams one screen rectangle with ScreenCaptureKit. Mwoyeo's own windows (the overlays) are excluded,
+/// Streams one screen rectangle with ScreenCaptureKit. AZET Lens's own windows (the overlays) are excluded,
 /// so it always sees the original content underneath. ScreenCaptureKit only delivers frames when pixels
 /// change, so a static region costs nothing.
 final class RegionCapturer: NSObject, SCStreamOutput, SCStreamDelegate, @unchecked Sendable {
@@ -17,8 +17,8 @@ final class RegionCapturer: NSObject, SCStreamOutput, SCStreamDelegate, @uncheck
     var onFrame: (@Sendable (CapturedFrame) -> Void)?
     var onStop: (@Sendable (Error?) -> Void)?
 
-    private let queue = DispatchQueue(label: "dev.midagedev.mwoyeo.capture", qos: .userInitiated)
-    private let log = Logger(subsystem: "dev.midagedev.mwoyeo", category: "capture")
+    private let queue = DispatchQueue(label: "io.azet.lens.capture", qos: .userInitiated)
+    private let log = Logger(subsystem: "io.azet.lens", category: "capture")
     private var stream: SCStream?
     private var filter: SCContentFilter?
     private var scale: CGFloat = 2

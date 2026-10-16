@@ -2,37 +2,40 @@
   <img src="App/Assets.xcassets/AppIcon.appiconset/icon_128x128@2x.png" width="128" alt="">
 </p>
 
-<h1 align="center">Mwoyeo</h1>
+<h1 align="center">AZET Lens</h1>
 <p align="center"><a href="README.md">한국어</a> · <a href="README.en.md">English</a> · <b>日本語</b> · <a href="README.zh-CN.md">简体中文</a></p>
+<p align="center"><sub><a href="https://github.com/midagedev">midagedev</a> の <a href="https://github.com/midagedev/mwoyeo">Mwoyeo</a>（MIT）をもとに、ネットワークを完全に遮断し、字幕の記録を加えたフォークです。開発：<a href="https://azet.io">AZET</a></sub></p>
 <p align="center"><b>画面の文字を、その場で読める言葉に。</b><br>
 チャットやフィード、ゲームにレンズを重ねるだけ。元の文字が消えて、同じ場所に訳文が書き込まれます。</p>
 
 <p align="center">
-  <a href="https://github.com/midagedev/mwoyeo/releases/latest"><img alt="Release" src="https://img.shields.io/github/v/release/midagedev/mwoyeo?style=flat-square&label=release&color=ff9f0a"></a>
-  <a href="https://github.com/midagedev/mwoyeo/releases"><img alt="Downloads" src="https://img.shields.io/endpoint?style=flat-square&url=https%3A%2F%2Fraw.githubusercontent.com%2Fmidagedev%2Fmwoyeo%2Fstats%2Fdownloads.json"></a>
+  <a href="https://github.com/azet-llc/azet-lens/releases/latest"><img alt="Release" src="https://img.shields.io/github/v/release/azet-llc/azet-lens?style=flat-square&label=release&color=ff9f0a"></a>
   <img alt="macOS 27+" src="https://img.shields.io/badge/macOS-27%2B-bf5af2?style=flat-square&logo=apple&logoColor=white">
   <img alt="Apple silicon" src="https://img.shields.io/badge/Apple_silicon-native-5e5ce6?style=flat-square">
-  <img alt="Privacy: on-device" src="https://img.shields.io/badge/privacy-on--device-64d2ff?style=flat-square">
-  <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/github/license/midagedev/mwoyeo?style=flat-square&color=8e8e93"></a>
+  <img alt="Network: none" src="https://img.shields.io/badge/network-none_(sandboxed)-34c759?style=flat-square">
+  <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/github/license/azet-llc/azet-lens?style=flat-square&color=8e8e93"></a>
 </p>
-
-```sh
-brew install midagedev/tap/mwoyeo
-```
 
 <p align="center"><img src="docs/media/hero.ja.gif" width="600" alt="韓国語のチャットに小さなレンズを重ねると、その下の文字だけがその場で日本語になります。レンズを動かすと通った場所がすぐ翻訳され、スクロールしても翻訳がついてきます。最後に⌃⌥Oでリングがグレーになり、原文が表示されます。"></p>
 
-Mwoyeoはレンズの下にある文字を読み取り、**元の文字を画面から消して**、同じ位置に同じ大きさと色で訳文を描き直します。ポップアップや字幕バーとは違い、画面そのものが日本語で読めるようになります。新しいメッセージが届いても、ページをスクロールしても、そのまま読み続けられます。処理はすべてMacの中で完結し、画面の内容が外部に送られることはありません。
+AZET Lensはレンズの下にある文字を読み取り、**元の文字を画面から消して**、同じ位置に同じ大きさと色で訳文を描き直します。ポップアップや字幕バーとは違い、画面そのものが日本語で読めるようになります。新しいメッセージが届いても、ページをスクロールしても、そのまま読み続けられます。処理はすべてMacの中で完結し、画面の内容が外部に送られることはありません。
+
+## Mwoyeoとの違い
+
+AZET LensはMwoyeoから3点だけを変えています。レンズ、文字の消去、翻訳エンジン、用語集、ショートカット、12言語のUIなど、それ以外はすべてMwoyeoの成果そのままです。詳しい比較は[docs/DIFFERENCES.md](docs/DIFFERENCES.md)にあります。
+
+| | Mwoyeo 1.0.4 | AZET Lens |
+|---|---|---|
+| **ネットワーク** | 1日1回GitHubへリクエスト（アップデート確認・匿名のインストール数）、オフ可能 | **なし。macOSが強制。** ネットワーク権限のないApp Sandboxで動くため、アプリが開こうとする接続はすべてシステムが拒否します。アップデート確認もありません。[自分で確かめる](#自分で確かめる) |
+| **記録** | 翻訳を表示するだけ | オンにするとレンズごとに訳した行と表示時間をメモリに残し、**字幕ファイル（.srt）**または原文付きテキストとして保存 |
+| **縁取り字幕** | 黒い縁取りの白い字幕が、縁取りのない暗い文字・左寄せになる | 文字色と縁取りを保ち、中央揃えの字幕は中央のまま（[実測](docs/DIFFERENCES.md#measured)） |
+| レンズ・消去・エンジン・用語集・翻訳メモリ・ショートカット・メニューバー | ✓ | 同じ |
 
 ## インストール
 
-```bash
-brew install midagedev/tap/mwoyeo
-```
+[Releases](https://github.com/azet-llc/azet-lens/releases/latest)からディスクイメージをダウンロードし、AZET Lensをアプリケーションフォルダにドラッグしてください。AZET LLCのDeveloper IDで署名し、Appleの公証も受けています。
 
-または[Releases](https://github.com/midagedev/mwoyeo/releases/latest)からディスクイメージをダウンロードし、Mwoyeoをアプリケーションフォルダにドラッグしてください。署名済みで、Appleの公証も受けています。
-
-Mwoyeoは1日1回GitHubで新しいバージョンを確認し、見つかればメニューでお知らせします。アップデートするには`brew upgrade mwoyeo`を実行するか、新しいディスクイメージをダウンロードしてください。手動での確認や自動確認のオン/オフ、リリースノートと問題報告ページへのリンクは設定 › 情報にあります。
+AZET Lensはインターネットにつながらないため、アップデートを自分で確認しません。新しいバージョンは[Releases](https://github.com/azet-llc/azet-lens/releases)で公開されます。リポジトリを Watch › Custom › Releases で購読すると、GitHubから通知が届きます。
 
 ### 動作環境
 
@@ -41,7 +44,7 @@ Mwoyeoは1日1回GitHubで新しいバージョンを確認し、見つかれば
 | **macOS** | 27.0以降 |
 | **Mac** | macOS 27が動くすべてのMac（Appleシリコン搭載のM1以降、またはMacBook Neo）。Intel版はありません。 |
 | **許可** | 画面収録のみ。アクセシビリティや入力監視の許可は要りません |
-| **ネットワーク** | 翻訳には使いません。通信するのは1日1回のアップデート確認だけで、これもオフにできます。 |
+| **ネットワーク** | 使いません。ネットワーク権限のないサンドボックスアプリです。言語パックとApple IntelligenceのモデルはmacOS自身がダウンロードします |
 | **ディスク** | アプリ本体は約20 MB。言語パック（とApple Intelligenceのモデル、最大8〜14 GB）はmacOSがダウンロードして保存します。 |
 | **ディスプレイ** | 何台でも使え、どのディスプレイにもレンズを置けます |
 
@@ -50,19 +53,19 @@ Mwoyeoは1日1回GitHubで新しいバージョンを確認し、見つかれば
 | 機能 | 必要なもの |
 |---|---|
 | 文字の読み取り（Vision）と消去（Core ML） | 追加の条件はありません。macOS 27が動くMacならどれでも使えます |
-| **言語パック**での翻訳（最速・オフライン対応） | 使う言語ペアの言語パック。Mwoyeoの設定 › 翻訳か、システム設定 › 一般 › 言語と地域 › 翻訳言語から一度だけダウンロードします |
+| **言語パック**での翻訳（最速・オフライン対応） | 使う言語ペアの言語パック。AZET Lensの設定 › 翻訳か、システム設定 › 一般 › 言語と地域 › 翻訳言語から一度だけダウンロードします |
 | **言語パックなし**の翻訳、*高品質*エンジン、*用語集を優先* | システム設定 › Apple IntelligenceとSiri で **Apple Intelligence** をオンにしておくこと |
 
-Apple IntelligenceはmacOS 27が動くすべてのMacで使えますが、条件があと2つあります。Macの言語とSiriの言語を同じ対応言語にそろえること、そして中国本土では使えないことです。Mwoyeoの対応言語のうちApple Intelligenceが扱えるのは、英語、韓国語、日本語、中国語、フランス語、ドイツ語、スペイン語、イタリア語、ポルトガル語、ベトナム語です。ロシア語、ウクライナ語、タイ語は対象外なので、言語パックでのみ翻訳します。Apple Intelligenceが使えない環境では、Mwoyeoはすべての翻訳を言語パックで行います。
+Apple IntelligenceはmacOS 27が動くすべてのMacで使えますが、条件があと2つあります。Macの言語とSiriの言語を同じ対応言語にそろえること、そして中国本土では使えないことです。AZET Lensの対応言語のうちApple Intelligenceが扱えるのは、英語、韓国語、日本語、中国語、フランス語、ドイツ語、スペイン語、イタリア語、ポルトガル語、ベトナム語です。ロシア語、ウクライナ語、タイ語は対象外なので、言語パックでのみ翻訳します。Apple Intelligenceが使えない環境では、AZET Lensはすべての翻訳を言語パックで行います。
 
 **言語。** 英語、韓国語、日本語、中国語（簡体字・繁体字）、フランス語、ドイツ語、スペイン語、イタリア語、ポルトガル語（ブラジル）、ロシア語、ウクライナ語、ベトナム語、タイ語のあいだで、macOSに翻訳モデルがある組み合わせならどの方向にも翻訳できます。翻訳元を*自動*にしておくと、行ごとに言語を判別します。アプリの表示言語は英語、韓国語、日本語、中国語（簡体字・繁体字）、フランス語、ドイツ語、スペイン語、イタリア語、ポルトガル語（ブラジル）、ロシア語、ウクライナ語に対応しています。
 
 ## はじめかた
 
-1. **Mwoyeoを起動します。** メニューバーに常駐し、ビューファインダーのアイコンが表示されます。あとはウェルカムウインドウの案内に沿って進めてください。
-2. **画面収録を許可します。** **許可**をクリックし、システム設定 › プライバシーとセキュリティ › 画面収録とシステムオーディオ録音 でMwoyeoをオンにします。それでもレンズに何も表示されないときは、Mwoyeoを一度終了して開き直してください。
+1. **AZET Lensを起動します。** メニューバーに常駐し、ビューファインダーのアイコンが表示されます。あとはウェルカムウインドウの案内に沿って進めてください。
+2. **画面収録を許可します。** **許可**をクリックし、システム設定 › プライバシーとセキュリティ › 画面収録とシステムオーディオ録音 でAZET Lensをオンにします。それでもレンズに何も表示されないときは、AZET Lensを一度終了して開き直してください。
 3. **言語を選びます。** *翻訳元*は**自動**のままで大丈夫です。*翻訳先*には最初からMacの言語が選ばれています。
-4. **言語パックを入れます**（おすすめ）。Mwoyeoの設定 › 翻訳で、使う言語ペアの横にある**ダウンロード**をクリックします。言語パックがあれば翻訳はほぼ一瞬で、オフラインでも使えます。言語パックがなくてもApple Intelligenceが代わりに翻訳します。ダウンロードは要りませんが、1行あたり0.5秒ほどかかります。
+4. **言語パックを入れます**（おすすめ）。AZET Lensの設定 › 翻訳で、使う言語ペアの横にある**ダウンロード**をクリックします。言語パックがあれば翻訳はほぼ一瞬で、オフラインでも使えます。言語パックがなくてもApple Intelligenceが代わりに翻訳します。ダウンロードは要りませんが、1行あたり0.5秒ほどかかります。
 5. **⌃⌥Lを押して、読みたい範囲をドラッグで囲みます。** たとえばDiscordチャンネルのメッセージ一覧や、Redditのスレッドです。クリックするだけでも、その位置にレンズが置かれます。⌥を押しながら操作すると、レンズはウインドウではなく画面に固定されます（後述）。
 
 ## レンズの使い方
@@ -91,16 +94,35 @@ Apple IntelligenceはmacOS 27が動くすべてのMacで使えますが、条件
 | タブ | 変更できる項目 |
 |---|---|
 | 一般 | 言語 · **表示方法**: *適応型*（デフォルト。動いている間はシンプルなボックスで、止まるとシームレスに書き直し）、*クイック*（常にボックス。バッテリー消費が最小）、*シームレス*（常に書き直し） · 画面チェックの頻度（4、8、15 fps） · ログイン時に開く |
-| 翻訳 | **エンジン**: *自動*（言語パックがあれば言語パック、なければApple Intelligence）、*高品質*（常にApple Intelligence）、*用語集を優先* · 言語パック · **翻訳メモリ**: 再利用のために覚えておく翻訳の件数（1,000、5,000、20,000。メモリ上にだけ保持し、Mwoyeoを終了すると消えます） · 固有名詞の**用語集**（1行に1つ`原文 = 訳文`の形で） |
+| 翻訳 | **エンジン**: *自動*（言語パックがあれば言語パック、なければApple Intelligence）、*高品質*（常にApple Intelligence）、*用語集を優先* · 言語パック · **翻訳メモリ**: 再利用のために覚えておく翻訳の件数（1,000、5,000、20,000。メモリ上にだけ保持し、AZET Lensを終了すると消えます） · 固有名詞の**用語集**（1行に1つ`原文 = 訳文`の形で） |
 | 外観 | **レンズ**: *グロー*、*控えめ*（読み取り中だけ光る）、*ミニマル*（細い線だけ。名札はポインタを重ねたときに表示） · フォント（デフォルト、丸ゴシック、セリフ） · ボックスの不透明度 · 写真やイラストのAI消去 |
 
 ## ヒントとトラブルシューティング
 
 - **「翻訳中…」から進まない？** たいていは言語パックが入っていないのが原因です。設定 › 翻訳からダウンロードしてください。また、インストール後に初めて置くレンズは、macOSが文字認識モデルを一度読み込むので少し時間がかかります。
 - **キャラクター名や地名、ユーザー名の訳がおかしい？** 用語集に登録して、*用語集を優先*を選んでください。
-- **アップデートしたら何も表示されなくなった？** macOSが画面収録の許可をもう一度求めることがあります。システム設定で確認してから、Mwoyeoを開き直してください。
+- **アップデートしたら何も表示されなくなった？** macOSが画面収録の許可をもう一度求めることがあります。システム設定で確認してから、AZET Lensを開き直してください。
 - **原文と見比べたい？** ⌃⌥Oで原文に切り替わり、もう一度押すと訳文に戻ります。
-- **プライバシー。** Mwoyeoが読み取るのはレンズの下にあるものだけで、保存も送信もしません。Mwoyeo自身のオーバーレイもキャプチャから除外しています。インターネットに問い合わせるのは、1日1回GitHubで最新のバージョン番号を確認するときだけです。これも設定 › 情報でオフにできます。この確認はリリースに添付された小さなファイルをダウンロードする仕組みなので、GitHubのダウンロード数がそのまま利用統計になります。インストールは1回、利用は月に1回だけ数え、Macを特定できる情報は一切送りません。
+- **プライバシー。** AZET Lensが読み取るのはレンズの下にあるものだけで、自身のオーバーレイはキャプチャから除外しています。何も送信しません。ネットワーク権限がまったくありません（下記参照）。記録をオンにしない限り何も残さず、オンにしても自分で選んだファイルに保存するまではメモリの中だけです。
+
+## 記録と字幕の保存
+
+**設定 › 一般 › レンズごとに記録を残す**をオンにすると、レンズが訳した各行を画面に出ていた時間と一緒に残します。記録のあるレンズにはメニューに💬の数字が出て、クリックすると保存できます。
+
+- **.srt**：訳文の字幕ファイル。動画の字幕行にレンズを置いて最後まで再生し、保存すればその動画の翻訳字幕になります。
+- **.txt**：時刻、訳文、その下に原文を1行ずつ。
+
+記録はメモリの中だけにあります。設定をオフにする、レンズを削除する、アプリを終了すると消え、保存パネルでファイルを選ぶまでディスクには何も書きません。書き込めるのも選んだそのファイルだけです。
+
+## 自分で確かめる
+
+ネットワークを使わないことは、信じるしかない設定ではなく、macOSが強制するアプリ署名の中の権限です。
+
+```bash
+codesign -d --entitlements - "/Applications/AZET Lens.app"
+```
+
+出てくるのは`com.apple.security.app-sandbox`と`com.apple.security.files.user-selected.read-write`の2つだけです。`com.apple.security.network.client`がないので、外へ向かう接続はサンドボックスがすべて拒否します。レンズが翻訳している間に`nettop -p "AZET Lens"`を開いておくと、接続が一つも出ないことが分かります。詳しくは[SECURITY.md](SECURITY.md)を見てください。
 
 ## 内部の仕組み
 
@@ -108,7 +130,7 @@ Apple IntelligenceはmacOS 27が動くすべてのMacで使えますが、条件
 
 | 段階 | 技術 |
 |---|---|
-| キャプチャ | ScreenCaptureKit（レンズごとに1ストリーム。Mwoyeo自身のオーバーレイは除外し、ピクセルが変わったときだけフレームを取得） |
+| キャプチャ | ScreenCaptureKit（レンズごとに1ストリーム。AZET Lens自身のオーバーレイは除外し、ピクセルが変わったときだけフレームを取得） |
 | テキスト認識 | Visionの`RecognizeDocumentsRequest`（段落）と`RecognizeTextRequest`（行、関心領域） |
 | 翻訳 | Translationフレームワーク（低遅延の言語パック。言語パックがない場合は高品質なApple Intelligenceのモデル） |
 | 用語集に沿った翻訳 | オプションでFoundation Models（オンデバイスの言語モデル）を使用 |
@@ -137,11 +159,17 @@ ScreenCaptureKit ──► change map (16 px tiles) ──► scroll? shift bloc
 
 ## 開発
 
-ビルド、テスト、リリースの手順は[英語版README](README.en.md#development)にまとめています。
+ビルド、テスト、リリースの手順は[英語版README](README.en.md#development)にまとめています。ヘッドレスのテストハーネスは、サンドボックスのないDebugビルドで動かします。
 
 ## クレジット
 
+AZET Lensは[midagedev](https://github.com/midagedev)さんの[Mwoyeo](https://github.com/midagedev/mwoyeo)（MIT）をもとにしています。レンズ、キャプチャと変化の追跡、文字の消去、翻訳エンジン、UIはすべてmidagedevさんの仕事です。ありがとうございます。オリジナルを使いたい方はそちらからどうぞ。
+
 インペインティングモデルには、Picsart AI Researchの[MI-GAN](https://github.com/Picsart-AI-Research/MI-GAN)（MITライセンス、`tools/inpaint/models/LICENSE-MI-GAN-WEIGHTS`）を使っています。`tools/inpaint/models`にあるCore ML版は、`tools/inpaint/convert_migan.sh`で変換したものです。
+
+## AZETのほかのアプリ
+
+データを端末の中にとどめるプライバシー・セキュリティアプリを作っています：[Sweep](https://azet.io/products/sweep-ja)（広告・トラッカー・詐欺サイトのブロック）· [AZET Pass](https://azet.io/products/pass-ja)（エンドツーエンド暗号化のパスワードマネージャー）· [AZET Care](https://azet.io/products/care-mac-ja)（Mac・Windows・iPhone・Androidの点検）· [AZET Shield](https://azet.io/products/shield)。お問い合わせ：hello@azet.io
 
 ## ライセンス
 

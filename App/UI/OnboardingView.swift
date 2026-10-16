@@ -14,7 +14,7 @@ struct OnboardingView: View {
                 .padding(.horizontal, 28)
                 .padding(.top, 40)
             VStack(spacing: 6) {
-                Text("Mwoyeo")
+                Text("AZET Lens")
                     .font(.system(size: 28, weight: .bold, design: .rounded))
                 Text("Put a lens on the screen. The text under it is erased and rewritten in your language.")
                     .foregroundStyle(.secondary)
@@ -27,15 +27,15 @@ struct OnboardingView: View {
 
             VStack(spacing: 10) {
                 StepCard(number: 1, title: String(localized: "Screen Recording"), done: model.hasScreenPermission,
-                         detail: model.hasScreenPermission ? String(localized: "Allowed. Mwoyeo reads only what is under a lens, and never stores or sends it.")
-                             : String(localized: "Needed to read the text under a lens. You may have to reopen Mwoyeo after allowing it.")) {
+                         detail: model.hasScreenPermission ? String(localized: "Allowed. AZET Lens reads only what is under a lens, and never stores or sends it.")
+                             : String(localized: "Needed to read the text under a lens. You may have to reopen AZET Lens after allowing it.")) {
                     if !model.hasScreenPermission {
                         Button("Allow") { model.requestPermission() }.buttonStyle(.glassProminent)
                     }
                 }
                 StepCard(number: 2, title: String(localized: "Languages"), done: true,
                          detail: intelligence.isAvailable ? String(localized: "Apple Intelligence translates with context. For faster translation, get a language pack in Settings › Translation.")
-                             : String(localized: "Mwoyeo uses Apple Translation. Get a language pack in Settings › Translation.")) {
+                             : String(localized: "AZET Lens uses Apple Translation. Get a language pack in Settings › Translation.")) {
                     LanguageBar(source: $model.settings.sourceLanguage, target: $model.settings.targetLanguage)
                         .frame(width: 230)
                 }

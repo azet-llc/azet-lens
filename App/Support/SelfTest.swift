@@ -4,12 +4,12 @@ import MwoyeoCore
 import UniformTypeIdentifiers
 
 /// Headless end-to-end run on a still image:
-///   Mwoyeo --render in.png out.png [--src ja] [--tgt ko] [--mode fast|seamless] [--engine auto|translation|intelligence]
-///                                  [--no-inpaint] [--scale 2] [--then en,ko,style]
+///   AZET Lens --render in.png out.png [--src ja] [--tgt ko] [--mode fast|seamless] [--engine auto|translation|intelligence]
+///                                  [--no-inpaint] [--scale 2] [--then en,ko,style] [--srt out.srt]
 /// Prints what was read and translated, and writes the composited result. Exits when done.
 ///
 /// Simulated lens drag over a still "screen" (points; writes the lens view per step as outdir/frame_NNN.png):
-///   Mwoyeo --render screen.png outdir --pan --lens x,y,w,h --to x,y [--steps 40] [--step-ms 100] [--hold-ms 3000]
+///   AZET Lens --render screen.png outdir --pan --lens x,y,w,h --to x,y [--steps 40] [--step-ms 100] [--hold-ms 3000]
 /// With `--scroll`, the lens stays and the content scrolls by `--to` instead (screen.png is the whole page); `--scroll-rect x,y,w,h`
 /// scrolls only that part (a message log between a fixed sidebar, header and footer), `--ease` decelerates like inertial scrolling.
 /// `--back` holds at the end, then scrolls back. Work counts (OCR, erase, engine calls) are printed per phase.
@@ -136,6 +136,14 @@ enum SelfTest {
         CGImageDestinationAddImage(dest, out, nil)
         guard CGImageDestinationFinalize(dest) else { throw Failure(description: "cannot write \(output.path)") }
         print("wrote \(output.path)")
+        // `--srt path`: the transcript a lens over the whole image would keep, as the menu saves it (shown for 2 s).
+        if let srt = option("--srt"), let snap = collector.latest {
+            let pairs = await MainActor.run { RegionSession.pairs(in: snap, lens: capture) }
+            var t = Transcript(), t0 = Date()
+            t.observe(pairs, at: t0)
+            try t.srt(now: t0.addingTimeInterval(2)).write(toFile: srt, atomically: true, encoding: .utf8)
+            print("wrote \(srt)")
+        }
     }
 
     private static func ms(_ since: Date) -> Int { Int(Date().timeIntervalSince(since) * 1000) }

@@ -1,6 +1,8 @@
 import AppKit
+import MwoyeoCore
 import Observation
 import os
+import UniformTypeIdentifiers
 
 @MainActor
 @Observable
@@ -12,7 +14,7 @@ final class AppModel {
             guard settings != oldValue else { return }
             save()
             if settings.shortcuts != oldValue.shortcuts { HotKeys.shared.apply(settings.shortcuts) }
-            if settings.checksForUpdates != oldValue.checksForUpdates { Updates.shared.schedule(enabled: settings.checksForUpdates) }
+            if !settings.keepsTranscript { transcripts.removeAll() }
             let s = settings
             Task {
                 await translator.update(settings: s)
@@ -32,6 +34,8 @@ final class AppModel {
     private(set) var inpaintingAvailable = false
     /// Bumped when any session's activity/error changes, so views re-read them.
     private(set) var sessionTick = 0
+    /// What each lens showed while `settings.keepsTranscript` is on. In memory only; written nowhere until saved.
+    private(set) var transcripts: [UUID: Transcript] = [:]
 
     @ObservationIgnored let translator: TranslationService
     @ObservationIgnored private var sessions: [UUID: RegionSession] = [:]
@@ -39,7 +43,7 @@ final class AppModel {
     @ObservationIgnored private let picker = RegionPicker()
     @ObservationIgnored private var picking = false
     @ObservationIgnored private let defaults = UserDefaults.standard
-    @ObservationIgnored private let log = Logger(subsystem: "dev.midagedev.mwoyeo", category: "app")
+    @ObservationIgnored private let log = Logger(subsystem: "io.azet.lens", category: "app")
 
     private init() {
         let s = (defaults.data(forKey: "settings")).flatMap { try? JSONDecoder().decode(AppSettings.self, from: $0) } ?? AppSettings()
@@ -61,7 +65,6 @@ final class AppModel {
         HotKeys.shared.setHandler(.pause) { [weak self] in Task { await self?.togglePause() } }
         HotKeys.shared.setHandler(.refresh) { [weak self] in Task { await self?.refreshAll() } }
         HotKeys.shared.apply(settings.shortcuts)
-        Updates.shared.schedule(enabled: settings.checksForUpdates)
 
         await translator.setIssueHandler { issue in Task { @MainActor in AppModel.shared.issue = issue } }
         await translator.prewarm()
@@ -144,6 +147,7 @@ final class AppModel {
 
     func remove(_ id: UUID) async {
         await sessions.removeValue(forKey: id)?.stop()
+        transcripts[id] = nil
         regions.removeAll { $0.id == id }
         sessionTick += 1
     }
@@ -154,6 +158,24 @@ final class AppModel {
         if enabled, !isPaused { await startSession(regions[i]) } else { await sessions.removeValue(forKey: id)?.stop() }
         sessionTick += 1
     }
+
+    /// Saves a lens's transcript where the person chooses: SubRip subtitles (.srt) or text with the originals (.txt).
+    func saveTranscript(_ id: UUID) {
+        guard let t = transcripts[id], !t.isEmpty else { return }
+        let name = regions.first { $0.id == id }?.name ?? ""
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [UTType(filenameExtension: "srt") ?? .plainText, .plainText]
+        panel.nameFieldStringValue = "\(name.isEmpty ? "AZET Lens" : name) \(Date().formatted(.iso8601.year().month().day())).srt"
+        panel.isExtensionHidden = false
+        panel.message = String(localized: "Save as .srt for subtitles, or .txt for the translation with the original under each line.")
+        NSApp.activate()
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        let now = Date()
+        let body = url.pathExtension.lowercased() == "txt" ? t.text(now: now) : t.srt(now: now)
+        do { try body.write(to: url, atomically: true, encoding: .utf8) } catch { log.error("transcript save failed: \(error.localizedDescription)") }
+    }
+
+    func clearTranscript(_ id: UUID) { transcripts[id] = nil }
 
     func shortcut(_ action: HotKeyAction) -> String? { settings.shortcuts[action.rawValue]?.display }
 
@@ -167,6 +189,10 @@ final class AppModel {
         guard sessions[config.id] == nil else { return }
         let s = RegionSession(config: config, settings: settings, translator: translator, inpainter: inpainter)
         s.onChange = { [weak self] in self?.sessionTick += 1 }
+        s.onShown = { [weak self, id = config.id] pairs in
+            guard let self, settings.keepsTranscript else { return }
+            transcripts[id, default: Transcript()].observe(pairs, at: Date())
+        }
         s.onConfigChange = { [weak self] updated in
             guard let self, let i = regions.firstIndex(where: { $0.id == updated.id }) else { return }
             regions[i].rect = updated.rect
