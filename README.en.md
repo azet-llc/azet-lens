@@ -31,7 +31,7 @@ for the full comparison.
 | | Mwoyeo 1.0.4 | AZET Lens |
 |---|---|---|
 | **Network** | One request a day to GitHub (update check and anonymous install counts), can be turned off | **None, enforced by macOS**: the app runs in the App Sandbox without the network entitlement, so the system refuses any connection it would open. No update check. [Check it yourself](#check-it-yourself) |
-| **Transcript** | Translations are shown, never kept | Optional: each lens can keep what it translated with the time it was on screen, in memory, and save it as **subtitles (.srt)** or as text with the originals |
+| **Transcript** | None (translations are reused from memory while the app runs, never saved) | Optional: each lens can keep what it translated with the time it was on screen, in memory, and save it as **subtitles (.srt)** or as text with the originals |
 | **Outlined subtitles** | White letters with a black edge come out as dark text without the edge, left-aligned | The fill colour and the edge are kept, and centred lines stay centred ([measured](docs/DIFFERENCES.md#measured)) |
 | Lens, erasing, engines, glossary, translation memory, shortcuts, menu bar | ✓ | Same |
 

@@ -191,7 +191,7 @@ ScreenCaptureKit ──► change map (16 px tiles) ──► scroll? shift bloc
 단색이나 그라데이션 배경은 주변 색으로 채워요. 그림이나 게임 화면처럼 무늬가 있는 배경은 기기 안의 인페인팅
 모델이 배경을 다시 그리고 번역은 원래 글자와 비슷한 굵기와 크기로 써요.
 
-위 영상은 실제 앱을 직접 만든 가짜 채팅 페이지(`demo/chat.html?lang=ja`)에 올려 진짜 마우스와 트랙패드
+위 영상은 AZET Lens의 바탕인 Mwoyeo를 직접 만든 가짜 채팅 페이지(`demo/chat.html?lang=ja`)에 올려 진짜 마우스와 트랙패드
 스크롤로 찍었어요. 촬영 순서는 `docs/HERO.md`에 있어요.
 
 이름은 "뭐여?"라는 사투리에서 따왔어요.

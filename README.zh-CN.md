@@ -153,7 +153,7 @@ ScreenCaptureKit ──► change map (16 px tiles) ──► scroll? shift bloc
 
 擦除时，纯色和渐变背景直接用周围的颜色填充；遇到有纹理的背景（插画、游戏画面），则由设备端的图像修复模型重建背景，译文也会用相应的字重和字号排版。
 
-上面的动图就是 App 本身，运行在一个虚构的聊天页面（`demo/chat.html?lang=ko`）上，用真实的鼠标和触控板滚动录制。拍摄清单见 `docs/HERO.md`。
+上面的动图是 AZET Lens 所基于的 Mwoyeo，运行在一个虚构的聊天页面（`demo/chat.html?lang=ko`）上，用真实的鼠标和触控板滚动录制。拍摄清单见 `docs/HERO.md`。
 
 名字来自韩语方言：*mwoyeo*（뭐여）就是“那是啥？”的意思。
 
