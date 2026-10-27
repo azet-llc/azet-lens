@@ -50,17 +50,58 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    /// Opening the app again (Finder, Spotlight, Launchpad) shows the menu panel once set up, since a full menu
+    /// bar on a notched Mac can hide the icon.
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
-        Task { @MainActor in WindowPresenter.shared.showOnboarding() }
+        Task { @MainActor in
+            let model = AppModel.shared
+            model.recheckPermission()
+            if model.settings.hasCompletedOnboarding && model.hasScreenPermission {
+                WindowPresenter.shared.showMenu()
+            } else {
+                WindowPresenter.shared.showOnboarding()
+            }
+        }
         return true
     }
 }
 
-/// Opens AppKit-hosted windows (onboarding) and the Settings scene for a menu-bar-only app.
+/// Opens AppKit-hosted windows (onboarding, the menu panel) and the Settings scene for a menu-bar-only app.
 @MainActor
 final class WindowPresenter {
     static let shared = WindowPresenter()
     private var onboarding: NSWindow?
+    private var menu: NSPanel?
+
+    /// The menu panel in a window of its own under the top-right of the menu bar, for when the icon can't be
+    /// reached. Closes when it loses focus, like the menu.
+    func showMenu() {
+        let w = menu ?? makeMenuPanel()
+        menu = w
+        let screen = NSScreen.screens.first { $0.frame.contains(NSEvent.mouseLocation) } ?? NSScreen.main
+        if let v = screen?.visibleFrame {
+            w.setFrameTopLeftPoint(CGPoint(x: v.maxX - w.frame.width - 10, y: v.maxY - 6))
+        }
+        NSApp.activate(ignoringOtherApps: true)
+        w.makeKeyAndOrderFront(nil)
+    }
+
+    func toggleMenu() {
+        if let w = menu, w.isVisible { w.close() } else { showMenu() }
+    }
+
+    private func makeMenuPanel() -> NSPanel {
+        let w = NSPanel(contentViewController: NSHostingController(rootView: MenuPanel().environment(AppModel.shared)))
+        w.styleMask = [.titled, .closable, .fullSizeContentView]
+        w.titlebarAppearsTransparent = true
+        w.titleVisibility = .hidden
+        w.isFloatingPanel = true
+        w.isReleasedWhenClosed = false
+        NotificationCenter.default.addObserver(forName: NSWindow.didResignKeyNotification, object: w, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.menu?.close() }
+        }
+        return w
+    }
 
     func showOnboarding() {
         NSApp.activate(ignoringOtherApps: true)

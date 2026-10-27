@@ -42,11 +42,15 @@ struct KeyCombo: Codable, Equatable {
 }
 
 enum HotKeyAction: String, Codable, CaseIterable, Identifiable {
-    case addLens, toggleOriginal, pause, refresh
+    case showMenu, addLens, toggleOriginal, pause, refresh
+
+    /// Actions that existed before `showMenu`; saved settings without `shortcutActions` were made with these.
+    static let original: Set<String> = ["addLens", "toggleOriginal", "pause", "refresh"]
 
     var id: String { rawValue }
     var title: String {
         switch self {
+        case .showMenu: String(localized: "Open AZET Lens")
         case .addLens: String(localized: "Add Lens")
         case .toggleOriginal: String(localized: "Show Original")
         case .pause: String(localized: "Pause")
@@ -56,7 +60,9 @@ enum HotKeyAction: String, Codable, CaseIterable, Identifiable {
 
     /// ⌃⌥ plus a letter, avoiding the ⌃⌥ letters window managers such as Rectangle and Magnet take by default
     /// (D F G E T for thirds, U I J K for corners, C for centre). Pause and refresh have none: the menu has them.
+    /// ⌃⌥M opens the menu panel when the menu bar is too full and the notch hides the icon.
     static let defaults: [String: KeyCombo] = [
+        HotKeyAction.showMenu.rawValue: KeyCombo(keyCode: kVK_ANSI_M, modifiers: controlKey | optionKey, display: "⌃⌥M"),
         HotKeyAction.addLens.rawValue: KeyCombo(keyCode: kVK_ANSI_L, modifiers: controlKey | optionKey, display: "⌃⌥L"),
         HotKeyAction.toggleOriginal.rawValue: KeyCombo(keyCode: kVK_ANSI_O, modifiers: controlKey | optionKey, display: "⌃⌥O"),
     ]

@@ -116,6 +116,7 @@ elsewhere, record a different one. The defaults stay clear of window managers su
 |---|---|
 | ⌃⌥L | Add a lens (drag an area, or click to drop one; hold ⌥ to pin it to the screen) |
 | ⌃⌥O | Show the original / the translation |
+| ⌃⌥M | Open the menu panel (also when a full menu bar hides the icon behind the notch; opening the app again does the same) |
 | none | Pause all lenses, Translate again (in the menu; give them keys in Settings if you like) |
 
 ## Settings

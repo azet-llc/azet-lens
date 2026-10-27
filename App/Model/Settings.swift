@@ -100,6 +100,9 @@ struct AppSettings: Codable, Equatable {
     var cacheSize = 5000
     /// HotKeyAction raw value → combo; an action missing here has no shortcut.
     var shortcuts = HotKeyAction.defaults
+    /// Actions whose default shortcut has been offered, so a new action gets its default without bringing back
+    /// one the person removed.
+    var shortcutActions = Set(HotKeyAction.allCases.map(\.rawValue))
     /// Keep, in memory, what each lens showed and when, so it can be saved as subtitles. Off by default.
     var keepsTranscript = false
     var hasCompletedOnboarding = false
@@ -128,7 +131,13 @@ struct AppSettings: Codable, Equatable {
         fontStyle = (try? c.decodeIfPresent(FontStyleChoice.self, forKey: .fontStyle)) ?? d.fontStyle
         boxOpacity = try c.decodeIfPresent(Double.self, forKey: .boxOpacity) ?? d.boxOpacity
         lensStyle = (try? c.decodeIfPresent(LensStyle.self, forKey: .lensStyle)) ?? d.lensStyle
-        shortcuts = (try? c.decodeIfPresent([String: KeyCombo].self, forKey: .shortcuts)) ?? d.shortcuts
+        var keys = (try? c.decodeIfPresent([String: KeyCombo].self, forKey: .shortcuts)) ?? d.shortcuts
+        let offered = (try? c.decodeIfPresent(Set<String>.self, forKey: .shortcutActions)) ?? HotKeyAction.original
+        for (action, combo) in HotKeyAction.defaults where !offered.contains(action)
+            && !keys.values.contains(where: { $0.keyCode == combo.keyCode && $0.modifiers == combo.modifiers }) {
+            keys[action] = combo
+        }
+        shortcuts = keys
         keepsTranscript = try c.decodeIfPresent(Bool.self, forKey: .keepsTranscript) ?? d.keepsTranscript
         cacheSize = max(100, try c.decodeIfPresent(Int.self, forKey: .cacheSize) ?? d.cacheSize)
         hasCompletedOnboarding = try c.decodeIfPresent(Bool.self, forKey: .hasCompletedOnboarding) ?? d.hasCompletedOnboarding

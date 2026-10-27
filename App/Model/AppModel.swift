@@ -60,6 +60,7 @@ final class AppModel {
     // MARK: - Lifecycle
 
     func bootstrap() async {
+        HotKeys.shared.setHandler(.showMenu) { WindowPresenter.shared.toggleMenu() }
         HotKeys.shared.setHandler(.addLens) { [weak self] in Task { await self?.addRegion() } }
         HotKeys.shared.setHandler(.toggleOriginal) { [weak self] in self?.toggleTranslations() }
         HotKeys.shared.setHandler(.pause) { [weak self] in Task { await self?.togglePause() } }
