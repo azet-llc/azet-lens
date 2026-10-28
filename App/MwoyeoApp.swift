@@ -97,6 +97,8 @@ final class WindowPresenter {
         w.titleVisibility = .hidden
         w.isFloatingPanel = true
         w.isReleasedWhenClosed = false
+        // Size it now: until SwiftUI lays out, the frame is 0 wide and showMenu would place it off the right edge.
+        w.setContentSize(w.contentView?.fittingSize ?? .zero)
         NotificationCenter.default.addObserver(forName: NSWindow.didResignKeyNotification, object: w, queue: .main) { [weak self] _ in
             MainActor.assumeIsolated { self?.menu?.close() }
         }
